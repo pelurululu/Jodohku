@@ -62,6 +62,7 @@ app.add_middleware(
         "http://127.0.0.1:5500",
         "http://localhost:3000",
         "https://jodohku.netlify.app",
+        "https://jodohku.my",
     ],
     allow_credentials=True,
     allow_methods=["*"],
