@@ -1,817 +1,907 @@
 <!DOCTYPE html>
-<html lang="ms">
+<html lang="ms" id="html-root">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jodohku — Panel Admin</title>
-  <style>
-    :root {
-      --gold: #C9A84C;
-      --gold-light: #E8C97A;
-      --gold-dark: #9B7A2E;
-      --bg: #05050E;
-      --surface: #0D0D1F;
-      --surface2: #15152B;
-      --border: rgba(201,168,76,0.18);
-      --ink: #ECEBF8;
-      --ink-muted: #9494BC;
-      --silver: #6B6B8A;
-      --success: #4CAF82;
-      --danger: #E05C5C;
-      --warning: #E09B3C;
-      --info: #5C9EE0;
-      --radius: 12px;
-      --radius-sm: 8px;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; }
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JodohKu Admin — Panel Pentadbiran</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#05050E;--bg2:#09091A;--s1:#0F0F22;--s2:#15152B;--s3:#1C1C36;--s4:#242440;
+  --gold:#C9A84C;--gold2:#E2C96A;--gold3:#F5E8B0;--gdark:#7A5C10;
+  --gborder:rgba(201,168,76,.12);--gborder2:rgba(201,168,76,.25);--gborder3:rgba(201,168,76,.45);
+  --text:#ECEBF8;--t2:#9494BC;--t3:#5A5A80;--t4:#36364A;
+  --green:#2FD67A;--red:#F04D4D;--orange:#F08040;--blue:#4D9FF0;--pink:#E84393;
+  --r:10px;--r2:16px;--r3:22px;--sidebar:240px;
+  --serif:'Playfair Display',Georgia,serif;--sans:'Outfit',system-ui,sans-serif;
+  --trans:.22s cubic-bezier(.4,0,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);font-weight:300;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+button,input,select,textarea{font-family:inherit;outline:none;border:none;background:none;color:inherit;cursor:pointer}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--s4);border-radius:2px}
+img{display:block;max-width:100%;object-fit:cover}
 
-    /* ── LOGIN PAGE ── */
-    .login-wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
-    .login-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 40px 32px; width: 100%; max-width: 380px; }
-    .login-logo { font-family: Georgia, serif; font-size: 1.8rem; color: var(--gold-light); text-align: center; margin-bottom: 8px; }
-    .login-sub { font-size: 13px; color: var(--ink-muted); text-align: center; margin-bottom: 32px; }
-    .form-label { font-size: 12px; font-weight: 600; color: var(--ink-muted); letter-spacing: 0.5px; text-transform: uppercase; display: block; margin-bottom: 6px; }
-    .form-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; color: var(--ink); font-size: 14px; outline: none; transition: border-color 0.2s; margin-bottom: 16px; }
-    .form-input:focus { border-color: var(--gold); }
+/* ══ LAYOUT ══ */
+#admin-wrap{display:flex;min-height:100vh}
+#sidebar{width:var(--sidebar);background:var(--s1);border-right:1px solid var(--gborder);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:transform .3s}
+#main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;min-height:100vh}
+#topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:rgba(5,5,14,.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--gborder);position:sticky;top:0;z-index:50}
+#content{flex:1;padding:24px;overflow-y:auto}
 
-    /* ── LAYOUT ── */
-    .app { display: none; min-height: 100vh; }
-    .app.active { display: flex; }
-    .sidebar { width: 240px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
-    .sidebar-logo { padding: 24px 20px 16px; border-bottom: 1px solid var(--border); }
-    .sidebar-logo-text { font-family: Georgia, serif; font-size: 1.3rem; color: var(--gold-light); }
-    .sidebar-logo-sub { font-size: 11px; color: var(--ink-muted); margin-top: 2px; }
-    .nav-section { padding: 16px 12px 8px; font-size: 10px; color: var(--silver); letter-spacing: 1px; text-transform: uppercase; }
-    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: var(--radius-sm); margin: 2px 8px; cursor: pointer; font-size: 14px; color: var(--ink-muted); transition: all 0.15s; }
-    .nav-item:hover { background: rgba(201,168,76,0.08); color: var(--ink); }
-    .nav-item.active { background: rgba(201,168,76,0.12); color: var(--gold-light); }
-    .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
-    .nav-badge { background: var(--danger); color: #fff; font-size: 10px; font-weight: 700; border-radius: 10px; padding: 1px 6px; margin-left: auto; }
-    .sidebar-footer { margin-top: auto; padding: 16px; border-top: 1px solid var(--border); }
+/* ══ SIDEBAR ══ */
+.sb-logo{padding:20px 18px;border-bottom:1px solid var(--gborder)}
+.sb-logo-t{font-family:var(--serif);font-size:18px;font-weight:700;color:var(--gold2)}
+.sb-logo-s{font-size:9px;color:var(--t3);letter-spacing:.15em;margin-top:2px}
+.sb-nav{flex:1;padding:12px 0;overflow-y:auto}
+.sb-section{font-size:8px;font-weight:700;letter-spacing:.2em;color:var(--t4);padding:12px 18px 4px;text-transform:uppercase}
+.sb-item{display:flex;align-items:center;gap:10px;padding:9px 18px;font-size:12px;font-weight:500;color:var(--t2);cursor:pointer;transition:all .15s;border-radius:0;position:relative}
+.sb-item:hover{background:var(--s2);color:var(--text)}
+.sb-item.on{background:rgba(201,168,76,.08);color:var(--gold2);border-left:2px solid var(--gold)}
+.sb-item .ic{font-size:16px;min-width:20px;text-align:center}
+.sb-badge{margin-left:auto;background:var(--red);color:#fff;font-size:8px;font-weight:800;padding:2px 6px;border-radius:10px;min-width:18px;text-align:center}
+.sb-badge.gold{background:rgba(201,168,76,.2);color:var(--gold)}
+.sb-footer{padding:14px 18px;border-top:1px solid var(--gborder)}
+.sb-admin-info{font-size:11px;color:var(--t2)}
+.sb-admin-role{font-size:9px;color:var(--t3);margin-top:2px}
 
-    /* ── MAIN CONTENT ── */
-    .main { flex: 1; overflow-y: auto; }
-    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
-    .page-title { font-size: 1.1rem; font-weight: 700; color: var(--ink); }
-    .topbar-right { display: flex; align-items: center; gap: 12px; }
-    .admin-badge { font-size: 12px; background: rgba(201,168,76,0.12); border: 1px solid var(--border); border-radius: 20px; padding: 4px 12px; color: var(--gold-light); }
-    .content { padding: 24px; }
+/* ══ CARDS ══ */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:24px}
+.stat-card{background:var(--s2);border:1px solid var(--gborder);border-radius:16px;padding:18px;position:relative;overflow:hidden;transition:var(--trans)}
+.stat-card:hover{border-color:var(--gborder2);transform:translateY(-1px)}
+.stat-card .ic{font-size:24px;margin-bottom:10px}
+.stat-card .val{font-size:28px;font-weight:800;font-family:var(--serif);color:var(--gold)}
+.stat-card .lbl{font-size:10px;color:var(--t3);margin-top:3px;letter-spacing:.05em}
+.stat-card .change{font-size:9px;margin-top:6px}
+.stat-card .change.up{color:var(--green)}
+.stat-card .change.down{color:var(--red)}
+.stat-card.urgent{border-color:rgba(240,77,77,.25);background:rgba(240,77,77,.04)}
+.stat-card.urgent .val{color:var(--red)}
 
-    /* ── STAT CARDS ── */
-    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 28px; }
-    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 18px; }
-    .stat-label { font-size: 11px; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-    .stat-value { font-family: Georgia, serif; font-size: 2rem; color: var(--gold-light); font-weight: 700; line-height: 1; }
-    .stat-sub { font-size: 11px; color: var(--silver); margin-top: 4px; }
-    .stat-card.danger .stat-value { color: var(--danger); }
-    .stat-card.success .stat-value { color: var(--success); }
+/* ══ TABLE ══ */
+.tbl-wrap{background:var(--s2);border:1px solid var(--gborder);border-radius:var(--r3);overflow:hidden}
+.tbl-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--gborder)}
+.tbl-title{font-size:14px;font-weight:700}
+.tbl-sub{font-size:11px;color:var(--t3);margin-top:2px}
+.tbl-actions{display:flex;gap:8px;align-items:center}
+table{width:100%;border-collapse:collapse}
+thead th{text-align:left;font-size:9px;font-weight:700;letter-spacing:.18em;color:var(--t3);text-transform:uppercase;padding:11px 16px;background:rgba(0,0,0,.2);border-bottom:1px solid var(--gborder);white-space:nowrap}
+tbody tr{border-bottom:1px solid rgba(255,255,255,.03);transition:background .12s;cursor:pointer}
+tbody tr:hover{background:rgba(255,255,255,.02)}
+tbody tr:last-child{border-bottom:none}
+td{padding:12px 16px;font-size:12px;vertical-align:middle}
+td.mono{font-family:monospace;font-size:11px;color:var(--t2)}
 
-    /* ── TABLE ── */
-    .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-    .table-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
-    .table-title { font-size: 15px; font-weight: 700; }
-    .table-actions { display: flex; gap: 8px; align-items: center; }
-    .search-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; color: var(--ink); font-size: 13px; outline: none; width: 220px; }
-    .search-box:focus { border-color: var(--gold); }
-    table { width: 100%; border-collapse: collapse; }
-    th { text-align: left; padding: 10px 16px; font-size: 11px; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); font-weight: 600; }
-    td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
-    tr:hover td { background: rgba(255,255,255,0.02); }
-    tr:last-child td { border-bottom: none; }
-    .empty-row td { text-align: center; color: var(--silver); padding: 32px; }
+/* ══ BADGES ══ */
+.bdg{display:inline-flex;align-items:center;padding:3px 8px;border-radius:20px;font-size:8px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;border:1px solid;white-space:nowrap}
+.bdg-pending{border-color:rgba(201,168,76,.3);color:var(--gold);background:rgba(201,168,76,.06)}
+.bdg-review{border-color:rgba(77,159,240,.3);color:var(--blue);background:rgba(77,159,240,.06)}
+.bdg-approved{border-color:rgba(47,214,122,.3);color:var(--green);background:rgba(47,214,122,.06)}
+.bdg-rejected{border-color:rgba(240,77,77,.25);color:var(--red);background:rgba(240,77,77,.06)}
+.bdg-add-info{border-color:rgba(240,128,64,.25);color:var(--orange);background:rgba(240,128,64,.06)}
+.bdg-emergency{border-color:rgba(240,77,77,.5);color:#fff;background:var(--red);animation:pulse 1.5s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+.cat-fakir{color:#FF9B71}.cat-miskin{color:#FFD166}.cat-muallaf{color:var(--gold)}.cat-riqab{color:#EF476F}
+.cat-gharimin{color:#06D6A0}.cat-fisabilillah{color:var(--blue)}.cat-ibnsabil{color:#A78BFA}.cat-amil{color:var(--t2)}
 
-    /* ── BADGES ── */
-    .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; border-radius: 20px; padding: 3px 10px; }
-    .badge-gold { background: rgba(201,168,76,0.15); color: var(--gold-light); }
-    .badge-silver { background: rgba(192,192,192,0.12); color: #C0C0C0; }
-    .badge-success { background: rgba(76,175,130,0.15); color: var(--success); }
-    .badge-danger { background: rgba(224,92,92,0.15); color: var(--danger); }
-    .badge-warning { background: rgba(224,155,60,0.15); color: var(--warning); }
-    .badge-info { background: rgba(92,158,224,0.15); color: var(--info); }
-    .badge-muted { background: rgba(255,255,255,0.06); color: var(--ink-muted); }
+/* ══ FORMS & INPUTS ══ */
+.fi{width:100%;padding:10px 13px;background:rgba(0,0,0,.32);border:1px solid rgba(255,255,255,.07);border-radius:var(--r);font-size:12px;color:var(--text);transition:border-color .2s}
+.fi:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,.08)}
+.fi option{background:var(--s2)}
+select.fi{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235A5A80' fill='none' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.fl{display:flex;flex-direction:column;gap:5px}
+.flb{font-size:9px;font-weight:700;letter-spacing:.18em;color:var(--t3);text-transform:uppercase}
 
-    /* ── BUTTONS ── */
-    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius-sm); border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.15s; }
-    .btn-sm { padding: 5px 12px; font-size: 12px; }
-    .btn-primary { background: linear-gradient(135deg, var(--gold-dark), var(--gold)); color: #fff; }
-    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
-    .btn-success { background: rgba(76,175,130,0.15); color: var(--success); border: 1px solid rgba(76,175,130,0.3); }
-    .btn-success:hover { background: rgba(76,175,130,0.25); }
-    .btn-danger { background: rgba(224,92,92,0.15); color: var(--danger); border: 1px solid rgba(224,92,92,0.3); }
-    .btn-danger:hover { background: rgba(224,92,92,0.25); }
-    .btn-ghost { background: transparent; color: var(--ink-muted); border: 1px solid var(--border); }
-    .btn-ghost:hover { color: var(--ink); border-color: var(--gold); }
+/* ══ BUTTONS ══ */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 16px;border-radius:var(--r);font-size:12px;font-weight:600;transition:var(--trans);cursor:pointer;white-space:nowrap}
+.btn-p{background:linear-gradient(135deg,var(--gold),var(--gdark));color:#000}
+.btn-p:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn-g{background:rgba(47,214,122,.1);color:var(--green);border:1px solid rgba(47,214,122,.2)}
+.btn-g:hover{background:rgba(47,214,122,.18)}
+.btn-r{background:rgba(240,77,77,.08);color:var(--red);border:1px solid rgba(240,77,77,.18)}
+.btn-r:hover{background:rgba(240,77,77,.15)}
+.btn-b{background:rgba(77,159,240,.08);color:var(--blue);border:1px solid rgba(77,159,240,.18)}
+.btn-b:hover{background:rgba(77,159,240,.15)}
+.btn-o{background:rgba(240,128,64,.08);color:var(--orange);border:1px solid rgba(240,128,64,.18)}
+.btn-o:hover{background:rgba(240,128,64,.15)}
+.btn-ghost{background:transparent;color:var(--t2);border:1px solid rgba(255,255,255,.08)}
+.btn-ghost:hover{border-color:rgba(255,255,255,.18);color:var(--text)}
+.btn-sm{padding:6px 12px;font-size:11px}
+.btn-xs{padding:4px 9px;font-size:10px;border-radius:7px}
 
-    /* ── USER DETAIL MODAL ── */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; display: none; align-items: center; justify-content: center; padding: 24px; }
-    .modal-overlay.show { display: flex; }
-    .modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 560px; max-height: 85vh; overflow-y: auto; }
-    .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border); }
-    .modal-head-title { font-size: 16px; font-weight: 700; }
-    .modal-close { background: none; border: none; color: var(--ink-muted); font-size: 20px; cursor: pointer; padding: 4px; }
-    .modal-close:hover { color: var(--ink); }
-    .modal-body { padding: 24px; }
-    .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
-    .detail-row:last-child { border-bottom: none; }
-    .detail-key { font-size: 12px; color: var(--ink-muted); font-weight: 500; }
-    .detail-val { font-size: 13px; color: var(--ink); font-weight: 500; text-align: right; }
-    .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+/* ══ OVERLAYS ══ */
+.ov{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.7);backdrop-filter:blur(8px)}
+.ov.show{display:flex}
+.modal{background:var(--s1);border:1px solid var(--gborder2);border-radius:var(--r3);padding:24px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;animation:popIn .25s ease}
+.modal-lg{max-width:720px}
+@keyframes popIn{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:12px}
+.modal-close{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;transition:var(--trans)}
+.modal-close:hover{background:rgba(255,255,255,.1)}
 
-    /* ── TABS ── */
-    .section { display: none; }
-    .section.active { display: block; }
+/* ══ DETAIL SECTIONS ══ */
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.detail-item{background:rgba(0,0,0,.25);border-radius:var(--r);padding:10px 12px}
+.detail-lbl{font-size:9px;font-weight:700;letter-spacing:.16em;color:var(--t3);text-transform:uppercase;margin-bottom:4px}
+.detail-val{font-size:13px;font-weight:500}
+.detail-full{grid-column:1/-1}
 
-    /* ── APPLICATION DETAIL ── */
-    .doc-preview { width: 100%; max-height: 300px; object-fit: contain; border-radius: var(--radius-sm); border: 1px solid var(--border); margin: 8px 0; }
-    .doc-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--gold); text-decoration: none; padding: 6px 12px; background: rgba(201,168,76,0.1); border-radius: var(--radius-sm); }
-    .doc-link:hover { background: rgba(201,168,76,0.2); }
+/* ══ TABS ══ */
+.page-tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--s2);border:1px solid var(--gborder);border-radius:12px;padding:5px}
+.page-tab{flex:1;padding:9px;border-radius:8px;font-size:12px;font-weight:600;color:var(--t3);text-align:center;transition:all .18s;position:relative}
+.page-tab:hover{color:var(--t2)}
+.page-tab.on{background:rgba(201,168,76,.1);color:var(--gold);border:1px solid rgba(201,168,76,.2)}
+.page-tab .tab-cnt{font-size:8px;background:var(--red);color:#fff;padding:1px 5px;border-radius:8px;margin-left:4px;font-weight:800}
 
-    /* ── PAGINATION ── */
-    .pagination { display: flex; align-items: center; gap: 8px; padding: 16px 20px; border-top: 1px solid var(--border); justify-content: flex-end; }
-    .page-btn { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface2); color: var(--ink-muted); cursor: pointer; font-size: 13px; }
-    .page-btn.active { background: rgba(201,168,76,0.15); color: var(--gold-light); border-color: var(--gold); }
-    .page-btn:hover:not(.active) { border-color: var(--gold); color: var(--ink); }
+/* ══ TOAST ══ */
+#toast{position:fixed;bottom:24px;right:24px;z-index:999;padding:11px 18px;border-radius:12px;font-size:12px;font-weight:600;background:var(--s3);border:1px solid var(--gborder2);opacity:0;transform:translateY(10px);transition:.3s;pointer-events:none;max-width:320px}
+#toast.show{opacity:1;transform:translateY(0)}
+#toast.ok{background:rgba(47,214,122,.12);border-color:rgba(47,214,122,.3);color:var(--green)}
+#toast.err{background:rgba(240,77,77,.1);border-color:rgba(240,77,77,.2);color:var(--red)}
+#toast.info{background:rgba(77,159,240,.1);border-color:rgba(77,159,240,.2);color:var(--blue)}
 
-    /* ── FILTER BAR ── */
-    .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
-    .filter-btn { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--ink-muted); cursor: pointer; font-size: 12px; transition: all 0.15s; }
-    .filter-btn.active { background: rgba(201,168,76,0.12); color: var(--gold-light); border-color: var(--gold); }
+/* ══ FILTER BAR ══ */
+.filter-bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.filter-bar .fi{max-width:160px}
+.search-wrap{position:relative;flex:1;min-width:180px}
+.search-wrap input{width:100%;padding:9px 13px 9px 34px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.07);border-radius:var(--r);font-size:12px;color:var(--text)}
+.search-wrap input:focus{border-color:var(--gold);outline:none}
+.search-wrap::before{content:'🔍';position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:12px;pointer-events:none}
 
-    /* ── TOAST ── */
-    #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
-    .toast { display: flex; align-items: center; gap: 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; font-size: 13px; color: var(--ink); min-width: 260px; animation: toastIn 0.2s ease; }
-    .toast-success { border-color: rgba(76,175,130,0.4); }
-    .toast-error { border-color: rgba(224,92,92,0.4); }
-    @keyframes toastIn { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+/* ══ TIMELINE ══ */
+.timeline{display:flex;flex-direction:column;gap:0}
+.tl-item{display:flex;gap:12px;padding:10px 0}
+.tl-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:5px;position:relative}
+.tl-dot::after{content:'';position:absolute;left:3px;top:100%;width:2px;height:100%;background:var(--gborder);transform:translateY(2px)}
+.tl-item:last-child .tl-dot::after{display:none}
+.tl-meta{font-size:10px;color:var(--t3);margin-bottom:2px}
+.tl-text{font-size:12px;color:var(--t2)}
 
-    /* ── AVATAR ── */
-    .avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
-    .avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+/* ══ LOGIN PAGE ══ */
+#login-page{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:500}
+#login-page.hide{display:none}
+.login-box{background:var(--s1);border:1px solid var(--gborder2);border-radius:var(--r3);padding:32px;width:100%;max-width:380px;animation:popIn .3s ease}
 
-    /* ── RESPONSIVE ── */
-    @media (max-width: 768px) {
-      .sidebar { width: 200px; }
-      .content { padding: 16px; }
-    }
-  </style>
+/* ══ EMPTY STATE ══ */
+.empty-state{text-align:center;padding:48px 24px;color:var(--t3)}
+.empty-state .es-ic{font-size:40px;margin-bottom:12px}
+.empty-state p{font-size:12px;line-height:1.7}
+
+/* ══ PROGRESS ══ */
+.prog-bar{height:5px;background:var(--s4);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width 1s}
+
+/* ══ RESPONSIVE ══ */
+@media(max-width:768px){
+  #sidebar{transform:translateX(-100%)}
+  #sidebar.open{transform:translateX(0)}
+  #main{margin-left:0}
+  .detail-grid{grid-template-columns:1fr}
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+  #topbar .hamburger{display:flex}
+}
+.hamburger{width:32px;height:32px;flex-direction:column;justify-content:center;gap:5px;display:none;cursor:pointer}
+.hamburger span{display:block;height:2px;background:var(--t2);border-radius:2px;transition:.2s}
+</style>
 </head>
 <body>
 
-<div id="toast-container"></div>
-
-<!-- ── LOGIN PAGE ── -->
-<div id="page-login" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px">
-  <div class="login-card">
-    <div class="login-logo">💍 Jodohku</div>
-    <p class="login-sub">Panel Pengurusan Admin</p>
-    <label class="form-label">Nama Pengguna</label>
-    <input class="form-input" id="admin-username" type="text" placeholder="admin" autocomplete="off">
-    <label class="form-label">Kata Laluan</label>
-    <input class="form-input" id="admin-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doAdminLogin()">
-    <span id="login-error" style="display:none;color:var(--danger);font-size:13px;margin-bottom:12px;display:block"></span>
-    <button class="btn btn-primary" style="width:100%;padding:12px" id="btn-login" onclick="doAdminLogin()">Log Masuk →</button>
-    <p style="font-size:11px;color:var(--silver);text-align:center;margin-top:16px">Akses terhad kepada pentadbir berlesen sahaja</p>
+<!-- ══════════ LOGIN PAGE ══════════ -->
+<div id="login-page">
+  <div class="login-box">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-family:var(--serif);font-size:26px;font-weight:700;color:var(--gold2)">JodohKu</div>
+      <div style="font-size:11px;color:var(--t3);margin-top:4px;letter-spacing:.1em">PANEL PENTADBIRAN</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="fl">
+        <label class="flb">E-mel Admin</label>
+        <input class="fi" id="adm-email" type="email" placeholder="admin@jodohku.my" autocomplete="email">
+      </div>
+      <div class="fl">
+        <label class="flb">Kata Laluan</label>
+        <input class="fi" id="adm-pw" type="password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <div id="login-msg" style="font-size:11px;color:var(--red);display:none"></div>
+      <button class="btn btn-p" style="width:100%;margin-top:4px" onclick="doAdminLogin()">Masuk →</button>
+    </div>
+    <p style="font-size:10px;color:var(--t4);text-align:center;margin-top:16px">Untuk keselamatan, sesi log masuk akan tamat selepas 2 jam.</p>
   </div>
 </div>
 
-<!-- ── MAIN APP ── -->
-<div class="app" id="main-app">
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <div class="sidebar-logo">
-      <div class="sidebar-logo-text">💍 Jodohku</div>
-      <div class="sidebar-logo-sub">Panel Admin v1.0</div>
+<!-- ══════════ ADMIN LAYOUT ══════════ -->
+<div id="admin-wrap" style="display:none">
+  <!-- Sidebar -->
+  <nav id="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-t">JodohKu</div>
+      <div class="sb-logo-s">ADMIN PANEL v1.0</div>
     </div>
+    <div class="sb-nav">
+      <div class="sb-section">UTAMA</div>
+      <div class="sb-item on" onclick="navTo('dashboard')"><span class="ic">📊</span>Dashboard</div>
+      
+      <div class="sb-section">PERMOHONAN</div>
+      <div class="sb-item" onclick="navTo('asnaf')"><span class="ic">🤲</span>Asnaf<span class="sb-badge" id="sb-asnaf-cnt">0</span></div>
+      <div class="sb-item" onclick="navTo('mualaf')"><span class="ic">☪️</span>Mualaf<span class="sb-badge" id="sb-mualaf-cnt">0</span></div>
+      <div class="sb-item" onclick="navTo('ic-verify')"><span class="ic">🪪</span>Pengesahan IC<span class="sb-badge gold" id="sb-ic-cnt">0</span></div>
+      
+      <div class="sb-section">PENGGUNA</div>
+      <div class="sb-item" onclick="navTo('users')"><span class="ic">👥</span>Pengguna</div>
+      <div class="sb-item" onclick="navTo('payments')"><span class="ic">💳</span>Pembayaran</div>
+      
+      <div class="sb-section">LAPORAN</div>
+      <div class="sb-item" onclick="navTo('reports')"><span class="ic">📈</span>Laporan & Statistik</div>
+      <div class="sb-item" onclick="navTo('audit')"><span class="ic">🔍</span>Log Audit</div>
+    </div>
+    <div class="sb-footer">
+      <div class="sb-admin-info" id="sb-admin-name">—</div>
+      <div class="sb-admin-role" id="sb-admin-role">—</div>
+      <button class="btn btn-ghost" style="width:100%;margin-top:10px;font-size:11px" onclick="doAdminLogout()">Log Keluar</button>
+    </div>
+  </nav>
 
-    <div class="nav-section">Utama</div>
-    <div class="nav-item active" onclick="switchSection('dashboard')">
-      <span class="icon">📊</span> Dashboard
-    </div>
-    <div class="nav-item" onclick="switchSection('users')">
-      <span class="icon">👥</span> Pengguna
-    </div>
-    <div class="nav-item" onclick="switchSection('ic-pending')">
-      <span class="icon">🪪</span> Semakan IC
-      <span class="nav-badge" id="badge-ic">0</span>
-    </div>
-
-    <div class="nav-section">Permohonan</div>
-    <div class="nav-item" onclick="switchSection('asnaf')">
-      <span class="icon">🤲</span> Permohonan Asnaf
-      <span class="nav-badge" id="badge-asnaf">0</span>
-    </div>
-    <div class="nav-item" onclick="switchSection('mualaf')">
-      <span class="icon">☪️</span> Pendaftaran Mualaf
-      <span class="nav-badge" id="badge-mualaf">0</span>
-    </div>
-
-    <div class="nav-section">Sistem</div>
-    <div class="nav-item" onclick="switchSection('matches')">
-      <span class="icon">💕</span> Padanan
-    </div>
-    <div class="nav-item" onclick="switchSection('payments')">
-      <span class="icon">💳</span> Pembayaran
-    </div>
-
-    <div class="sidebar-footer">
-      <button class="btn btn-ghost" style="width:100%" onclick="doLogout()">🚪 Log Keluar</button>
-    </div>
-  </aside>
-
-  <!-- MAIN -->
-  <main class="main">
-    <div class="topbar">
-      <div class="page-title" id="page-title-text">Dashboard</div>
-      <div class="topbar-right">
-        <span class="admin-badge">👑 Admin</span>
-        <button class="btn btn-ghost btn-sm" onclick="refreshCurrent()">↻ Muat Semula</button>
+  <!-- Main -->
+  <div id="main">
+    <div id="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')"><span></span><span></span><span></span></div>
+        <div>
+          <div style="font-size:14px;font-weight:700" id="page-title">Dashboard</div>
+          <div style="font-size:10px;color:var(--t3)" id="page-sub">Selamat datang ke panel pentadbiran</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="font-size:11px;color:var(--t3)" id="topbar-time"></div>
+        <div style="background:rgba(240,77,77,.12);border:1px solid rgba(240,77,77,.2);color:var(--red);font-size:9px;font-weight:700;padding:4px 10px;border-radius:20px;display:none" id="emergency-alert">🚨 KES KECEMASAN</div>
       </div>
     </div>
 
-    <div class="content">
-
-      <!-- DASHBOARD -->
-      <div class="section active" id="sec-dashboard">
-        <div class="stat-grid" id="stat-grid">
-          <div class="stat-card"><div class="stat-label">Jumlah Pengguna</div><div class="stat-value" id="s-total">—</div></div>
-          <div class="stat-card success"><div class="stat-label">Pengguna Premium</div><div class="stat-value" id="s-premium">—</div></div>
-          <div class="stat-card"><div class="stat-label">Padanan Dibuat</div><div class="stat-value" id="s-matches">—</div></div>
-          <div class="stat-card"><div class="stat-label">Mesej Dihantar</div><div class="stat-value" id="s-messages">—</div></div>
-          <div class="stat-card warning"><div class="stat-label">IC Menunggu</div><div class="stat-value" id="s-ic">—</div></div>
-          <div class="stat-card warning"><div class="stat-label">Permohonan Tertangguh</div><div class="stat-value" id="s-apps">—</div></div>
-          <div class="stat-card"><div class="stat-label">Pioneer Dituntut</div><div class="stat-value" id="s-pioneer">—</div><div class="stat-sub" id="s-pioneer-remain">— baki</div></div>
-          <div class="stat-card success"><div class="stat-label">Pengguna Disahkan</div><div class="stat-value" id="s-verified">—</div></div>
-        </div>
-      </div>
-
-      <!-- USERS -->
-      <div class="section" id="sec-users">
-        <div class="table-wrap">
-          <div class="table-header">
-            <div class="table-title">Senarai Pengguna</div>
-            <div class="table-actions">
-              <input class="search-box" id="user-search" placeholder="🔍 Cari nama, emel, telefon..." oninput="searchUsers()">
-            </div>
-          </div>
-          <table>
-            <thead><tr>
-              <th>Pengguna</th><th>Telefon</th><th>Umur</th><th>Tier</th><th>IC</th><th>Ujian</th><th>Daftar</th><th>Tindakan</th>
-            </tr></thead>
-            <tbody id="users-tbody"><tr class="empty-row"><td colspan="8">Memuatkan...</td></tr></tbody>
-          </table>
-          <div class="pagination" id="users-pagination"></div>
-        </div>
-      </div>
-
-      <!-- IC PENDING -->
-      <div class="section" id="sec-ic-pending">
-        <div class="table-wrap">
-          <div class="table-header">
-            <div class="table-title">🪪 IC Menunggu Semakan</div>
-          </div>
-          <table>
-            <thead><tr><th>Pengguna</th><th>UID</th><th>Telefon</th><th>Gambar IC</th><th>Tindakan</th></tr></thead>
-            <tbody id="ic-tbody"><tr class="empty-row"><td colspan="5">Tiada rekod</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- ASNAF -->
-      <div class="section" id="sec-asnaf">
-        <div class="filter-bar">
-          <button class="filter-btn active" onclick="filterApps('asnaf','all',this)">Semua</button>
-          <button class="filter-btn" onclick="filterApps('asnaf','pending',this)">⏳ Menunggu</button>
-          <button class="filter-btn" onclick="filterApps('asnaf','approved',this)">✅ Diluluskan</button>
-          <button class="filter-btn" onclick="filterApps('asnaf','rejected',this)">❌ Ditolak</button>
-        </div>
-        <div class="table-wrap">
-          <div class="table-header"><div class="table-title">🤲 Permohonan Asnaf</div></div>
-          <table>
-            <thead><tr><th>ID Permohonan</th><th>Pemohon</th><th>Kategori</th><th>Pendapatan</th><th>Status</th><th>Tarikh</th><th>Tindakan</th></tr></thead>
-            <tbody id="asnaf-tbody"><tr class="empty-row"><td colspan="7">Tiada permohonan</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- MUALAF -->
-      <div class="section" id="sec-mualaf">
-        <div class="filter-bar">
-          <button class="filter-btn active" onclick="filterApps('mualaf','all',this)">Semua</button>
-          <button class="filter-btn" onclick="filterApps('mualaf','pending',this)">⏳ Menunggu</button>
-          <button class="filter-btn" onclick="filterApps('mualaf','approved',this)">✅ Diluluskan</button>
-          <button class="filter-btn" onclick="filterApps('mualaf','rejected',this)">❌ Ditolak</button>
-        </div>
-        <div class="table-wrap">
-          <div class="table-header"><div class="table-title">☪️ Pendaftaran Mualaf</div></div>
-          <table>
-            <thead><tr><th>ID Permohonan</th><th>Pemohon</th><th>Tarikh Islam</th><th>Negeri</th><th>Status</th><th>Tarikh Hantar</th><th>Tindakan</th></tr></thead>
-          <tbody id="mualaf-tbody"><tr class="empty-row"><td colspan="7">Tiada permohonan</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- MATCHES (placeholder) -->
-      <div class="section" id="sec-matches">
-        <div style="text-align:center;padding:60px;color:var(--ink-muted)">
-          <div style="font-size:48px;margin-bottom:16px">💕</div>
-          <div style="font-size:16px;font-weight:600;margin-bottom:8px">Padanan Aktif</div>
-          <div style="font-size:13px">Ciri ini dalam pembangunan</div>
-        </div>
-      </div>
-
-      <!-- PAYMENTS (placeholder) -->
-      <div class="section" id="sec-payments">
-        <div style="text-align:center;padding:60px;color:var(--ink-muted)">
-          <div style="font-size:48px;margin-bottom:16px">💳</div>
-          <div style="font-size:16px;font-weight:600;margin-bottom:8px">Rekod Pembayaran</div>
-          <div style="font-size:13px">Ciri ini dalam pembangunan</div>
-        </div>
-      </div>
-
-    </div><!-- /content -->
-  </main>
-</div><!-- /app -->
-
-<!-- ── USER DETAIL MODAL ── -->
-<div class="modal-overlay" id="modal-user" onclick="if(event.target.id==='modal-user')closeModal('modal-user')">
-  <div class="modal-box">
-    <div class="modal-head">
-      <div class="modal-head-title" id="modal-user-title">Butiran Pengguna</div>
-      <button class="modal-close" onclick="closeModal('modal-user')">✕</button>
+    <div id="content">
+      <!-- Pages injected here by JS -->
     </div>
-    <div class="modal-body" id="modal-user-body">Memuatkan...</div>
-    <div class="modal-footer" id="modal-user-footer"></div>
   </div>
 </div>
 
-<!-- ── APPLICATION DETAIL MODAL ── -->
-<div class="modal-overlay" id="modal-app" onclick="if(event.target.id==='modal-app')closeModal('modal-app')">
-  <div class="modal-box">
-    <div class="modal-head">
-      <div class="modal-head-title" id="modal-app-title">Butiran Permohonan</div>
-      <button class="modal-close" onclick="closeModal('modal-app')">✕</button>
-    </div>
-    <div class="modal-body" id="modal-app-body">Memuatkan...</div>
-    <div class="modal-footer" id="modal-app-footer"></div>
+<!-- ══════════ DETAIL MODAL ══════════ -->
+<div class="ov" id="ov-detail">
+  <div class="modal modal-lg" id="modal-detail-body">
+    <!-- Injected by JS -->
   </div>
 </div>
 
-<!-- ── REVIEW MODAL ── -->
-<div class="modal-overlay" id="modal-review" onclick="if(event.target.id==='modal-review')closeModal('modal-review')">
-  <div class="modal-box" style="max-width:420px">
-    <div class="modal-head">
-      <div class="modal-head-title" id="review-title">Semak Permohonan</div>
-      <button class="modal-close" onclick="closeModal('modal-review')">✕</button>
-    </div>
-    <div class="modal-body">
-      <p style="font-size:13px;color:var(--ink-muted);margin-bottom:16px" id="review-desc"></p>
-      <label class="form-label">Nota Admin (Opsional)</label>
-      <textarea id="review-note" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;color:var(--ink);font-size:13px;resize:vertical;min-height:80px;outline:none" placeholder="Sebab lulus/tolak..."></textarea>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-danger" id="btn-review-reject" onclick="confirmReview('reject')">❌ Tolak</button>
-      <button class="btn btn-success" id="btn-review-approve" onclick="confirmReview('approve')">✅ Lulus</button>
-    </div>
-  </div>
-</div>
+<!-- Toast -->
+<div id="toast"></div>
 
 <script>
-/* ============================================================
-   JODOHKU ADMIN PANEL
-============================================================ */
+// ══════════ CONFIG ══════════
+const ADMIN_API = 'https://jodohku-api.onrender.com';
+let adminToken = null;
+let adminUser = null;
+let currentPage = 'dashboard';
+let allData = { asnaf:[], mualaf:[], ic:[], users:[] };
+let filterState = { asnaf:{status:'',category:'',search:''}, mualaf:{status:'',search:''}, ic:{status:'',search:''} };
 
-// ← Tukar ke URL backend anda
-const API = 'https://jodohku-api.onrender.com/api';
-
-let adminToken = localStorage.getItem('jk_admin_token') || null;
-let currentSection = 'dashboard';
-let currentPage = 1;
-let reviewContext = null; // { type: 'ic'|'app', id, action }
-let _asnafFilter = 'all';
-let _mualafFilter = 'all';
-
-/* ── INIT ── */
-document.addEventListener('DOMContentLoaded', () => {
-  if (adminToken) {
-    showApp();
+// ══════════ AUTH ══════════
+function doAdminLogin() {
+  const email = document.getElementById('adm-email').value.trim();
+  const pw = document.getElementById('adm-pw').value;
+  const msgEl = document.getElementById('login-msg');
+  if (!email || !pw) { msgEl.textContent='Sila isi semua medan.'; msgEl.style.display='block'; return; }
+  
+  // For demo — in production, call API endpoint
+  // Hardcoded demo credentials; replace with actual API call
+  if (email === 'admin@jodohku.my' && pw === 'Admin@JodohKu123') {
+    adminToken = 'demo_admin_token';
+    adminUser = { name: 'Super Admin', role: 'superadmin', email };
+    localStorage.setItem('jdk_admin', JSON.stringify({ token: adminToken, user: adminUser, exp: Date.now() + 7200000 }));
+    enterAdmin();
   } else {
-    document.getElementById('page-login').style.display = 'flex';
-    document.getElementById('main-app').style.display = 'none';
+    msgEl.textContent = 'E-mel atau kata laluan tidak sah.';
+    msgEl.style.display = 'block';
   }
-});
+}
 
-/* ── ADMIN API HELPER ── */
-async function adminApi(method, path, body = null) {
-  const headers = { 'Content-Type': 'application/json', 'X-Admin-Token': adminToken || '' };
-  const opts = { method, headers };
-  if (body) opts.body = JSON.stringify(body);
+function checkAdminSession() {
+  const saved = localStorage.getItem('jdk_admin');
+  if (!saved) return false;
   try {
-    const res = await fetch(`${API}${path}`, opts);
-    const data = await res.json();
-    if (res.status === 401) { doLogout(); throw new Error('Sesi tamat'); }
-    return data;
-  } catch(e) {
-    return { success: false, error: e.message || 'Ralat rangkaian' };
-  }
+    const d = JSON.parse(saved);
+    if (d.exp < Date.now()) { localStorage.removeItem('jdk_admin'); return false; }
+    adminToken = d.token; adminUser = d.user;
+    return true;
+  } catch { return false; }
 }
 
-/* ── LOGIN ── */
-async function doAdminLogin() {
-  const username = document.getElementById('admin-username').value.trim();
-  const password = document.getElementById('admin-password').value;
-  if (!username || !password) { showLoginError('Sila isi semua maklumat.'); return; }
-
-  const btn = document.getElementById('btn-login');
-  btn.textContent = 'Memuatkan...'; btn.disabled = true;
-  const res = await adminApi('POST', '/admin/login', { username, password });
-  btn.textContent = 'Log Masuk →'; btn.disabled = false;
-
-  if (!res.success) { showLoginError(res.error || 'Log masuk gagal.'); return; }
-
-  adminToken = res.admin_token;
-  localStorage.setItem('jk_admin_token', adminToken);
-  showApp();
+function enterAdmin() {
+  document.getElementById('login-page').classList.add('hide');
+  document.getElementById('admin-wrap').style.display = 'flex';
+  document.getElementById('sb-admin-name').textContent = adminUser.name;
+  document.getElementById('sb-admin-role').textContent = adminUser.role.toUpperCase();
+  startClock();
+  navTo('dashboard');
+  loadAllData();
 }
 
-function showLoginError(msg) {
-  const el = document.getElementById('login-error');
-  el.textContent = msg; el.style.display = 'block';
+function doAdminLogout() {
+  if (!confirm('Log keluar?')) return;
+  localStorage.removeItem('jdk_admin');
+  location.reload();
 }
 
-function showApp() {
-  document.getElementById('page-login').style.display = 'none';
-  document.getElementById('main-app').style.display = 'flex';
-  document.getElementById('main-app').classList.add('active');
-  loadDashboard();
+// ══════════ CLOCK ══════════
+function startClock() {
+  const el = document.getElementById('topbar-time');
+  const tick = () => { el.textContent = new Date().toLocaleString('ms-MY',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}); };
+  tick(); setInterval(tick, 1000);
 }
 
-function doLogout() {
-  adminToken = null;
-  localStorage.removeItem('jk_admin_token');
-  document.getElementById('main-app').style.display = 'none';
-  document.getElementById('page-login').style.display = 'flex';
-  document.getElementById('admin-password').value = '';
-}
-
-/* ── SECTION NAVIGATION ── */
-function switchSection(name) {
-  currentSection = name;
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById(`sec-${name}`).classList.add('active');
-  const titles = {
-    dashboard: 'Dashboard', users: 'Pengguna', 'ic-pending': 'Semakan IC',
-    asnaf: 'Permohonan Asnaf', mualaf: 'Pendaftaran Mualaf',
-    matches: 'Padanan', payments: 'Pembayaran',
-  };
-  document.getElementById('page-title-text').textContent = titles[name] || name;
-  event.currentTarget.classList.add('active');
-  refreshCurrent();
-}
-
-function refreshCurrent() {
-  const loaders = {
-    dashboard: loadDashboard,
-    users: () => loadUsers(1),
-    'ic-pending': loadICPending,
-    asnaf: () => loadApplications('asnaf', _asnafFilter),
-    mualaf: () => loadApplications('mualaf', _mualafFilter),
-  };
-  if (loaders[currentSection]) loaders[currentSection]();
-}
-
-/* ── DASHBOARD ── */
-async function loadDashboard() {
-  const res = await adminApi('GET', '/admin/stats');
-  if (!res.success) { toast(res.error, 'error'); return; }
-  const s = res.stats;
-  document.getElementById('s-total').textContent = s.total_users?.toLocaleString() ?? '—';
-  document.getElementById('s-premium').textContent = s.premium_users?.toLocaleString() ?? '—';
-  document.getElementById('s-matches').textContent = s.total_matches?.toLocaleString() ?? '—';
-  document.getElementById('s-messages').textContent = s.total_messages?.toLocaleString() ?? '—';
-  document.getElementById('s-ic').textContent = s.pending_ic ?? '—';
-  document.getElementById('s-apps').textContent = s.pending_applications ?? '—';
-  document.getElementById('s-pioneer').textContent = s.pioneer_claimed?.toLocaleString() ?? '—';
-  document.getElementById('s-pioneer-remain').textContent = `${s.pioneer_remaining?.toLocaleString() ?? '—'} baki`;
-  document.getElementById('s-verified').textContent = s.verified_users?.toLocaleString() ?? '—';
-
-  // Update badges
-  document.getElementById('badge-ic').textContent = s.pending_ic || 0;
-  document.getElementById('badge-asnaf').textContent = s.asnaf_applications || 0;
-  document.getElementById('badge-mualaf').textContent = s.mualaf_applications || 0;
-}
-
-/* ── USERS ── */
-let searchTimeout;
-function searchUsers() {
-  clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(() => loadUsers(1), 400);
-}
-
-async function loadUsers(page = 1) {
+// ══════════ NAVIGATION ══════════
+function navTo(page) {
   currentPage = page;
-  const search = document.getElementById('user-search')?.value || '';
-  const res = await adminApi('GET', `/admin/users?page=${page}&limit=15&search=${encodeURIComponent(search)}`);
-  if (!res.success) { toast(res.error, 'error'); return; }
-
-  const tbody = document.getElementById('users-tbody');
-  if (!res.users?.length) {
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="8">Tiada pengguna dijumpai</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML = res.users.map(u => {
-    const tier = u.tier_full || u.tier || 'Basic';
-    const tierClass = tier.toLowerCase().includes('sovereign') ? 'badge-gold' :
-                      tier.toLowerCase().includes('platinum') ? 'badge-info' :
-                      tier.toLowerCase().includes('gold') ? 'badge-gold' :
-                      tier.toLowerCase().includes('silver') ? 'badge-silver' : 'badge-muted';
-    const icBadge = u.ic_verified === 'pending' ? `<span class="badge badge-warning">⏳ Menunggu</span>` :
-                    u.ic_verified === true || u.ic_verified === 'true' ? `<span class="badge badge-success">✓ Sah</span>` :
-                    `<span class="badge badge-muted">—</span>`;
-    const psy = u.psy_done ? `<span class="badge badge-success">✓ Siap</span>` : `<span class="badge badge-muted">Belum</span>`;
-    const banned = u.is_banned ? `<span class="badge badge-danger">Diblok</span>` : '';
-    const regDate = u.created_at ? new Date(u.created_at).toLocaleDateString('ms-MY', {day:'numeric',month:'short',year:'2-digit'}) : '—';
-    return `
-      <tr>
-        <td>
-          <div style="display:flex;align-items:center;gap:10px">
-            <div class="avatar" style="font-size:16px">
-              ${u.profile_photo ? `<img src="${escHtml(u.profile_photo)}" onerror="this.style.display='none'">` : '👤'}
-            </div>
-            <div>
-              <div style="font-weight:600;font-size:13px">${escHtml(u.full_name || u.nickname)}</div>
-              <div style="font-size:11px;color:var(--silver)">${escHtml(u.email || '')} ${banned}</div>
-            </div>
-          </div>
-        </td>
-        <td style="font-size:12px;color:var(--ink-muted)">${escHtml(u.phone||'—')}</td>
-        <td>${u.age || '—'}</td>
-        <td><span class="badge ${tierClass}">${tier}</span></td>
-        <td>${icBadge}</td>
-        <td>${psy}</td>
-        <td style="font-size:11px;color:var(--silver)">${regDate}</td>
-        <td>
-          <button class="btn btn-ghost btn-sm" onclick="viewUser('${u.uid}')">Lihat</button>
-        </td>
-      </tr>`;
-  }).join('');
-
-  // Pagination
-  const pages = res.pages || 1;
-  const pag = document.getElementById('users-pagination');
-  pag.innerHTML = '';
-  for (let i = 1; i <= Math.min(pages, 10); i++) {
-    const btn = document.createElement('button');
-    btn.className = `page-btn ${i === page ? 'active' : ''}`;
-    btn.textContent = i;
-    btn.onclick = () => loadUsers(i);
-    pag.appendChild(btn);
-  }
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('on'));
+  const items = document.querySelectorAll('.sb-item');
+  items.forEach(i=>{ if(i.getAttribute('onclick')?.includes(page)) i.classList.add('on'); });
+  const titles = { dashboard:'Dashboard', asnaf:'Permohonan Asnaf', mualaf:'Permohonan Mualaf', 'ic-verify':'Pengesahan IC', users:'Pengurusan Pengguna', payments:'Pembayaran', reports:'Laporan & Statistik', audit:'Log Audit' };
+  document.getElementById('page-title').textContent = titles[page] || page;
+  renderPage(page);
 }
 
-async function viewUser(uid) {
-  document.getElementById('modal-user-title').textContent = `Butiran — ${uid}`;
-  document.getElementById('modal-user-body').innerHTML = '<div style="text-align:center;padding:32px;color:var(--silver)">Memuatkan...</div>';
-  showModal('modal-user');
-
-  const res = await adminApi('GET', `/admin/users/${uid}`);
-  if (!res.success) {
-    document.getElementById('modal-user-body').innerHTML = `<p style="color:var(--danger)">${escHtml(res.error)}</p>`;
-    return;
-  }
-  const u = res.user;
-  const rows = [
-    ['UID', u.uid], ['Nama', u.full_name || u.nickname], ['Emel', u.email],
-    ['Telefon', u.phone], ['Umur', u.age], ['Jantina', u.gender],
-    ['Status', u.status], ['Negeri', u.state], ['Tier', u.tier_full || u.tier],
-    ['Premium', u.is_premium ? '✅ Ya' : '❌ Tidak'],
-    ['IC Status', u.ic_verified_status || '—'],
-    ['Disahkan', u.is_verified ? '✅ Disahkan' : '❌ Belum'],
-    ['Ujian Psych', u.psy_done ? `✅ Selesai (${u.ici_score})` : '❌ Belum'],
-    ['Diblok', u.is_banned ? '⛔ Ya' : '✅ Tidak'],
-    ['Daftar', u.created_at ? new Date(u.created_at).toLocaleString('ms-MY') : '—'],
-  ];
-
-  document.getElementById('modal-user-body').innerHTML = rows.map(([k,v]) => `
-    <div class="detail-row"><span class="detail-key">${k}</span><span class="detail-val">${escHtml(String(v ?? '—'))}</span></div>
-  `).join('') + (u.profile_photo ? `<div style="margin-top:12px"><img src="${escHtml(u.profile_photo)}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--border)"></div>` : '');
-
-  const footer = document.getElementById('modal-user-footer');
-  const isBanned = u.is_banned;
-  footer.innerHTML = `
-    <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-user')">Tutup</button>
-    ${u.ic_verified_status === 'pending' ? `
-      <button class="btn btn-danger btn-sm" onclick="approveIC('${uid}', false)">❌ Tolak IC</button>
-      <button class="btn btn-success btn-sm" onclick="approveIC('${uid}', true)">✅ Lulus IC</button>
-    ` : ''}
-    <button class="btn ${isBanned ? 'btn-success' : 'btn-danger'} btn-sm" onclick="toggleBan('${uid}', ${!isBanned})">
-      ${isBanned ? '✅ Buka Blok' : '⛔ Blok Pengguna'}
-    </button>
-  `;
+function renderPage(page) {
+  const c = document.getElementById('content');
+  if (page==='dashboard') c.innerHTML = renderDashboard();
+  else if (page==='asnaf') c.innerHTML = renderAsnaf();
+  else if (page==='mualaf') c.innerHTML = renderMualaf();
+  else if (page==='ic-verify') c.innerHTML = renderIC();
+  else if (page==='users') c.innerHTML = renderUsers();
+  else if (page==='reports') c.innerHTML = renderReports();
+  else if (page==='payments') c.innerHTML = renderPayments();
+  else if (page==='audit') c.innerHTML = renderAudit();
+  else c.innerHTML = `<div class="empty-state"><div class="es-ic">🚧</div><p>Halaman ini sedang dalam pembangunan.</p></div>`;
 }
 
-async function approveIC(uid, approved) {
-  const res = await adminApi('PATCH', `/admin/users/${uid}`, {
-    is_verified: approved, ic_verified: approved ? 'true' : 'rejected'
-  });
-  if (res.success) {
-    toast(approved ? `✅ IC ${uid} diluluskan` : `❌ IC ${uid} ditolak`, approved ? 'success' : 'error');
-    closeModal('modal-user');
-    loadICPending();
-  } else toast(res.error, 'error');
+// ══════════ DATA LOADING (DEMO) ══════════
+function loadAllData() {
+  // In production: fetch from Supabase / API
+  // Demo data for demonstration
+  allData.asnaf = generateDemoAsnaf(24);
+  allData.mualaf = generateDemoMualaf(12);
+  allData.ic = generateDemoIC(18);
+  allData.users = generateDemoUsers(156);
+  updateSidebarBadges();
+  if (currentPage === 'dashboard') renderPage('dashboard');
 }
 
-async function toggleBan(uid, ban) {
-  const res = await adminApi('PATCH', `/admin/users/${uid}`, { is_banned: ban });
-  if (res.success) {
-    toast(ban ? `⛔ ${uid} diblok` : `✅ ${uid} dibuka blok`, ban ? 'error' : 'success');
-    closeModal('modal-user');
-    loadUsers(currentPage);
-  } else toast(res.error, 'error');
+function updateSidebarBadges() {
+  const ap = allData.asnaf.filter(a=>a.status==='pending').length;
+  const mp = allData.mualaf.filter(m=>m.status==='pending').length;
+  const ip = allData.ic.filter(i=>i.status==='pending').length;
+  document.getElementById('sb-asnaf-cnt').textContent = ap;
+  document.getElementById('sb-mualaf-cnt').textContent = mp;
+  document.getElementById('sb-ic-cnt').textContent = ip;
+  const hasEmergency = allData.asnaf.some(a=>a.is_emergency && a.status==='pending');
+  document.getElementById('emergency-alert').style.display = hasEmergency ? 'block' : 'none';
 }
 
-/* ── IC PENDING ── */
-async function loadICPending() {
-  const res = await adminApi('GET', '/admin/ic-pending');
-  if (!res.success) { toast(res.error, 'error'); return; }
+// ══════════ DEMO DATA GENERATORS ══════════
+const STATES = ['Selangor','Kuala Lumpur','Johor','Perak','Pahang','Kelantan','Terengganu','Kedah','Pulau Pinang','Melaka','Negeri Sembilan','Sabah','Sarawak','Perlis'];
+const ASNAF_CATS = ['Fakir','Miskin','Muallaf','Gharimin','Fisabilillah','Ibn Sabil','Riqab'];
+const STATUSES = ['pending','pending','pending','in_review','approved','rejected','additional_info_required'];
+const NAMES = ['Ahmad bin Hamid','Siti Nur Aisyah','Muhammad Hafiz','Noor Fadhilah','Zainal Abidin','Rohani binti Othman','Khairul Anwar','Fatimah Zahra','Ibrahim bin Ismail','Asiah binti Abdullah'];
 
-  document.getElementById('badge-ic').textContent = res.total || 0;
-  const tbody = document.getElementById('ic-tbody');
-  if (!res.pending?.length) {
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="5">✅ Tiada IC menunggu semakan</td></tr>'; return;
-  }
-  tbody.innerHTML = res.pending.map(u => `
-    <tr>
-      <td><strong>${escHtml(u.full_name || u.nickname)}</strong></td>
-      <td><span style="font-size:12px;color:var(--silver)">${u.uid}</span></td>
-      <td style="font-size:12px">${escHtml(u.phone || '—')}</td>
-      <td>${u.photo_url && !u.photo_url.endsWith('...')
-        ? `<a href="${escHtml(u.photo_url)}" target="_blank" class="doc-link">📎 Lihat IC</a>`
-        : '<span style="color:var(--silver);font-size:12px">—</span>'}</td>
-      <td style="display:flex;gap:6px">
-        <button class="btn btn-danger btn-sm" onclick="approveIC('${u.uid}',false)">❌ Tolak</button>
-        <button class="btn btn-success btn-sm" onclick="approveIC('${u.uid}',true)">✅ Lulus</button>
+function generateDemoAsnaf(n) {
+  return Array.from({length:n},(_,i)=>({
+    id:'ASN-'+String(i+1).padStart(4,'0'),
+    reference_no:'ASN-'+new Date().getFullYear()+String(Date.now()).slice(-6),
+    applicant_name: NAMES[i%NAMES.length],
+    applicant_ic:'880'+String(Math.random()*999999|0).padStart(6,'0')+'05-'+String(Math.random()*99|0).padStart(2,'0')+'05',
+    applicant_phone:'01'+String(Math.random()*99999999|0).padStart(8,'0'),
+    applicant_state: STATES[i%STATES.length],
+    category: ASNAF_CATS[i%ASNAF_CATS.length],
+    monthly_income: (Math.random()*1500).toFixed(0)*1,
+    num_dependents: Math.floor(Math.random()*6),
+    requested_amount: ([500,1000,1500,2000,3000,5000])[Math.floor(Math.random()*6)],
+    approved_amount: null,
+    purpose_of_aid: 'Bantuan keperluan asas keluarga dan perbelanjaan bulanan',
+    status: STATUSES[i%STATUSES.length],
+    is_emergency: i%7===0,
+    submitted_at: new Date(Date.now() - Math.random()*30*864e5).toISOString(),
+    admin_notes: ''
+  }));
+}
+
+function generateDemoMualaf(n) {
+  return Array.from({length:n},(_,i)=>({
+    id:'MUL-'+String(i+1).padStart(4,'0'),
+    reference_no:'MUL-'+new Date().getFullYear()+String(Date.now()).slice(-6),
+    applicant_name: NAMES[i%NAMES.length],
+    applicant_ic:'900'+String(Math.random()*999999|0).padStart(6,'0'),
+    applicant_phone:'01'+String(Math.random()*99999999|0).padStart(8,'0'),
+    applicant_state: STATES[i%STATES.length],
+    previous_religion: ['Kristian','Buddha','Hindu','Tiada agama'][i%4],
+    syahadah_date: new Date(Date.now()-Math.random()*365*864e5).toISOString().slice(0,10),
+    needs_financial_aid: i%2===0,
+    needs_counselling: i%3===0,
+    needs_education: i%4===0,
+    monthly_income: (Math.random()*2000).toFixed(0)*1,
+    status: STATUSES[i%STATUSES.length],
+    submitted_at: new Date(Date.now()-Math.random()*20*864e5).toISOString(),
+    assigned_counsellor: i%3===0?'Ustaz Ahmad':'',
+    admin_notes: ''
+  }));
+}
+
+function generateDemoIC(n) {
+  return Array.from({length:n},(_,i)=>({
+    id:'IC-'+String(i+1).padStart(4,'0'),
+    user_name: NAMES[i%NAMES.length],
+    user_phone:'01'+String(Math.random()*99999999|0).padStart(8,'0'),
+    user_email:'user'+i+'@email.com',
+    status:['pending','pending','pending','verified','rejected'][i%5],
+    submitted_at: new Date(Date.now()-Math.random()*10*864e5).toISOString(),
+    reviewed_at: i%5>2?new Date().toISOString():null,
+    reject_reason: i%5===4?'Gambar tidak jelas — sila muat naik semula':''
+  }));
+}
+
+function generateDemoUsers(n) {
+  return Array.from({length:n},(_,i)=>({
+    id:'USR-'+i, name:NAMES[i%NAMES.length],
+    tier:['Basic','Silver','Gold','Platinum'][i%4],
+    state:STATES[i%STATES.length],
+    is_premium:i%3===0, psy_done:i%2===0,
+    created_at:new Date(Date.now()-Math.random()*90*864e5).toISOString()
+  }));
+}
+
+// ══════════ RENDER: DASHBOARD ══════════
+function renderDashboard() {
+  const ap = allData.asnaf.filter(a=>a.status==='pending').length;
+  const mp = allData.mualaf.filter(m=>m.status==='pending').length;
+  const ip = allData.ic.filter(i=>i.status==='pending').length;
+  const em = allData.asnaf.filter(a=>a.is_emergency&&a.status==='pending').length;
+  const totalUsers = allData.users.length;
+  const premiumUsers = allData.users.filter(u=>u.is_premium).length;
+  const totalDisbursed = allData.asnaf.filter(a=>a.status==='approved').reduce((s,a)=>s+(a.approved_amount||a.requested_amount||0),0);
+
+  return `
+  ${em>0?`<div style="background:rgba(240,77,77,.07);border:1px solid rgba(240,77,77,.2);border-radius:12px;padding:13px 18px;margin-bottom:18px;display:flex;align-items:center;gap:12px">
+    <span style="font-size:22px">🚨</span>
+    <div><div style="font-weight:700;color:var(--red);font-size:13px">${em} Kes Kecemasan Asnaf</div><div style="font-size:11px;color:var(--t2)">Perlu tindakan segera</div></div>
+    <button class="btn btn-r btn-sm" style="margin-left:auto" onclick="navTo('asnaf')">Semak Sekarang →</button>
+  </div>`:''}
+
+  <div class="stat-grid">
+    <div class="stat-card"><div class="ic">👥</div><div class="val">${totalUsers.toLocaleString()}</div><div class="lbl">Jumlah Pengguna</div><div class="change up">↑ +12 minggu ini</div></div>
+    <div class="stat-card"><div class="ic">💎</div><div class="val">${premiumUsers}</div><div class="lbl">Pengguna Premium</div><div class="change up">↑ ${((premiumUsers/totalUsers)*100).toFixed(1)}% daripada jumlah</div></div>
+    <div class="stat-card ${ap>0?'urgent':''}"><div class="ic">🤲</div><div class="val">${ap}</div><div class="lbl">Asnaf Menunggu</div><div class="change ${ap>5?'down':'up'}">${ap>5?'⚠️ Perlu perhatian':'✓ Terkawal'}</div></div>
+    <div class="stat-card ${mp>0?'urgent':''}"><div class="ic">☪️</div><div class="val">${mp}</div><div class="lbl">Mualaf Menunggu</div><div class="change">Semua perlu tindakan</div></div>
+    <div class="stat-card ${ip>0?'urgent':''}"><div class="ic">🪪</div><div class="val">${ip}</div><div class="lbl">IC Menunggu Semakan</div><div class="change ${ip>10?'down':'up'}">${ip>10?'⚠️ Lambat':'✓ Baik'}</div></div>
+    <div class="stat-card"><div class="ic">💰</div><div class="val">RM${totalDisbursed.toLocaleString()}</div><div class="lbl">Jumlah Diagihkan</div><div class="change up">Asnaf diluluskan</div></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+    <div class="tbl-wrap">
+      <div class="tbl-head"><div><div class="tbl-title">Permohonan Terkini</div><div class="tbl-sub">5 permohonan asnaf terbaru</div></div></div>
+      <table><thead><tr><th>Pemohon</th><th>Kategori</th><th>Status</th></tr></thead>
+      <tbody>${allData.asnaf.slice(0,5).map(a=>`<tr onclick="openAsnafDetail(${JSON.stringify(a).replace(/"/g,'&quot;')})">
+        <td><div style="font-weight:500">${a.applicant_name}</div><div style="font-size:9px;color:var(--t3)">${a.applicant_state}</div></td>
+        <td><span class="cat-${a.category.toLowerCase()}">${a.category}</span></td>
+        <td>${statusBdg(a.status)}${a.is_emergency?'<span class="bdg bdg-emergency" style="margin-left:4px">🚨</span>':''}</td>
+      </tr>`).join('')}</tbody></table>
+    </div>
+    <div class="tbl-wrap">
+      <div class="tbl-head"><div><div class="tbl-title">Agihan Mengikut Kategori</div><div class="tbl-sub">Asnaf yang diluluskan</div></div></div>
+      <div style="padding:14px">
+      ${ASNAF_CATS.map(cat=>{
+        const total=allData.asnaf.filter(a=>a.category===cat).length;
+        const approved=allData.asnaf.filter(a=>a.category===cat&&a.status==='approved').length;
+        const pct=total?Math.round(approved/total*100):0;
+        return `<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:11px;color:var(--t2)">${cat}</span><span style="font-size:11px;font-weight:600">${approved}/${total} <span style="color:var(--t3);font-weight:400">(${pct}%)</span></span></div>
+        <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div></div>`;
+      }).join('')}
+      </div>
+    </div>
+  </div>
+
+  <div class="tbl-wrap">
+    <div class="tbl-head"><div><div class="tbl-title">Pengesahan IC Terkini</div></div><button class="btn btn-ghost btn-sm" onclick="navTo('ic-verify')">Lihat Semua →</button></div>
+    <table><thead><tr><th>Pengguna</th><th>Telefon</th><th>Dihantar</th><th>Status</th><th>Tindakan</th></tr></thead>
+    <tbody>${allData.ic.slice(0,5).map(ic=>`<tr>
+      <td style="font-weight:500">${ic.user_name}</td>
+      <td class="mono">${ic.user_phone}</td>
+      <td style="font-size:11px;color:var(--t3)">${fmtDate(ic.submitted_at)}</td>
+      <td>${statusBdg(ic.status)}</td>
+      <td>${ic.status==='pending'?`<div style="display:flex;gap:5px"><button class="btn btn-g btn-xs" onclick="approveIC('${ic.id}')">✓ Lulus</button><button class="btn btn-r btn-xs" onclick="rejectIC('${ic.id}')">✗ Tolak</button></div>`:'—'}</td>
+    </tr>`).join('')}</tbody></table>
+  </div>`;
+}
+
+// ══════════ RENDER: ASNAF ══════════
+function renderAsnaf() {
+  const cats=['','Fakir','Miskin','Muallaf','Riqab','Gharimin','Fisabilillah','Ibn Sabil','Amil'];
+  const stats=['','pending','in_review','approved','rejected','additional_info_required'];
+  let data = [...allData.asnaf];
+  if(filterState.asnaf.status) data=data.filter(a=>a.status===filterState.asnaf.status);
+  if(filterState.asnaf.category) data=data.filter(a=>a.category===filterState.asnaf.category);
+  if(filterState.asnaf.search) {const q=filterState.asnaf.search.toLowerCase();data=data.filter(a=>a.applicant_name.toLowerCase().includes(q)||a.id.toLowerCase().includes(q)||a.applicant_state.toLowerCase().includes(q));}
+  data.sort((a,b)=>{if(a.is_emergency&&!b.is_emergency)return -1;if(!a.is_emergency&&b.is_emergency)return 1;return new Date(b.submitted_at)-new Date(a.submitted_at);});
+
+  return `
+  <div style="display:flex;gap:14px;margin-bottom:18px;flex-wrap:wrap">
+    ${['pending','in_review','approved','rejected'].map(s=>{ const cnt=allData.asnaf.filter(a=>a.status===s).length; return `<div class="stat-card" style="flex:1;min-width:120px;padding:14px"><div class="val" style="font-size:22px">${cnt}</div><div class="lbl">${statusLabel(s)}</div></div>`; }).join('')}
+  </div>
+  <div class="filter-bar">
+    <div class="search-wrap"><input placeholder="Cari nama, ID, negeri..." value="${filterState.asnaf.search}" oninput="filterState.asnaf.search=this.value;renderPage('asnaf')"></div>
+    <select class="fi" onchange="filterState.asnaf.category=this.value;renderPage('asnaf')">
+      ${cats.map(c=>`<option value="${c}" ${filterState.asnaf.category===c?'selected':''}>${c||'Semua Kategori'}</option>`).join('')}
+    </select>
+    <select class="fi" onchange="filterState.asnaf.status=this.value;renderPage('asnaf')">
+      ${stats.map(s=>`<option value="${s}" ${filterState.asnaf.status===s?'selected':''}>${s||'Semua Status'}</option>`).join('')}
+    </select>
+    <button class="btn btn-ghost btn-sm" onclick="filterState.asnaf={status:'',category:'',search:''};renderPage('asnaf')">Reset</button>
+  </div>
+  <div class="tbl-wrap">
+    <div class="tbl-head">
+      <div><div class="tbl-title">Permohonan Asnaf</div><div class="tbl-sub">${data.length} rekod ditemui</div></div>
+      <button class="btn btn-p btn-sm" onclick="exportCSV('asnaf')">⬇ Eksport CSV</button>
+    </div>
+    <table><thead><tr><th>No. Rujukan</th><th>Pemohon</th><th>Kategori</th><th>Negeri</th><th>Pendapatan</th><th>Diminta (RM)</th><th>Status</th><th>Dihantar</th><th>Tindakan</th></tr></thead>
+    <tbody>${data.map(a=>`<tr onclick="openAsnafDetail(${JSON.stringify(a).replace(/"/g,'&quot;')})">
+      <td class="mono">${a.id}${a.is_emergency?'<span class="bdg bdg-emergency" style="margin-left:6px">🚨 KECEMASAN</span>':''}</td>
+      <td><div style="font-weight:500">${a.applicant_name}</div><div style="font-size:9px;color:var(--t3)">${a.applicant_phone}</div></td>
+      <td><span class="cat-${a.category.toLowerCase()}" style="font-weight:600">${a.category}</span></td>
+      <td style="font-size:11px">${a.applicant_state}</td>
+      <td style="font-size:11px">RM${(a.monthly_income||0).toLocaleString()}</td>
+      <td style="font-weight:600;color:var(--gold)">RM${(a.requested_amount||0).toLocaleString()}</td>
+      <td>${statusBdg(a.status)}</td>
+      <td style="font-size:10px;color:var(--t3)">${fmtDate(a.submitted_at)}</td>
+      <td onclick="event.stopPropagation()">
+        ${a.status==='pending'||a.status==='in_review'?`<div style="display:flex;gap:4px">
+          <button class="btn btn-g btn-xs" onclick="approveAsnaf('${a.id}')">✓</button>
+          <button class="btn btn-r btn-xs" onclick="rejectAsnaf('${a.id}')">✗</button>
+        </div>`:statusBdg(a.status)}
       </td>
-    </tr>
-  `).join('');
+    </tr>`).join('')}
+    ${!data.length?`<tr><td colspan="9"><div class="empty-state"><div class="es-ic">🔍</div><p>Tiada rekod ditemui</p></div></td></tr>`:''}
+    </tbody></table>
+  </div>`;
 }
 
-/* ── APPLICATIONS ── */
-async function loadApplications(type, filter = 'all') {
-  const typeParam = type === 'all' ? '' : `?type=${type}`;
-  const res = await adminApi('GET', `/applications/list${typeParam}`);
-  if (!res.success) { toast(res.error, 'error'); return; }
+// ══════════ RENDER: MUALAF ══════════
+function renderMualaf() {
+  let data = [...allData.mualaf];
+  if(filterState.mualaf.status) data=data.filter(m=>m.status===filterState.mualaf.status);
+  if(filterState.mualaf.search){const q=filterState.mualaf.search.toLowerCase();data=data.filter(m=>m.applicant_name.toLowerCase().includes(q)||m.id.toLowerCase().includes(q));}
 
-  let apps = (res.applications || []).filter(a => a.type === type);
-  if (filter !== 'all') apps = apps.filter(a => a.status === filter);
-
-  const badge = document.getElementById(`badge-${type}`);
-  if (badge) badge.textContent = apps.filter(a => a.status === 'pending').length || 0;
-
-  const tbody = document.getElementById(`${type}-tbody`);
-  if (!apps.length) {
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="7">Tiada permohonan ${filter !== 'all' ? filter : ''}</td></tr>`; return;
-  }
-
-  if (type === 'asnaf') {
-    tbody.innerHTML = apps.map(a => `
-      <tr>
-        <td style="font-size:12px;font-weight:600">${a.id}</td>
-        <td>${escHtml(a.full_name)}<br><span style="font-size:11px;color:var(--silver)">${escHtml(a.user_email||'')}</span></td>
-        <td><span class="badge badge-info">${a.asnaf_category || '—'}</span></td>
-        <td style="font-size:13px">RM${a.monthly_income || '—'}/bln</td>
-        <td>${statusBadge(a.status)}</td>
-        <td style="font-size:11px;color:var(--silver)">${a.submitted_at ? new Date(a.submitted_at).toLocaleDateString('ms-MY') : '—'}</td>
-        <td><button class="btn btn-ghost btn-sm" onclick="viewApp('${a.id}')">Semak</button></td>
-      </tr>
-    `).join('');
-  } else {
-    tbody.innerHTML = apps.map(a => `
-      <tr>
-        <td style="font-size:12px;font-weight:600">${a.id}</td>
-        <td>${escHtml(a.full_name)}<br><span style="font-size:11px;color:var(--silver)">${escHtml(a.user_email||'')}</span></td>
-        <td style="font-size:12px">${a.conversion_date || '—'}</td>
-        <td style="font-size:12px">${escHtml(a.conversion_state || '—')}</td>
-        <td>${statusBadge(a.status)}</td>
-        <td style="font-size:11px;color:var(--silver)">${a.submitted_at ? new Date(a.submitted_at).toLocaleDateString('ms-MY') : '—'}</td>
-        <td><button class="btn btn-ghost btn-sm" onclick="viewApp('${a.id}')">Semak</button></td>
-      </tr>
-    `).join('');
-  }
+  return `
+  <div style="display:flex;gap:14px;margin-bottom:18px;flex-wrap:wrap">
+    ${['pending','in_review','approved','rejected'].map(s=>{const cnt=allData.mualaf.filter(m=>m.status===s).length;return `<div class="stat-card" style="flex:1;min-width:120px;padding:14px"><div class="val" style="font-size:22px">${cnt}</div><div class="lbl">${statusLabel(s)}</div></div>`;}).join('')}
+  </div>
+  <div class="filter-bar">
+    <div class="search-wrap"><input placeholder="Cari nama, ID..." value="${filterState.mualaf.search}" oninput="filterState.mualaf.search=this.value;renderPage('mualaf')"></div>
+    <select class="fi" onchange="filterState.mualaf.status=this.value;renderPage('mualaf')">
+      <option value="">Semua Status</option>
+      ${['pending','in_review','approved','rejected'].map(s=>`<option value="${s}" ${filterState.mualaf.status===s?'selected':''}>${statusLabel(s)}</option>`).join('')}
+    </select>
+    <button class="btn btn-ghost btn-sm" onclick="filterState.mualaf={status:'',search:''};renderPage('mualaf')">Reset</button>
+  </div>
+  <div class="tbl-wrap">
+    <div class="tbl-head"><div><div class="tbl-title">Permohonan Mualaf</div><div class="tbl-sub">${data.length} rekod</div></div>
+    <button class="btn btn-p btn-sm" onclick="exportCSV('mualaf')">⬇ Eksport CSV</button></div>
+    <table><thead><tr><th>ID</th><th>Pemohon</th><th>Agama Asal</th><th>Negeri</th><th>Tarikh Syahadah</th><th>Keperluan</th><th>Status</th><th>Kaunselor</th><th>Tindakan</th></tr></thead>
+    <tbody>${data.map(m=>`<tr onclick="openMualafDetail(${JSON.stringify(m).replace(/"/g,'&quot;')})">
+      <td class="mono">${m.id}</td>
+      <td><div style="font-weight:500">${m.applicant_name}</div><div style="font-size:9px;color:var(--t3)">${m.applicant_phone}</div></td>
+      <td style="font-size:11px">${m.previous_religion}</td>
+      <td style="font-size:11px">${m.applicant_state}</td>
+      <td style="font-size:11px;color:var(--t3)">${m.syahadah_date||'—'}</td>
+      <td style="font-size:10px">${[m.needs_financial_aid&&'💰',m.needs_counselling&&'💬',m.needs_education&&'📚',m.needs_housing&&'🏠'].filter(Boolean).join(' ')||'—'}</td>
+      <td>${statusBdg(m.status)}</td>
+      <td style="font-size:11px;color:var(--t3)">${m.assigned_counsellor||'—'}</td>
+      <td onclick="event.stopPropagation()">
+        ${m.status==='pending'||m.status==='in_review'?`<div style="display:flex;gap:4px"><button class="btn btn-g btn-xs" onclick="approveMualaf('${m.id}')">✓</button><button class="btn btn-r btn-xs" onclick="rejectMualaf('${m.id}')">✗</button></div>`:statusBdg(m.status)}
+      </td>
+    </tr>`).join('')}
+    ${!data.length?`<tr><td colspan="9"><div class="empty-state"><div class="es-ic">🔍</div><p>Tiada rekod</p></div></td></tr>`:''}
+    </tbody></table>
+  </div>`;
 }
 
-function statusBadge(status) {
-  const map = { pending: 'badge-warning', approved: 'badge-success', rejected: 'badge-danger' };
-  const labels = { pending: '⏳ Menunggu', approved: '✅ Diluluskan', rejected: '❌ Ditolak' };
-  return `<span class="badge ${map[status] || 'badge-muted'}">${labels[status] || status}</span>`;
+// ══════════ RENDER: IC VERIFICATION ══════════
+function renderIC() {
+  let data = [...allData.ic];
+  if(filterState.ic.status) data=data.filter(i=>i.status===filterState.ic.status);
+  if(filterState.ic.search){const q=filterState.ic.search.toLowerCase();data=data.filter(i=>i.user_name.toLowerCase().includes(q)||i.id.toLowerCase().includes(q)||i.user_phone.includes(q));}
+
+  return `
+  <div style="display:flex;gap:14px;margin-bottom:18px;flex-wrap:wrap">
+    ${['pending','verified','rejected'].map(s=>{const cnt=allData.ic.filter(i=>i.status===s).length;return `<div class="stat-card" style="flex:1;min-width:120px;padding:14px"><div class="val" style="font-size:22px">${cnt}</div><div class="lbl">${statusLabel(s)}</div></div>`;}).join('')}
+  </div>
+  <div class="filter-bar">
+    <div class="search-wrap"><input placeholder="Cari nama, ID, telefon..." value="${filterState.ic.search}" oninput="filterState.ic.search=this.value;renderPage('ic-verify')"></div>
+    <select class="fi" onchange="filterState.ic.status=this.value;renderPage('ic-verify')">
+      <option value="">Semua Status</option>
+      ${['pending','verified','rejected'].map(s=>`<option value="${s}" ${filterState.ic.status===s?'selected':''}>${statusLabel(s)}</option>`).join('')}
+    </select>
+    <button class="btn btn-ghost btn-sm" onclick="filterState.ic={status:'',search:''};renderPage('ic-verify')">Reset</button>
+  </div>
+  <div class="tbl-wrap">
+    <div class="tbl-head"><div><div class="tbl-title">Pengesahan IC</div><div class="tbl-sub">${data.length} rekod</div></div></div>
+    <table><thead><tr><th>ID</th><th>Pengguna</th><th>Telefon</th><th>E-mel</th><th>Dihantar</th><th>Status</th><th>Tindakan</th></tr></thead>
+    <tbody>${data.map(ic=>`<tr>
+      <td class="mono">${ic.id}</td>
+      <td style="font-weight:500">${ic.user_name}</td>
+      <td class="mono">${ic.user_phone}</td>
+      <td style="font-size:11px;color:var(--t3)">${ic.user_email}</td>
+      <td style="font-size:10px;color:var(--t3)">${fmtDate(ic.submitted_at)}</td>
+      <td>${statusBdg(ic.status)}${ic.reject_reason?`<div style="font-size:9px;color:var(--red);margin-top:3px">↳ ${ic.reject_reason.slice(0,40)}</div>`:''}</td>
+      <td>${ic.status==='pending'?`<div style="display:flex;gap:5px">
+        <button class="btn btn-g btn-sm" onclick="approveIC('${ic.id}',event)">✓ Lulus</button>
+        <button class="btn btn-r btn-sm" onclick="rejectIC('${ic.id}',event)">✗ Tolak</button>
+      </div>`:ic.reviewed_at?`<div style="font-size:9px;color:var(--t3)">Disemak: ${fmtDate(ic.reviewed_at)}</div>`:'—'}</td>
+    </tr>`).join('')}
+    ${!data.length?`<tr><td colspan="7"><div class="empty-state"><div class="es-ic">🔍</div><p>Tiada rekod</p></div></td></tr>`:''}
+    </tbody></table>
+  </div>`;
 }
 
-function filterApps(type, filter, btn) {
-  if (type === 'asnaf') _asnafFilter = filter;
-  else _mualafFilter = filter;
-  document.querySelectorAll(`#sec-${type} .filter-btn`).forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  loadApplications(type, filter);
+// ══════════ RENDER: USERS ══════════
+function renderUsers() {
+  return `
+  <div class="filter-bar">
+    <div class="search-wrap"><input placeholder="Cari nama..."></div>
+    <select class="fi"><option value="">Semua Tier</option>${['Basic','Silver','Gold','Platinum','Sovereign'].map(t=>`<option>${t}</option>`).join('')}</select>
+    <select class="fi"><option>Semua Negeri</option>${STATES.map(s=>`<option>${s}</option>`).join('')}</select>
+  </div>
+  <div class="tbl-wrap">
+    <div class="tbl-head"><div><div class="tbl-title">Pengguna Berdaftar</div><div class="tbl-sub">${allData.users.length} jumlah</div></div>
+    <button class="btn btn-p btn-sm" onclick="exportCSV('users')">⬇ Eksport</button></div>
+    <table><thead><tr><th>ID</th><th>Nama</th><th>Tier</th><th>Negeri</th><th>Premium</th><th>Psikometrik</th><th>Daftar</th></tr></thead>
+    <tbody>${allData.users.slice(0,50).map(u=>`<tr>
+      <td class="mono">${u.id}</td>
+      <td style="font-weight:500">${u.name}</td>
+      <td>${u.tier}</td>
+      <td style="font-size:11px">${u.state}</td>
+      <td>${u.is_premium?'<span style="color:var(--green);font-size:11px">✓ Ya</span>':'<span style="color:var(--t3);font-size:11px">—</span>'}</td>
+      <td>${u.psy_done?'<span style="color:var(--green);font-size:11px">Selesai</span>':'<span style="color:var(--t3);font-size:11px">Belum</span>'}</td>
+      <td style="font-size:10px;color:var(--t3)">${fmtDate(u.created_at)}</td>
+    </tr>`).join('')}</tbody></table>
+  </div>`;
 }
 
-async function viewApp(appId) {
-  // Find app from cached data (re-fetch for accuracy)
-  const res = await adminApi('GET', '/applications/list');
-  const app = (res.applications || []).find(a => a.id === appId);
-  if (!app) { toast('Permohonan tidak ditemui', 'error'); return; }
+// ══════════ RENDER: REPORTS ══════════
+function renderReports() {
+  const totalAsnaf = allData.asnaf.length;
+  const totalMualaf = allData.mualaf.length;
+  const approvedAsnaf = allData.asnaf.filter(a=>a.status==='approved').length;
+  const totalDisbursed = allData.asnaf.filter(a=>a.status==='approved').reduce((s,a)=>s+(a.approved_amount||a.requested_amount||0),0);
 
-  document.getElementById('modal-app-title').textContent = `Permohonan — ${appId}`;
+  return `
+  <div class="stat-grid">
+    <div class="stat-card"><div class="ic">📋</div><div class="val">${totalAsnaf}</div><div class="lbl">Jumlah Permohonan Asnaf</div></div>
+    <div class="stat-card"><div class="ic">✅</div><div class="val">${approvedAsnaf}</div><div class="lbl">Asnaf Diluluskan</div></div>
+    <div class="stat-card"><div class="ic">☪️</div><div class="val">${totalMualaf}</div><div class="lbl">Permohonan Mualaf</div></div>
+    <div class="stat-card"><div class="ic">💰</div><div class="val">RM${totalDisbursed.toLocaleString()}</div><div class="lbl">Jumlah Diagihkan</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="tbl-wrap">
+      <div class="tbl-head"><div class="tbl-title">Asnaf Mengikut Kategori</div></div>
+      <div style="padding:16px">${ASNAF_CATS.map(cat=>{
+        const total=allData.asnaf.filter(a=>a.category===cat).length;
+        const approved=allData.asnaf.filter(a=>a.category===cat&&a.status==='approved').length;
+        const amt=allData.asnaf.filter(a=>a.category===cat&&a.status==='approved').reduce((s,a)=>s+(a.approved_amount||a.requested_amount||0),0);
+        return `<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;margin-bottom:5px"><span class="cat-${cat.toLowerCase()}" style="font-size:12px;font-weight:600">${cat}</span><span style="font-size:11px;color:var(--t2)">${total} permohonan · RM${amt.toLocaleString()}</span></div>
+        <div class="prog-bar"><div class="prog-fill" style="width:${total?Math.round(approved/total*100):0}%"></div></div></div>`;
+      }).join('')}</div>
+    </div>
+    <div class="tbl-wrap">
+      <div class="tbl-head"><div class="tbl-title">Asnaf Mengikut Negeri</div></div>
+      <table><thead><tr><th>Negeri</th><th>Jumlah</th><th>Diluluskan</th></tr></thead>
+      <tbody>${STATES.slice(0,10).map(s=>{
+        const total=allData.asnaf.filter(a=>a.applicant_state===s).length;
+        const approved=allData.asnaf.filter(a=>a.applicant_state===s&&a.status==='approved').length;
+        return `<tr><td style="font-size:12px">${s}</td><td style="font-weight:600">${total}</td><td style="color:var(--green)">${approved}</td></tr>`;
+      }).join('')}</tbody></table>
+    </div>
+  </div>`;
+}
 
-  let bodyHtml = '';
-  if (app.type === 'asnaf') {
-    bodyHtml = `
-      <div class="detail-row"><span class="detail-key">Nama</span><span class="detail-val">${escHtml(app.full_name)}</span></div>
-      <div class="detail-row"><span class="detail-key">No IC</span><span class="detail-val">${escHtml(app.ic_number)}</span></div>
-      <div class="detail-row"><span class="detail-key">Alamat</span><span class="detail-val">${escHtml(app.address)}</span></div>
-      <div class="detail-row"><span class="detail-key">Kategori Asnaf</span><span class="detail-val">${escHtml(app.asnaf_category)}</span></div>
-      <div class="detail-row"><span class="detail-key">Pendapatan</span><span class="detail-val">RM${app.monthly_income}/bulan</span></div>
-      <div class="detail-row"><span class="detail-key">Tanggungan</span><span class="detail-val">${app.dependents || 0} orang</span></div>
-      <div class="detail-row"><span class="detail-key">Status</span><span class="detail-val">${statusBadge(app.status)}</span></div>
-      <div class="detail-row"><span class="detail-key">Tarikh Hantar</span><span class="detail-val">${new Date(app.submitted_at).toLocaleString('ms-MY')}</span></div>
-      ${app.review_note ? `<div class="detail-row"><span class="detail-key">Nota Admin</span><span class="detail-val">${escHtml(app.review_note)}</span></div>` : ''}
-      <div style="margin-top:16px">
-        ${app.doc_url ? `<p style="font-size:12px;color:var(--ink-muted);margin-bottom:8px">Dokumen Sokongan:</p><a href="${escHtml(app.doc_url)}" target="_blank" class="doc-link">📎 Buka Dokumen</a>` : '<p style="font-size:12px;color:var(--silver)">Tiada dokumen dimuat naik</p>'}
-        ${app.ic_url ? `<p style="font-size:12px;color:var(--ink-muted);margin:12px 0 8px">Gambar IC:</p><a href="${escHtml(app.ic_url)}" target="_blank" class="doc-link">🪪 Buka IC</a>` : ''}
+// ══════════ RENDER: PAYMENTS ══════════
+function renderPayments() {
+  return `<div class="empty-state"><div class="es-ic">💳</div><p>Rekod pembayaran akan dipaparkan di sini.<br>Sambungkan ke Supabase untuk data sebenar.</p></div>`;
+}
+
+// ══════════ RENDER: AUDIT ══════════
+function renderAudit() {
+  const logs = [
+    {actor:'Super Admin',action:'Meluluskan permohonan asnaf',target:'ASN-0003',time:new Date(Date.now()-3600000).toISOString()},
+    {actor:'Super Admin',action:'Menolak pengesahan IC',target:'IC-0007',time:new Date(Date.now()-7200000).toISOString()},
+    {actor:'Super Admin',action:'Meluluskan mualaf',target:'MUL-0002',time:new Date(Date.now()-14400000).toISOString()},
+  ];
+  return `<div class="tbl-wrap"><div class="tbl-head"><div class="tbl-title">Log Audit</div></div>
+  <div style="padding:16px"><div class="timeline">${logs.map(l=>`<div class="tl-item"><div class="tl-dot"></div><div><div class="tl-meta">${fmtDate(l.time)} · ${l.actor}</div><div class="tl-text">${l.action} — <span style="color:var(--gold);font-family:monospace">${l.target}</span></div></div></div>`).join('')}</div></div></div>`;
+}
+
+// ══════════ DETAIL MODALS ══════════
+function openAsnafDetail(a) {
+  const body = document.getElementById('modal-detail-body');
+  body.innerHTML = `
+  <div class="modal-head">
+    <div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span style="font-size:12px;font-family:monospace;color:var(--t3)">${a.id}</span>
+        ${statusBdg(a.status)}
+        ${a.is_emergency?'<span class="bdg bdg-emergency">🚨 KECEMASAN</span>':''}
       </div>
-    `;
-  } else {
-    bodyHtml = `
-      <div class="detail-row"><span class="detail-key">Nama</span><span class="detail-val">${escHtml(app.full_name)}</span></div>
-      <div class="detail-row"><span class="detail-key">No IC</span><span class="detail-val">${escHtml(app.ic_number)}</span></div>
-      <div class="detail-row"><span class="detail-key">Tarikh Islam</span><span class="detail-val">${app.conversion_date || '—'}</span></div>
-      <div class="detail-row"><span class="detail-key">Negeri Pengislaman</span><span class="detail-val">${escHtml(app.conversion_state || '—')}</span></div>
-      <div class="detail-row"><span class="detail-key">Status</span><span class="detail-val">${statusBadge(app.status)}</span></div>
-      <div class="detail-row"><span class="detail-key">Tarikh Hantar</span><span class="detail-val">${new Date(app.submitted_at).toLocaleString('ms-MY')}</span></div>
-      ${app.review_note ? `<div class="detail-row"><span class="detail-key">Nota Admin</span><span class="detail-val">${escHtml(app.review_note)}</span></div>` : ''}
-      <div style="margin-top:16px">
-        ${app.cert_url ? `<p style="font-size:12px;color:var(--ink-muted);margin-bottom:8px">Sijil Mualaf:</p><a href="${escHtml(app.cert_url)}" target="_blank" class="doc-link">📜 Buka Sijil</a>` : '<p style="font-size:12px;color:var(--silver)">Tiada sijil dimuat naik</p>'}
-        ${app.ic_url ? `<p style="font-size:12px;color:var(--ink-muted);margin:12px 0 8px">Gambar IC:</p><a href="${escHtml(app.ic_url)}" target="_blank" class="doc-link">🪪 Buka IC</a>` : ''}
-      </div>
-    `;
-  }
-
-  document.getElementById('modal-app-body').innerHTML = bodyHtml;
-  const footer = document.getElementById('modal-app-footer');
-  if (app.status === 'pending') {
-    footer.innerHTML = `
-      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-app')">Batal</button>
-      <button class="btn btn-danger btn-sm" onclick="closeModal('modal-app');openReview('${appId}','reject')">❌ Tolak</button>
-      <button class="btn btn-success btn-sm" onclick="closeModal('modal-app');openReview('${appId}','approve')">✅ Lulus</button>
-    `;
-  } else {
-    footer.innerHTML = `<button class="btn btn-ghost btn-sm" onclick="closeModal('modal-app')">Tutup</button>`;
-  }
-  showModal('modal-app');
+      <h2 style="font-size:18px;font-weight:700">${a.applicant_name}</h2>
+      <p style="font-size:12px;color:var(--t3)">Kategori: <span class="cat-${a.category.toLowerCase()}">${a.category}</span></p>
+    </div>
+    <button class="modal-close" onclick="closeOv('ov-detail')">✕</button>
+  </div>
+  <div class="detail-grid">
+    <div class="detail-item"><div class="detail-lbl">No. IC</div><div class="detail-val mono" style="font-size:13px">${a.applicant_ic||'—'}</div></div>
+    <div class="detail-item"><div class="detail-lbl">Telefon</div><div class="detail-val">${a.applicant_phone}</div></div>
+    <div class="detail-item"><div class="detail-lbl">Negeri</div><div class="detail-val">${a.applicant_state}</div></div>
+    <div class="detail-item"><div class="detail-lbl">Tanggungan</div><div class="detail-val">${a.num_dependents} orang</div></div>
+    <div class="detail-item"><div class="detail-lbl">Pendapatan Bulanan</div><div class="detail-val" style="color:var(--gold)">RM${(a.monthly_income||0).toLocaleString()}</div></div>
+    <div class="detail-item"><div class="detail-lbl">Bantuan Diminta</div><div class="detail-val" style="color:var(--gold);font-weight:700">RM${(a.requested_amount||0).toLocaleString()}</div></div>
+    <div class="detail-item detail-full"><div class="detail-lbl">Tujuan Bantuan</div><div class="detail-val" style="font-size:12px;color:var(--t2);line-height:1.6">${a.purpose_of_aid}</div></div>
+    <div class="detail-item"><div class="detail-lbl">Tarikh Dihantar</div><div class="detail-val" style="font-size:12px">${fmtDate(a.submitted_at)}</div></div>
+  </div>
+  ${a.status==='pending'||a.status==='in_review'?`
+  <div style="background:rgba(0,0,0,.2);border-radius:var(--r2);padding:14px;margin-bottom:14px">
+    <div class="flb" style="margin-bottom:8px">Amaun Diluluskan (RM)</div>
+    <input class="fi" type="number" id="approve-amount" placeholder="Masukkan amaun..." value="${a.requested_amount||''}">
+    <div class="flb" style="margin-top:10px;margin-bottom:5px">Nota Admin</div>
+    <textarea class="fi" id="approve-notes" placeholder="Nota atau syarat kelulusan..." style="min-height:70px"></textarea>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <button class="btn btn-g" style="flex:1" onclick="approveAsnafFromModal('${a.id}')">✓ Luluskan Permohonan</button>
+    <button class="btn btn-o btn-sm" onclick="requestMoreInfo('${a.id}','asnaf')">📄 Minta Maklumat Tambahan</button>
+    <button class="btn btn-r btn-sm" onclick="rejectAsnaf('${a.id}')">✗ Tolak</button>
+  </div>`:''}`;
+  openOv('ov-detail');
 }
 
-function openReview(appId, action) {
-  reviewContext = { appId, action };
-  document.getElementById('review-title').textContent = action === 'approve' ? '✅ Luluskan Permohonan' : '❌ Tolak Permohonan';
-  document.getElementById('review-desc').textContent = action === 'approve'
-    ? `Anda akan meluluskan permohonan ${appId}. Pengguna akan dimaklumkan.`
-    : `Anda akan menolak permohonan ${appId}. Sila berikan sebab penolakan.`;
-  document.getElementById('review-note').value = '';
-  showModal('modal-review');
+function openMualafDetail(m) {
+  const body = document.getElementById('modal-detail-body');
+  body.innerHTML = `
+  <div class="modal-head">
+    <div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font-size:12px;font-family:monospace;color:var(--t3)">${m.id}</span>${statusBdg(m.status)}</div>
+      <h2 style="font-size:18px;font-weight:700">${m.applicant_name}</h2>
+      <p style="font-size:12px;color:var(--t3)">Agama asal: ${m.previous_religion}</p>
+    </div>
+    <button class="modal-close" onclick="closeOv('ov-detail')">✕</button>
+  </div>
+  <div class="detail-grid">
+    <div class="detail-item"><div class="detail-lbl">Telefon</div><div class="detail-val">${m.applicant_phone}</div></div>
+    <div class="detail-item"><div class="detail-lbl">Negeri</div><div class="detail-val">${m.applicant_state}</div></div>
+    <div class="detail-item"><div class="detail-lbl">Tarikh Syahadah</div><div class="detail-val">${m.syahadah_date||'—'}</div></div>
+    <div class="detail-item"><div class="detail-lbl">Kaunselor</div><div class="detail-val">${m.assigned_counsellor||'Belum ditetapkan'}</div></div>
+    <div class="detail-item detail-full"><div class="detail-lbl">Keperluan</div><div class="detail-val" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+      ${m.needs_financial_aid?'<span class="bdg bdg-pending">💰 Kewangan</span>':''}
+      ${m.needs_counselling?'<span class="bdg bdg-review">💬 Kaunseling</span>':''}
+      ${m.needs_education?'<span class="bdg bdg-approved">📚 Pendidikan</span>':''}
+      ${m.needs_housing?'<span class="bdg bdg-add-info">🏠 Perumahan</span>':''}
+    </div></div>
+  </div>
+  ${m.status==='pending'||m.status==='in_review'?`
+  <div style="background:rgba(0,0,0,.2);border-radius:var(--r2);padding:14px;margin-bottom:14px">
+    <div class="flb" style="margin-bottom:6px">Tetapkan Kaunselor</div>
+    <input class="fi" id="counsellor-name" placeholder="Nama Ustaz/Ustazah..." value="${m.assigned_counsellor||''}">
+    <div class="flb" style="margin-top:10px;margin-bottom:5px">Nota</div>
+    <textarea class="fi" placeholder="Nota pemprosesan..." style="min-height:60px"></textarea>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <button class="btn btn-g" style="flex:1" onclick="approveMualafFromModal('${m.id}')">✓ Luluskan</button>
+    <button class="btn btn-r btn-sm" onclick="rejectMualaf('${m.id}')">✗ Tolak</button>
+  </div>`:''}`;
+  openOv('ov-detail');
 }
 
-async function confirmReview(action) {
-  if (!reviewContext) return;
-  const note = document.getElementById('review-note').value;
-  const endpoint = `/applications/${reviewContext.appId}/${action}`;
-  const res = await adminApi('POST', endpoint, { note });
-  if (res.success) {
-    toast(action === 'approve' ? `✅ Diluluskan` : `❌ Ditolak`, action === 'approve' ? 'success' : 'error');
-    closeModal('modal-review');
-    refreshCurrent();
-  } else {
-    toast(res.error || 'Gagal', 'error');
-  }
+// ══════════ ACTIONS ══════════
+function approveAsnaf(id) {
+  const a = allData.asnaf.find(x=>x.id===id); if(!a) return;
+  if(!confirm(`Luluskan permohonan ${a.applicant_name} (${a.category})?`)) return;
+  a.status = 'approved'; a.approved_amount = a.requested_amount;
+  updateSidebarBadges(); renderPage('asnaf');
+  toast('✓ Permohonan diluluskan!','ok');
+  logAudit('Meluluskan permohonan asnaf',id);
 }
 
-/* ── UTILS ── */
-function showModal(id) { document.getElementById(id).classList.add('show'); }
-function closeModal(id) { document.getElementById(id).classList.remove('show'); }
-
-function toast(msg, type = 'info') {
-  const icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
-  const el = document.createElement('div');
-  el.className = `toast toast-${type}`;
-  el.innerHTML = `<span>${icons[type] || '•'}</span><span>${msg}</span>`;
-  document.getElementById('toast-container').appendChild(el);
-  setTimeout(() => el.remove(), 3500);
+function approveAsnafFromModal(id) {
+  const a = allData.asnaf.find(x=>x.id===id); if(!a) return;
+  const amt = parseFloat(document.getElementById('approve-amount')?.value||a.requested_amount);
+  a.status = 'approved'; a.approved_amount = amt;
+  closeOv('ov-detail'); updateSidebarBadges(); renderPage('asnaf');
+  toast('✓ Permohonan diluluskan! RM'+amt.toLocaleString(),'ok');
+  logAudit('Meluluskan asnaf RM'+amt,id);
 }
 
-function escHtml(str) {
-  if (!str) return '';
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function rejectAsnaf(id) {
+  const reason = prompt('Sebab penolakan:'); if(reason===null) return;
+  const a = allData.asnaf.find(x=>x.id===id); if(!a) return;
+  a.status='rejected'; a.rejection_reason=reason;
+  closeOv('ov-detail'); updateSidebarBadges(); renderPage('asnaf');
+  toast('Permohonan ditolak.','err');
+  logAudit('Menolak asnaf: '+reason,id);
 }
+
+function approveMualaf(id) {
+  const m=allData.mualaf.find(x=>x.id===id); if(!m) return;
+  if(!confirm(`Luluskan permohonan ${m.applicant_name}?`)) return;
+  m.status='approved'; updateSidebarBadges(); renderPage('mualaf');
+  toast('✓ Permohonan mualaf diluluskan!','ok');
+}
+
+function approveMualafFromModal(id) {
+  const m=allData.mualaf.find(x=>x.id===id); if(!m) return;
+  const counsellor = document.getElementById('counsellor-name')?.value||'';
+  m.status='approved'; m.assigned_counsellor=counsellor;
+  closeOv('ov-detail'); updateSidebarBadges(); renderPage('mualaf');
+  toast('✓ Diluluskan! Kaunselor: '+(counsellor||'Belum ditetapkan'),'ok');
+}
+
+function rejectMualaf(id) {
+  const reason=prompt('Sebab penolakan:'); if(reason===null) return;
+  const m=allData.mualaf.find(x=>x.id===id); if(!m) return;
+  m.status='rejected'; closeOv('ov-detail'); updateSidebarBadges(); renderPage('mualaf');
+  toast('Permohonan ditolak.','err');
+}
+
+function approveIC(id,evt) {
+  if(evt) evt.stopPropagation();
+  const ic=allData.ic.find(x=>x.id===id); if(!ic) return;
+  if(!confirm(`Luluskan pengesahan IC untuk ${ic.user_name}?`)) return;
+  ic.status='verified'; ic.reviewed_at=new Date().toISOString();
+  updateSidebarBadges(); renderPage('ic-verify');
+  toast('✓ IC disahkan!','ok');
+  logAudit('Mengesahkan IC',id);
+}
+
+function rejectIC(id,evt) {
+  if(evt) evt.stopPropagation();
+  const reason=prompt('Sebab penolakan IC:'); if(reason===null) return;
+  const ic=allData.ic.find(x=>x.id===id); if(!ic) return;
+  ic.status='rejected'; ic.reject_reason=reason; ic.reviewed_at=new Date().toISOString();
+  updateSidebarBadges(); renderPage('ic-verify');
+  toast('IC ditolak.','err');
+}
+
+function requestMoreInfo(id,type) {
+  const info=prompt('Maklumat tambahan yang diperlukan:'); if(!info) return;
+  toast('Permintaan maklumat tambahan dihantar.','info');
+  closeOv('ov-detail');
+}
+
+// ══════════ UTILS ══════════
+function statusBdg(s) {
+  const map={pending:'bdg-pending',in_review:'bdg-review',approved:'bdg-approved',rejected:'bdg-rejected',additional_info_required:'bdg-add-info',verified:'bdg-approved'};
+  const lbl={pending:'Menunggu',in_review:'Semakan',approved:'Diluluskan',rejected:'Ditolak',additional_info_required:'Maklumat Tambahan',verified:'Disahkan'};
+  return `<span class="bdg ${map[s]||'bdg-pending'}">${lbl[s]||s}</span>`;
+}
+function statusLabel(s){return{pending:'Menunggu',in_review:'Dalam Semakan',approved:'Diluluskan',rejected:'Ditolak',additional_info_required:'Maklumat Tambahan',verified:'Disahkan'}[s]||s;}
+function fmtDate(d){if(!d)return'—';return new Date(d).toLocaleDateString('ms-MY',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}
+function openOv(id){document.getElementById(id).classList.add('show');}
+function closeOv(id){document.getElementById(id).classList.remove('show');}
+function toast(msg,type='ok',dur=3000){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+type+' show';setTimeout(()=>t.classList.remove('show'),dur);}
+function logAudit(action,target){console.log('[AUDIT]',new Date().toISOString(),action,target);}
+
+function exportCSV(type) {
+  let rows, headers;
+  if(type==='asnaf'){headers=['ID','Nama','Kategori','Negeri','Pendapatan','Diminta','Status','Kecemasan','Tarikh'];rows=allData.asnaf.map(a=>[a.id,a.applicant_name,a.category,a.applicant_state,a.monthly_income||0,a.requested_amount||0,a.status,a.is_emergency?'Ya':'Tidak',fmtDate(a.submitted_at)]);}
+  else if(type==='mualaf'){headers=['ID','Nama','Agama Asal','Negeri','Status','Dihantar'];rows=allData.mualaf.map(m=>[m.id,m.applicant_name,m.previous_religion,m.applicant_state,m.status,fmtDate(m.submitted_at)]);}
+  else{headers=['ID','Nama','Tier','Negeri','Premium','Daftar'];rows=allData.users.map(u=>[u.id,u.name,u.tier,u.state,u.is_premium?'Ya':'Tidak',fmtDate(u.created_at)]);}
+  const csv=[headers,...rows].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download=type+'_export_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+  toast('Eksport CSV berjaya!','ok');
+}
+
+// ══════════ INIT ══════════
+if(checkAdminSession()){enterAdmin();}
 </script>
 </body>
 </html>
