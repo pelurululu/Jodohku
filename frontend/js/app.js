@@ -5,7 +5,7 @@
 ============================================================ */
 
 // TODO: Tukar kepada URL sebenar dalam production (e.g. 'https://jodohku-api.onrender.com/api')
-const API = 'https://jodohku-api.onrender.com/api';
+const API = 'http://localhost:3001/api';
 
 /* ── STATE ── */
 let appState = {
