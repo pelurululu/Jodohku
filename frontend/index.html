@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Jodohku — Cari jodoh sekufu. Disahkan IC. Dipadankan AI.">
+  <title>Jodohku — Cari Jodoh Sekufu</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Socket.IO -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body>
+<div id="app" class="app">
+
+  <!-- ===================== TOAST CONTAINER ===================== -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- ===================== LANDING PAGE ===================== -->
+  <div class="page active" id="page-landing">
+    <div class="landing-hero">
+      <div class="hero-pattern"></div>
+      <nav class="hero-nav">
+        <div class="hero-logo">Jodoh<span>ku</span></div>
+        <button class="hero-login-btn" onclick="showPage('page-login')">Log Masuk</button>
+      </nav>
+      <div class="hero-content">
+        <div class="hero-badge">
+          <div class="hero-badge-dot"></div>
+          <span>🎟️ Pioneer Pass — 7 Hari PERCUMA</span>
+        </div>
+        <h1 class="hero-title">Cari Jodoh<br><em>Sekufu</em></h1>
+        <p class="hero-sub">Disahkan IC. Dipadankan AI. Tiada Scammer.</p>
+        <div class="pioneer-counter">
+          <span>Baki slot percuma:</span>
+          <strong id="pioneer-count">2,847</strong>
+          <span>/ 3,000</span>
+        </div>
+        <button class="btn btn-primary btn-lg" onclick="showPage('page-register')">
+          Daftar Percuma — Mulai Sekarang
+        </button>
+        <div class="hero-trust">
+          <span>🔐 IC Verified</span>
+          <span>🤖 AI 30 Dimensi</span>
+          <span>🛡️ Zero Scammer</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== REGISTER PAGE ===================== -->
+  <div class="page" id="page-register">
+    <div class="top-nav">
+      <button class="nav-back" onclick="showPage('page-landing')">← Kembali</button>
+      <span class="nav-title">Daftar Akaun</span>
+      <div style="width:80px"></div>
+    </div>
+    <div class="scroll-view">
+      <div class="form-container">
+        <div class="step-indicator" id="reg-steps">
+          <div class="step active" id="step-dot-1">1</div>
+          <div class="step-line"></div>
+          <div class="step" id="step-dot-2">2</div>
+          <div class="step-line"></div>
+          <div class="step" id="step-dot-3">3</div>
+        </div>
+
+        <!-- Step 1: Basic Info -->
+        <div id="reg-step-1">
+          <h2 class="form-title">Maklumat Asas</h2>
+          <p class="form-sub">Percuma untuk 3,000 Pioneer pertama</p>
+          <div class="form-group">
+            <label class="form-label">Nombor Telefon</label>
+            <input type="tel" id="reg-phone" class="form-input" placeholder="0123456789" inputmode="numeric">
+            <div class="form-error" id="err-phone"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nama Panggilan</label>
+            <input type="text" id="reg-nickname" class="form-input" placeholder="Nama anda">
+            <div class="form-error" id="err-name"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tarikh Lahir</label>
+            <input type="date" id="reg-dob" class="form-input">
+            <div class="form-error" id="err-dob"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Jantina</label>
+              <select id="reg-gender" class="form-input">
+                <option value="Lelaki">Lelaki</option>
+                <option value="Perempuan">Perempuan</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Status</label>
+              <select id="reg-status" class="form-input">
+                <option value="Bujang">Bujang</option>
+                <option value="Janda">Janda</option>
+                <option value="Duda">Duda</option>
+                <option value="Ibu Tunggal">Ibu Tunggal</option>
+                <option value="Bapa Tunggal">Bapa Tunggal</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Pendapatan Tahunan</label>
+            <select id="reg-income" class="form-input">
+              <option value="">Pilih julat pendapatan...</option>
+              <option value="B40">RM 24,000 – RM 50,000</option>
+              <option value="M40">RM 50,001 – RM 100,000</option>
+              <option value="T20">RM 100,001 – RM 250,000</option>
+              <option value="VVIP">Lebih RM 250,000</option>
+            </select>
+            <div class="form-error" id="err-income"></div>
+          </div>
+          <button class="btn btn-primary btn-full" onclick="submitStep1()">Seterusnya →</button>
+          <div class="form-footer">
+            Sudah ada akaun? <button class="link-btn" onclick="showPage('page-login')">Log Masuk</button>
+          </div>
+        </div>
+
+        <!-- Step 2: Verification -->
+        <div id="reg-step-2" style="display:none">
+          <h2 class="form-title">Pengesahan Identiti</h2>
+          <p class="form-sub">Untuk keselamatan semua pengguna. Data dienkripsi PDPA 2010.</p>
+          <div class="form-group">
+            <label class="form-label">Emel (pemulihan akaun)</label>
+            <input type="email" id="reg-email" class="form-input" placeholder="nama@emel.com">
+            <div class="form-error" id="err-email"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Negeri Tempat Tinggal</label>
+            <select id="reg-state" class="form-input">
+              <option value="">Pilih Negeri</option>
+              <option>Johor</option><option>Kedah</option><option>Kelantan</option>
+              <option>Melaka</option><option>Negeri Sembilan</option><option>Pahang</option>
+              <option>Perak</option><option>Perlis</option><option>Pulau Pinang</option>
+              <option>Sabah</option><option>Sarawak</option><option>Selangor</option>
+              <option>Terengganu</option><option>W.P. Kuala Lumpur</option>
+              <option>W.P. Putrajaya</option><option>W.P. Labuan</option>
+            </select>
+            <div class="form-error" id="err-state"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">No. IC (4 digit terakhir)</label>
+            <input type="text" id="reg-ic" class="form-input" placeholder="XXXX" maxlength="4" inputmode="numeric">
+            <span class="form-hint">Untuk verifikasi umur. TIDAK disimpan sepenuhnya.</span>
+            <div class="form-error" id="err-ic"></div>
+          </div>
+          <div class="captcha-box" id="captcha-box" onclick="toggleCaptcha()">
+            <span id="captcha-icon">🤖</span>
+            <span>Saya bukan robot</span>
+            <div class="captcha-spinner" id="captcha-spinner" style="display:none"></div>
+            <span id="captcha-check" style="display:none;margin-left:auto;color:var(--success)">✓</span><span id="captcha-text" style="display:none;font-size:12px;color:var(--success)">Disahkan</span>
+          </div>
+          <div class="form-error" id="err-captcha"></div>
+          <button class="btn btn-primary btn-full" onclick="submitStep2()">Seterusnya →</button>
+          <button class="btn btn-ghost btn-full" onclick="showRegStep(1)" style="margin-top:8px">← Kembali</button>
+        </div>
+
+        <!-- Step 3: Photo & TnC -->
+        <div id="reg-step-3" style="display:none">
+          <h2 class="form-title">Gambar Profil</h2>
+          <p class="form-sub">1 gambar sahaja. Mesti jelas, sopan & menunjukkan wajah anda.</p>
+          <div class="photo-upload" id="photo-upload-zone" onclick="document.getElementById('reg-photo-input').click()">
+            <input type="file" id="photo-input" data-alias="photo-input" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="previewPhoto(this)">
+            <div id="photo-placeholder">
+              <div style="font-size:40px;margin-bottom:8px">📷</div>
+              <div style="font-size:13px;font-weight:500;color:var(--ink-muted)">Ketik untuk muat naik gambar</div>
+              <div style="font-size:11px;color:var(--silver);margin-top:4px">Maksimum 1 gambar • JPG/PNG • 5MB</div>
+            </div>
+            <div id="photo-preview" style="display:none;position:absolute;inset:0">
+              <img id="photo-preview-img" src="" style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-lg)">
+              <div class="photo-overlay">✏️ Tukar Gambar</div>
+            </div>
+          </div>
+          <label class="checkbox-label" onclick="toggleCheckbox('reg-terms')">
+            <div class="checkbox" id="reg-terms"></div>
+            <span>Saya bersetuju dengan <button onclick="event.stopPropagation();showPage('page-tnc')" class="link-btn">Terma & Syarat</button> dan Polisi Privasi (PDPA 2010). Maklumat yang diberikan adalah benar.</span>
+          </label>
+          <div class="form-error" id="err-tnc"></div>
+          <button class="btn btn-primary btn-full" id="reg-final-btn" onclick="submitStep3()">
+            <span id="reg-final-txt">Daftar & Aktifkan Pioneer Pass →</span>
+            <span id="reg-final-spin" style="display:none" class="spinner"></span>
+          </button>
+          <button class="btn btn-ghost btn-full" onclick="showRegStep(2)" style="margin-top:8px">← Kembali</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== LOGIN PAGE ===================== -->
+  <div class="page" id="page-login">
+    <div class="top-nav">
+      <button class="nav-back" onclick="showPage('page-landing')">← Kembali</button>
+      <span class="nav-title">Log Masuk</span>
+      <div style="width:80px"></div>
+    </div>
+    <div class="scroll-view">
+      <div class="form-container">
+        <h2 class="form-title">Selamat Kembali</h2>
+        <p class="form-sub">Masukkan emel anda untuk menerima OTP</p>
+
+        <!-- Step 1: Email -->
+        <div id="login-email-step">
+          <div class="form-group">
+            <label class="form-label">Alamat Emel</label>
+            <input type="email" id="login-email" class="form-input" placeholder="nama@emel.com">
+            <div class="form-error" id="err-login-email"></div>
+          </div>
+          <button class="btn btn-primary btn-full" id="otp-btn" onclick="sendOTP()">
+            <span id="otp-btn-txt">Hantar Kod OTP</span>
+            <span id="otp-btn-spin" class="spinner" style="display:none"></span>
+          </button>
+          <div class="form-footer">
+            Belum ada akaun? <button class="link-btn" onclick="showPage('page-register')">Daftar Sekarang</button>
+          </div>
+        </div>
+
+        <!-- Step 2: OTP -->
+        <div id="login-otp-step" style="display:none">
+          <p class="form-sub">Kod dihantar ke <strong id="otp-email-display" style="color:var(--gold-dark)"></strong></p>
+          <div class="form-group">
+            <label class="form-label">Kod OTP 6 Digit</label>
+            <div class="otp-inputs" id="otp-inputs">
+              <input type="tel" class="otp-input" maxlength="1" inputmode="numeric" oninput="otpInput(this,0)" onkeydown="otpKeydown(this,0)">
+              <input type="tel" class="otp-input" maxlength="1" inputmode="numeric" oninput="otpInput(this,1)" onkeydown="otpKeydown(this,1)">
+              <input type="tel" class="otp-input" maxlength="1" inputmode="numeric" oninput="otpInput(this,2)" onkeydown="otpKeydown(this,2)">
+              <input type="tel" class="otp-input" maxlength="1" inputmode="numeric" oninput="otpInput(this,3)" onkeydown="otpKeydown(this,3)">
+              <input type="tel" class="otp-input" maxlength="1" inputmode="numeric" oninput="otpInput(this,4)" onkeydown="otpKeydown(this,4)">
+              <input type="tel" class="otp-input" maxlength="1" inputmode="numeric" oninput="otpInput(this,5)" onkeydown="otpKeydown(this,5)">
+            </div>
+            <div class="form-error" id="err-otp"></div>
+          </div>
+          <button class="btn btn-primary btn-full" id="btn-verify-otp" onclick="verifyOTP()">
+            <span id="btn-verify-otp-txt">Sahkan & Masuk</span>
+            <span id="btn-verify-otp-spin" class="spinner" style="display:none"></span>
+          </button>
+          <button class="link-btn" id="btn-resend" onclick="resendOTP()" style="width:100%;text-align:center;margin-top:12px;padding:8px">
+            ↺ Hantar semula OTP <span id="resend-countdown"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== MAIN APP (Dashboard) ===================== -->
+  <div class="main-app" id="main-app">
+
+    <!-- Top Nav -->
+    <div class="top-nav" id="main-nav">
+      <div class="nav-logo">Jodoh<span>ku</span></div>
+      <div class="nav-right">
+        <div id="nav-tier-badge" class="tier-badge tier-silver">SILVER</div>
+        <div class="nav-avatar" id="nav-avatar" onclick="switchTab('profile')">
+          <img id="nav-avatar-img" src="" alt="" style="display:none">
+          <span id="nav-avatar-icon" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:18px">👤</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trial Bar -->
+    <div class="trial-bar hidden" id="trial-bar">
+      ⏰ Trial tamat dalam: <span id="trial-countdown">--:--:--</span>
+      <button class="link-btn" onclick="switchTab('premium')" style="color:#fff;text-decoration:underline">Langgan →</button>
+    </div>
+
+    <!-- Renewal Reminders -->
+    <div class="renewal-bar renewal-7 hidden" id="renewal-7">
+      <span>📅</span>
+      <span style="flex:1">Langganan anda tamat dalam <strong>7 hari</strong>.</span>
+      <button onclick="switchTab('premium');this.closest('.renewal-bar').classList.add('hidden')" class="link-btn">Perbaharui</button>
+    </div>
+    <div class="renewal-bar renewal-3 hidden" id="renewal-3">
+      <span>⚠️</span>
+      <span style="flex:1">Amaran! Langganan tamat dalam <strong>3 hari</strong>.</span>
+      <button onclick="switchTab('premium');this.closest('.renewal-bar').classList.add('hidden')" class="link-btn" style="color:var(--warning)">Perbaharui Sekarang</button>
+    </div>
+    <div class="renewal-bar renewal-1 hidden" id="renewal-1">
+      <span>🚨</span>
+      <span style="flex:1"><strong>Amaran Kritikal:</strong> Langganan tamat ESOK!</span>
+      <button onclick="switchTab('premium');this.closest('.renewal-bar').classList.add('hidden')" class="link-btn" style="color:var(--danger)">Perbaharui Segera!</button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="tab-discover">
+      <div class="scroll-view">
+        <div class="section-header">
+          <div>
+            <h2 class="section-title">Calon Hari Ini</h2>
+            <p class="section-sub">Kurasi AI eksklusif — Hanya 80%+ padanan</p>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:10px;color:var(--ink-muted)">Reset esok</div>
+            <div id="reset-countdown" style="font-size:12px;color:var(--gold-dark);font-weight:700;font-family:monospace">8:00 PG</div>
+          </div>
+        </div>
+
+        <div id="discover-empty" class="empty-state hidden">
+          <p id="discover-empty-msg">Tiada padanan hari ini.</p>
+        </div>
+        <div id="discover-loading" class="empty-state">
+          <div class="loading-spinner"></div>
+          <p>AI sedang menganalisis 30 dimensi keserasian...</p>
+        </div>
+        <div id="candidates-list" style="display:none" class="cards-list"></div>
+        <div id="discover-locked" style="display:none" class="empty-state">
+          <div style="font-size:48px;margin-bottom:12px">🔒</div>
+          <h3>Kurasi Harian Selesai</h3>
+          <p>5 calon hari ini telah dikurasi.<br>Calon baru hadir esok jam <strong>8:00 PG</strong>.</p>
+        </div>
+        <div id="discover-low-match" style="display:none" class="warning-box">
+          <div style="font-size:32px;margin-bottom:8px">📋</div>
+          <h3 style="color:var(--warning)">Padanan Anda Masih Rendah</h3>
+          <p>Skor keserasian anda belum mencapai 80%. Sila lengkapkan Ujian Keserasian 30 Dimensi.</p>
+          <button class="btn btn-outline btn-sm" onclick="switchTab('quiz')" style="margin-top:12px">🧪 Semak Semula Ujian →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content hidden" id="tab-chat">
+      <div class="scroll-view">
+        <div class="section-header"><h2 class="section-title">Sembang</h2></div>
+        <div id="chat-empty" class="empty-state">
+          <div style="font-size:44px">💬</div>
+          <p>Tiada padanan lagi</p>
+          <p style="font-size:12px;color:var(--silver)">Pergi ke Discover untuk mula!</p>
+        </div>
+        <div id="chat-loading"></div>
+      </div>
+    </div>
+
+    <div class="tab-content hidden" id="tab-stats">
+      <div class="scroll-view">
+        <div class="section-header"><h2 class="section-title">📊 Statistik & Wawasan</h2></div>
+        <div class="cards-list">
+          <!-- ICI Ring -->
+          <div class="info-card" style="text-align:center;padding:24px">
+            <div id="ici-ring" style="width:100px;height:100px;border-radius:50%;background:conic-gradient(var(--gold) 0%, var(--cream) 0%);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:700;color:var(--gold-dark)">
+              <span id="ici-ring-val">—</span>
+            </div>
+            <div style="font-size:10px;color:var(--silver);letter-spacing:0.1em">INDEKS KESERASIAN</div>
+          </div>
+          <!-- Stats Row -->
+          <div style="display:flex;gap:10px">
+            <div class="info-card" style="flex:1;text-align:center;padding:14px">
+              <div id="stat-matches" style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:700;color:var(--gold-dark)">0</div>
+              <div style="font-size:10px;color:var(--silver);margin-top:3px">Padanan</div>
+            </div>
+            <div class="info-card" style="flex:1;text-align:center;padding:14px">
+              <div id="stat-high" style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:700;color:var(--success)">0</div>
+              <div style="font-size:10px;color:var(--silver);margin-top:3px">90%+ Terbaik</div>
+            </div>
+            <div class="info-card" style="flex:1;text-align:center;padding:14px">
+              <div id="stat-convos" style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:700">0</div>
+              <div style="font-size:10px;color:var(--silver);margin-top:3px">Perbualan</div>
+            </div>
+          </div>
+          <!-- AI profile result display -->
+          <div id="ai-stats-display" class="info-card" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content hidden" id="tab-premium">
+      <div class="scroll-view">
+        <div class="section-header">
+          <h2 class="section-title">Pilih Tier Anda</h2>
+          <p class="section-sub">Tier lebih tinggi = akses lebih eksklusif</p>
+        </div>
+        <div id="tier-cards" class="cards-list"></div>
+      </div>
+    </div>
+
+    <div class="tab-content hidden" id="tab-profile">
+      <div class="scroll-view">
+        <div class="section-header"><h2 class="section-title">Profil Saya</h2></div>
+        <div class="cards-list">
+          <!-- Avatar Card -->
+          <div class="info-card" style="text-align:center;padding:24px">
+            <div style="position:relative;display:inline-block;margin-bottom:12px">
+              <div style="width:80px;height:80px;border-radius:50%;background:var(--cream);border:2px solid var(--gold-light);overflow:hidden;display:flex;align-items:center;justify-content:center;margin:0 auto">
+                <span id="profile-avatar-emoji" style="font-size:32px">👤</span>
+                <img id="profile-photo" src="" style="display:none;width:100%;height:100%;object-fit:cover">
+              </div>
+              <label style="position:absolute;bottom:0;right:0;width:26px;height:26px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px">
+                ✏️<input type="file" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="uploadProfilePhoto(this)">
+              </label>
+            </div>
+            <h3 id="profile-name" style="font-family:'Cormorant Garamond',serif;font-size:1.3rem">—</h3>
+            <p id="profile-meta" style="font-size:12px;color:var(--silver);margin-top:4px">—</p>
+          </div>
+          <!-- Stats Row -->
+          <div style="display:flex;gap:10px">
+            <div class="info-card" style="flex:1;text-align:center;padding:14px">
+              <div id="profile-ici" style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:700;color:var(--gold-dark)">—</div>
+              <div style="font-size:10px;color:var(--silver);margin-top:3px">ICI Score</div>
+            </div>
+            <div class="info-card" style="flex:1;text-align:center;padding:14px">
+              <div id="profile-credits" style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:700">0</div>
+              <div style="font-size:10px;color:var(--silver);margin-top:3px">Kredit Mesej</div>
+            </div>
+          </div>
+          <!-- Info -->
+          <div class="info-card">
+            <div class="info-row"><span>Status Langganan</span><span id="info-sub-status">Percuma</span></div>
+            <div class="info-row"><span>Tier Aktif</span><span id="info-tier">Percuma</span></div>
+            <div class="info-row"><span>Tamat Langganan</span><span id="info-sub-end" style="color:var(--silver)">—</span></div>
+            <div class="info-row"><span>IC Disahkan</span><span id="info-ic-status" style="color:var(--warning)">Menunggu</span></div>
+            <div class="info-row"><span>Ujian 30 Dimensi</span><span id="info-quiz-status" style="color:var(--silver)">Belum selesai</span></div>
+          </div>
+          <!-- Wingman AI -->
+          <div class="info-card" id="wingman-card" style="display:none">
+            <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;color:var(--silver);margin-bottom:8px">🤝 AI WINGMAN</div>
+            <div class="form-group">
+              <label class="form-label">Tahap Pendidikan</label>
+              <select id="wingman-edu" class="form-input">
+                <option value="">Pilih...</option>
+                <option value="SPM">SPM</option><option value="Diploma">Diploma</option>
+                <option value="Degree">Degree</option><option value="Master">Master</option>
+                <option value="PhD">PhD</option><option value="Profesional">Profesional</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-top:10px">
+              <label class="form-label">Sektor Pekerjaan</label>
+              <select id="wingman-sector" class="form-input">
+                <option value="">Pilih...</option>
+                <option value="Doktor/Medikal">Doktor / Medikal</option>
+                <option value="Jurutera">Jurutera</option>
+                <option value="Akauntan">Akauntan</option>
+                <option value="Pensyarah">Pensyarah</option>
+                <option value="Business">Ahli Perniagaan</option>
+                <option value="Sektor Awam">Sektor Awam</option>
+                <option value="Lain-lain">Lain-lain</option>
+              </select>
+            </div>
+            <button class="btn btn-outline btn-sm btn-full" style="margin-top:12px" onclick="saveWingman()">Simpan Wingman →</button>
+          </div>
+          <!-- AI Profile Display -->
+          <div id="ai-profile-display" class="info-card" style="display:none"></div>
+          <!-- Actions -->
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <button class="btn btn-primary btn-full" onclick="switchTab('premium')">👑 Naik Taraf Tier</button>
+            <button class="btn btn-outline btn-full" onclick="openQuiz()">🧪 Ujian Keserasian 30 Dimensi</button>
+            <button class="btn btn-ghost btn-full" onclick="showPage('page-tnc')">📋 Terma & Syarat</button>
+            <button class="btn btn-danger btn-full" onclick="doLogout()">Log Keluar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <div class="nav-item active" id="nav-discover" onclick="switchTab('discover')">
+        <div class="nav-icon">💎</div>
+        <span>Discover</span>
+      </div>
+      <div class="nav-item" id="nav-chat" onclick="switchTab('chat')">
+        <div class="nav-icon">💬</div>
+        <span>Sembang</span>
+        <div class="nav-badge" id="chat-badge"></div>
+      </div>
+      <div class="nav-item" id="nav-stats" onclick="switchTab('stats')">
+        <div class="nav-icon">📊</div>
+        <span>Wawasan</span>
+      </div>
+      <div class="nav-item" id="nav-premium" onclick="switchTab('premium')">
+        <div class="nav-icon">👑</div>
+        <span>Premium</span>
+      </div>
+      <div class="nav-item" id="nav-profile" onclick="switchTab('profile')">
+        <div class="nav-icon">👤</div>
+        <span>Profil</span>
+      </div>
+    </nav>
+  </div><!-- end main-app -->
+
+  <!-- ===================== CHAT ROOM PAGE ===================== -->
+  <div class="page" id="chat-room">
+    <div class="top-nav">
+      <button class="nav-back" onclick="closeChatRoom()">← Kembali</button>
+      <div style="text-align:center;flex:1">
+        <div id="room-partner-name" style="font-size:14px;font-weight:600">—</div>
+        <div id="room-partner-status" style="font-size:10px;color:var(--success)">● Dalam talian</div>
+      </div>
+      <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:var(--cream)">
+        <img id="room-partner-photo" src="" style="width:100%;height:100%;object-fit:cover;display:none">
+        <span id="room-partner-emoji" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:18px">👤</span>
+      </div>
+      <div id="room-partner-badge" class="tier-badge tier-silver">SILVER</div>
+    </div>
+
+    <!-- Message quota bar (Silver only) -->
+    <div id="msg-quota-bar" class="quota-bar hidden">
+      Mesej percuma: <strong id="room-credits">10</strong>/10 —
+      <button class="link-btn" onclick="openPaywall()">Langgan untuk tanpa had</button>
+    </div>
+
+    <!-- Advance relationship bar -->
+    <div id="advance-bar" class="advance-bar hidden">
+      <span>💕 Perbualan selesa terkesan. Bersedia untuk langkah seterusnya?</span>
+      <button class="btn btn-sm btn-primary" onclick="requestAdvance()">Mohon Perkenalan Lanjut →</button>
+    </div>
+
+    <div id="chat-messages" class="messages-view"><div id="typing-indicator" class="typing-indicator hidden"></div></div>
+    <div id="chat-list" class="messages-view" style="display:none"></div>
+
+    <!-- Quick replies -->
+    <div class="quick-replies" id="quick-replies">
+      <button class="quick-reply-btn" data-msg="Assalamualaikum warahmatullahi wabarakatuh 🤲">Assalamualaikum 🤲</button>
+      <button class="quick-reply-btn" data-msg="Salam perkenalan. Saya tertarik dengan profil anda ✨">Salam perkenalan ✨</button>
+      <button class="quick-reply-btn" data-msg="Apa khabar hari ini? Semoga hari anda dipermudahkan 😊">Apa khabar? 😊</button>
+      <button class="quick-reply-btn" data-msg="Boleh kita berkenalan dengan lebih dekat?">Boleh kenal lebih dekat?</button>
+      <button class="quick-reply-btn" data-msg="InsyaAllah, semoga perkenalan ini membawa kebaikan 🤲">InsyaAllah ada jodoh 🤲</button>
+      <button class="quick-reply-btn" data-msg="Terima kasih sudi menerima padanan saya 😊">Terima kasih reply 😊</button>
+    </div>
+
+    <div id="upgrade-prompt" class="upgrade-prompt hidden">
+      <p>Had mesej percuma dicapai.</p>
+      <button class="btn btn-primary btn-sm" onclick="openPaywall()">Langgan →</button>
+    </div>
+    <div class="chat-input-bar">
+      <input type="text" id="chat-input" class="chat-input" placeholder="Taip mesej..." onkeydown="chatKeydown(event)" oninput="chatInputChange()">
+      <button class="chat-send-btn" id="send-btn" onclick="sendMessage()">→</button>
+    </div>
+  </div>
+
+  <!-- ===================== QUIZ PAGE ===================== -->
+  <div class="page" id="page-quiz">
+    <div class="top-nav">
+      <button class="nav-back" onclick="exitQuiz()">← Kembali</button>
+      <span class="nav-title">Ujian 30 Dimensi</span>
+      <span id="quiz-progress-text" style="font-size:12px;color:var(--ink-muted)">1/30</span>
+    </div>
+    <div class="scroll-view">
+      <div class="form-container">
+        <p style="font-size:13px;color:var(--ink-muted);line-height:1.6;margin-bottom:16px">
+          Jawab dengan ikhlas. AI menganalisis 30 dimensi keperibadian anda untuk padanan yang lebih tepat. (~10 minit)
+        </p>
+        <div class="quiz-progress-bar">
+          <div class="quiz-progress-fill" id="quiz-progress-bar"></div>
+        </div>
+        <div id="quiz-question-area"></div>
+        <div id="quiz-footer" class="quiz-footer"></div>
+        <div id="quiz-bio-area" style="display:none">
+          <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;margin-bottom:8px">✍️ Keperibadian Tambahan</h3>
+          <p style="font-size:13px;color:var(--ink-muted);line-height:1.6;margin-bottom:12px">
+            Ceritakan tentang diri anda yang mungkin tidak tercakup dalam soalan di atas.
+          </p>
+          <textarea id="quiz-bio" class="form-input" placeholder="Contoh: Saya seorang yang suka memasak masakan Melayu tradisional..." style="min-height:120px;resize:vertical" oninput="updateCharCount(this)"></textarea>
+          <div style="text-align:right;font-size:11px;color:var(--silver);margin-top:4px" id="bio-char-count">0 / 500</div>
+          <button class="btn btn-primary btn-full" style="margin-top:16px" onclick="submitQuiz()">Selesai & Lihat Keputusan →</button>
+        </div>
+        <div id="quiz-result-area" style="display:none">
+          <div class="result-card">
+            <div style="font-size:50px;margin-bottom:12px">🏆</div>
+            <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.6rem;color:var(--gold-dark)">Analisis Selesai!</h3>
+            <p style="color:var(--ink-muted);margin:8px 0 16px">Profil keperibadian 30 dimensi anda telah disimpan</p>
+            <div class="score-display">
+              <div id="result-ici-score" style="font-family:'Cormorant Garamond',serif;font-size:3rem;font-weight:700;color:var(--gold-dark)">8.2</div>
+              <div style="font-size:12px;color:var(--silver);margin-top:4px">/ 10 — Indeks Keserasian 30 Dimensi</div>
+            </div>
+            <div id="quiz-result-type" style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:600;color:var(--gold-dark);margin:12px 0 8px">—</div>
+            <p id="result-profile-text" style="font-size:13px;color:var(--ink-muted);line-height:1.65;margin-bottom:12px">—</p>
+            <div id="quiz-result-traits" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px"></div>
+            <button class="btn btn-primary btn-full" onclick="switchTab('profile');showPage('main-app')">Kembali ke Profil →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== ADVANCE RELATIONSHIP PAGE ===================== -->
+  <div class="page" id="page-advance">
+    <div class="top-nav">
+      <button class="nav-back" onclick="showPage('chat-room')">← Kembali</button>
+      <span class="nav-title">Perkenalan Lanjut</span>
+      <div style="width:80px"></div>
+    </div>
+    <div class="scroll-view">
+      <div class="form-container">
+        <div style="text-align:center;margin-bottom:24px">
+          <div style="font-size:52px;margin-bottom:12px">💍</div>
+          <h2 style="font-family:'Cormorant Garamond',serif">Tahniah!</h2>
+          <p style="color:var(--ink-muted);margin-top:8px;line-height:1.6">
+            Anda dan <strong id="advance-partner-name" style="color:var(--gold-dark)">—</strong> telah berbual selama 3 hari berturut-turut. Ini menunjukkan keserasian yang baik!
+          </p>
+        </div>
+        <div class="info-card">
+          <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;color:var(--silver);margin-bottom:12px">LANGKAH SETERUSNYA</div>
+          <div class="step-item"><span>📞</span><div><strong>Mohon Nombor Telefon</strong><p>Dengan persetujuan kedua-dua pihak, nombor WhatsApp boleh dikongsi.</p></div></div>
+          <div class="step-item"><span>👨‍👩‍👧</span><div><strong>Libatkan Wali / Keluarga</strong><p>Maklumkan kepada keluarga tentang niat serius anda.</p></div></div>
+          <div class="step-item"><span>☕</span><div><strong>Pertemuan Pertama</strong><p>Atur pertemuan di tempat awam dengan kehadiran keluarga.</p></div></div>
+          <div class="step-item"><span>📋</span><div><strong>Pengesahan Background (Premium)</strong><p>Ahli Platinum/Sovereign boleh memohon semakan latar belakang profesional.</p></div></div>
+        </div>
+        <button class="btn btn-primary btn-full" style="margin-top:16px" onclick="requestWhatsApp()">📞 Mohon Nombor WhatsApp →</button>
+        <button class="btn btn-ghost btn-full" style="margin-top:8px" onclick="showPage('chat-room')">Kembali ke Perbualan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== T&C PAGE ===================== -->
+  <div class="page" id="page-tnc">
+    <div class="top-nav">
+      <button class="nav-back" onclick="showPage('page-landing')">← Kembali</button>
+      <span class="nav-title">Terma & Syarat</span>
+      <div style="width:80px"></div>
+    </div>
+    <div class="scroll-view">
+      <div class="form-container">
+        <p style="font-size:11px;color:var(--silver);margin-bottom:16px">Dikemas kini: 1 Mac 2026 • PDPA 2010 Malaysia</p>
+        <div class="info-card">
+          <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;margin-bottom:16px">A. Terma Penggunaan Platform</h3>
+          <div class="tnc-section"><h4>1. Kelayakan & Integriti</h4><p>Pengguna mestilah warganegara Malaysia berumur 18–55 tahun. Status perkahwinan mesti diisytiharkan dengan benar.</p></div>
+          <div class="tnc-section"><h4>2. Polisi Anti-Scam</h4><p>AI memantau gelagat mencurigakan. Akaun yang ditandakan boleh digantung serta-merta.</p></div>
+          <div class="tnc-section"><h4>3. Polisi Gambar & Kandungan</h4><p>Hanya 1 gambar profil. Mesti jelas, sopan & menunjukkan wajah anda.</p></div>
+          <div class="tnc-section"><h4>4. Polisi Perkenalan Lanjut</h4><p>Selepas 3 hari berturut-turut berbual, kedua-dua pihak boleh memohon Perkenalan Lanjut.</p></div>
+          <div class="tnc-section"><h4>5. Penafian Liabiliti</h4><p>Jodohku adalah medium digital sahaja. Pengguna bertanggungjawab sepenuhnya.</p></div>
+        </div>
+        <div class="info-card" style="margin-top:12px">
+          <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;margin-bottom:16px">B. Polisi Privasi (PDPA 2010)</h3>
+          <div class="tnc-section"><h4>1. Data & Perlindungan</h4><p>Data disulitkan AES-256. IC tidak disimpan sepenuhnya.</p></div>
+          <div class="tnc-section"><h4>2. Penggunaan Data</h4><p>Nombor telefon tidak didedahkan tanpa kebenaran. Data tidak dijual kepada pihak ketiga.</p></div>
+          <div class="tnc-section"><h4>3. Hak Pengguna</h4><p>Anda berhak akses, pembetulan, atau pemadaman data. Hubungi privacy@jodohku.com</p></div>
+        </div>
+        <div class="info-card" style="margin-top:12px">
+          <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;margin-bottom:16px">C. Keselamatan Platform</h3>
+          <div class="tnc-section"><h4>1. Pengesahan Berlapis</h4><p>OTP, tarikh lahir, IC separa, CAPTCHA, emel — memastikan setiap akaun adalah manusia nyata.</p></div>
+          <div class="tnc-section"><h4>2. Rate Limiting</h4><p>Maksimum 5 percubaan OTP sejam. IP mencurigakan diblok automatik.</p></div>
+        </div>
+        <button class="btn btn-primary btn-full" style="margin-top:24px" onclick="showPage('page-landing')">Saya Faham & Bersetuju →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== MODALS / OVERLAYS ===================== -->
+
+  <!-- Paywall Modal -->
+  <div class="modal-overlay" id="modal-paywall">
+    <div class="modal-card">
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-size:36px;margin-bottom:8px">🔥</div>
+        <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;margin-bottom:6px">Perbualan Semakin Hangat.</h3>
+        <p style="font-size:13px;color:var(--ink-muted);line-height:1.6">Anda telah mencapai had 10 mesej Silver. Jangan biarkan dia tertunggu-tunggu.</p>
+      </div>
+      <div id="paywall-tiers"></div>
+      <button onclick="closeModal('modal-paywall')" style="width:100%;padding:10px;font-size:12px;color:var(--silver);margin-top:8px">
+        Teruskan dengan baki <span id="paywall-credits-left">0</span> mesej percuma
+      </button>
+    </div>
+  </div>
+
+  <!-- Match Found Modal -->
+  <div class="modal-overlay" id="modal-match">
+    <div class="modal-card" style="text-align:center">
+      <div style="font-size:52px;margin-bottom:10px">💫</div>
+      <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.6rem;color:var(--gold-dark);margin-bottom:6px">Padanan Ditemui!</h3>
+      <p id="match-name" style="font-size:1rem;font-weight:600;margin-bottom:4px">—</p>
+      <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:12px">
+        <span style="font-size:13px;color:var(--silver)">Keserasian:</span>
+        <span id="match-score" style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:700;color:var(--gold-dark)">88%</span>
+      </div>
+      <div class="ai-analysis-box" style="margin-bottom:16px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:0.12em;color:var(--silver);margin-bottom:6px">AI ANALISIS 30 DIMENSI</div>
+        <p id="match-verdict" style="font-size:13px;color:var(--ink-muted);font-style:italic;line-height:1.6">—</p>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="closeMatchAndChat()" style="margin-bottom:8px">Mula Berbual Sekarang →</button>
+      <button onclick="closeModal('modal-match')" style="width:100%;padding:10px;font-size:12px;color:var(--silver)">Teruskan mencari calon lain</button>
+    </div>
+  </div>
+
+  <!-- Payment Processing Modal -->
+  <div class="modal-overlay" id="modal-payment-processing">
+    <div class="modal-card" style="text-align:center">
+      <div class="loading-spinner" style="margin:0 auto 16px"></div>
+      <h3 id="payment-modal-title" style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;margin-bottom:6px">Memproses Pembayaran...</h3>
+      <div id="payment-progress" style="width:100%;height:4px;background:var(--cream);border-radius:2px;overflow:hidden;margin:10px 0"><div style="height:100%;background:var(--gold);width:0%;transition:width 0.3s"></div></div>
+      <p style="font-size:13px;color:var(--ink-muted)">Disambungkan ke ToyyibPay. Sila tunggu.</p>
+      <div style="margin-top:16px;padding:14px;background:var(--cream);border-radius:var(--radius-sm)">
+        <div style="font-size:11px;color:var(--silver)">Jumlah:</div>
+        <div id="payment-amount" style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:700;color:var(--gold-dark);margin-top:4px">RM0</div>
+        <div id="payment-tier" style="font-size:12px;color:var(--ink-muted);margin-top:2px">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WhatsApp Consent Modal -->
+  <div class="modal-overlay" id="modal-consent">
+    <div class="modal-card" style="text-align:center">
+      <div style="font-size:38px;margin-bottom:10px">🔐</div>
+      <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;margin-bottom:8px">Permohonan Nombor</h3>
+      <p style="font-size:13px;color:var(--ink-muted);line-height:1.6;margin-bottom:14px">Ahli VVIP memohon nombor WhatsApp anda.</p>
+      <div class="info-card" style="margin-bottom:16px">
+        <div id="consent-name" style="font-size:1rem;font-weight:600;margin-bottom:4px">—</div>
+        <div id="consent-info" style="font-size:12px;color:var(--silver)">—</div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-ghost" style="flex:1" onclick="respondConsent(false)">Belum Bersedia</button>
+        <button class="btn btn-primary" style="flex:1" onclick="respondConsent(true)">Beri Kebenaran ✓</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progressive Profiling Modal -->
+  <div class="modal-overlay" id="modal-progressive">
+    <div class="modal-card">
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-size:36px;margin-bottom:8px">🧠</div>
+        <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;margin-bottom:6px">Lengkapkan Senjata Anda</h3>
+        <p style="font-size:13px;color:var(--ink-muted);line-height:1.6">Bantu AI Wingman kami membaca tahap pemikiran anda. 30 saat sahaja.</p>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tahap Pendidikan Tertinggi</label>
+        <select id="wingman-edu" class="form-input">
+          <option value="">Pilih tahap pendidikan...</option>
+          <option value="SPM">SPM / Setaraf</option>
+          <option value="Diploma">Diploma</option>
+          <option value="Degree">Ijazah Sarjana Muda (Degree)</option>
+          <option value="Master">Sarjana (Master's)</option>
+          <option value="PhD">Doktor Falsafah (PhD)</option>
+          <option value="Profesional">Kelayakan Profesional (ACCA, Ir, Dr, dll)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Sektor Pekerjaan Semasa</label>
+        <select id="wingman-sector" class="form-input">
+          <option value="">Pilih sektor pekerjaan...</option>
+          <option value="Doktor/Medikal">Doktor / Pakar Perubatan</option>
+          <option value="Jurutera">Jurutera (Engineer)</option>
+          <option value="Akauntan">Akauntan / Kewangan</option>
+          <option value="Pensyarah">Pensyarah / Akademik</option>
+          <option value="Sales/Marketing">Eksekutif Jualan / Pemasaran</option>
+          <option value="Business">Ahli Perniagaan / Founder</option>
+          <option value="Peguam">Peguam / Perundangan</option>
+          <option value="Sektor Awam">Penjawat Awam / Kerajaan</option>
+          <option value="Lain-lain">Lain-lain Sektor</option>
+        </select>
+      </div>
+      <div class="ai-wingman-notice">
+        <div style="font-size:10px;color:var(--gold-dark);font-weight:700;letter-spacing:0.1em;margin-bottom:4px">AI WINGMAN — AKTIF</div>
+        <p style="font-size:12px;color:var(--ink-muted);line-height:1.6">Sistem memilih 30 soalan rawak dari 300 bank data untuk analisis keserasian yang unik setiap sesi.</p>
+      </div>
+      <button class="btn btn-primary btn-full" style="margin-top:16px" onclick="saveProgressiveProfile()">Simpan & Mula Pencarian →</button>
+      <button onclick="skipProgressiveProfile()" style="width:100%;padding:10px;font-size:12px;color:var(--silver);margin-top:6px">Langkau buat masa ini</button>
+    </div>
+  </div>
+
+  <!-- IC Upload Modal -->
+  <div class="modal-overlay" id="modal-ic">
+    <div class="modal-card" style="text-align:center">
+      <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--gold-dark);margin-bottom:6px">Sahkan Identiti Anda</h3>
+      <p style="font-size:13px;color:var(--ink-muted);line-height:1.6;margin-bottom:16px">Muat naik gambar IC anda (depan sahaja).<br>Data dienkripsi & dipadam selepas verifikasi.</p>
+      <div class="ic-upload-zone" onclick="document.getElementById('ic-file-input').click()">
+        <input type="file" id="ic-input" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="previewIC(this)">
+        <div id="ic-preview" style="display:none;position:relative">
+          <img id="ic-preview-img" style="width:100%;border-radius:var(--radius-sm);max-height:200px;object-fit:contain">
+          <button onclick="clearIC(event)" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.6);border-radius:50%;width:28px;height:28px;font-size:13px;color:#fff">✕</button>
+        </div>
+        <div id="ic-placeholder">
+          <div style="font-size:36px;margin-bottom:8px">🪪</div>
+          <div style="font-size:13px;font-weight:500;color:var(--ink-muted)">Pilih Gambar IC</div>
+          <div style="font-size:11px;color:var(--silver);margin-top:4px">JPG / PNG • Maks 5MB</div>
+        </div>
+      </div>
+      <div id="ic-status" class="form-error" style="margin:10px 0"></div>
+      <div style="text-align:left;margin-bottom:16px">
+        <div style="font-size:11px;color:var(--silver);margin-bottom:4px">✅ Pastikan IC jelas & tidak kabur</div>
+        <div style="font-size:11px;color:var(--silver);margin-bottom:4px">✅ Muat naik depan IC sahaja</div>
+        <div style="font-size:11px;color:var(--silver);margin-bottom:4px">🔒 Data dienkripsi AES-256 (PDPA 2010)</div>
+        <div style="font-size:11px;color:var(--silver)">🗑️ Imej dipadam selepas verifikasi selesai</div>
+      </div>
+      <button id="ic-submit-btn" class="btn btn-primary btn-full" onclick="submitIC()" disabled style="opacity:0.4">
+        <span>Hantar untuk Semakan</span>
+        <span id="ic-submit-spin" class="spinner" style="display:none"></span>
+      </button>
+      <button onclick="closeModal('modal-ic')" style="width:100%;padding:10px;font-size:12px;color:var(--silver);margin-top:8px">Batal</button>
+    </div>
+  </div>
+
+</div><!-- end app -->
+
+<!-- Scripts -->
+<script src="js/app.js"></script>
+</body>
+</html>
