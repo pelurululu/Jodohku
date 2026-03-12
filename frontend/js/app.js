@@ -400,7 +400,8 @@ function otpInput(el, idx) {
 }
 
 function otpKeydown(el, idx, event) {
-  if (event.key === 'Backspace' && !el.value) {
+  const e = event || window.event;
+  if (e && e.key === 'Backspace' && !el.value) {
     const prev = document.querySelectorAll('.otp-digit')[idx-1];
     if (prev) { prev.value=''; prev.classList.remove('filled'); prev.focus(); }
   }
