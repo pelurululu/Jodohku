@@ -20,11 +20,11 @@ class Settings(BaseSettings):
     AIRTABLE_BASE_ID: str = ""
     AIRTABLE_TABLE: str = "Jodohku Command Center"
 
-    # ══ Email OTP (Gmail SMTP) ══
-    EMAIL_HOST: str = "smtp.gmail.com"
-    EMAIL_PORT: int = 587
-    EMAIL_USER: str = ""        # yourname@gmail.com
-    EMAIL_PASSWORD: str = ""    # 16-char Gmail App Password
+   
+   # ══ Emel OTP (Brevo API) ══
+    BREVO_API_KEY: str = os.getenv("BREVO_API_KEY", "")
+    BREVO_SENDER_EMAIL: str = os.getenv("BREVO_SENDER_EMAIL", "noreply@jodohku.my") # Change to your verified Brevo email
+    BREVO_SENDER_NAME: str = "Jodohku"
 
     # ══ ToyyibPay ══
     TOYYIBPAY_SECRET: str = ""
