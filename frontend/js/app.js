@@ -361,11 +361,11 @@ async function verifyOTP() {
   const digits = [...document.querySelectorAll('.otp-digit')].map(d => d.value).join('');
   if (digits.length < 6) { toast('Sila masukkan 6 digit OTP','warning'); return; }
 
-  setBtnLoading('otp-btn', 'btn-verify-otp-spin', 'btn-verify-otp-txt', true, 'Mengesahkan...');
+  setBtnLoading('btn-verify-otp', 'btn-verify-otp-spin', 'btn-verify-otp-txt', true, 'Mengesahkan...');
   const res = await api('POST', '/auth/email/verify-otp-by-email', {
     email: S.otpEmail, otp_code: digits,
   });
-  setBtnLoading('otp-btn', 'btn-verify-otp-spin', 'btn-verify-otp-txt', false, 'Log Masuk');
+  setBtnLoading('btn-verify-otp', 'btn-verify-otp-spin', 'btn-verify-otp-txt', false, 'Log Masuk');
 
   if (!res._ok) {
     toast(res._err, 'error');
@@ -409,7 +409,7 @@ function otpKeydown(el, idx, event) {
 
 function checkOTPComplete() {
   const all = [...document.querySelectorAll('.otp-digit')].map(d=>d.value).join('');
-  const btn = document.getElementById('otp-btn');
+  const btn = document.getElementById('btn-verify-otp');
   if (btn && document.getElementById('login-otp-step')?.classList.contains('hidden') === false) {
     btn.disabled = all.length < 6;
   }
