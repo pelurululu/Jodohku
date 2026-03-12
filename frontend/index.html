@@ -1,612 +1,2991 @@
 <!DOCTYPE html>
-<html lang="ms" id="html-root">
+<html lang="ms">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
-<meta name="theme-color" content="#05050E"/>
-<meta name="description" content="Jodohku — Platform Jodoh VVIP Sekufu Malaysia #1 Di Dunia"/>
-<title>Jodohku — Cari Jodoh Sekufu</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600&family=Outfit:wght@200;300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Jodohku — Cari jodoh sekufu. Disahkan IC. Dipadankan AI.">
+  <title>Jodohku — Cari Jodoh Sekufu</title>
 
-<!-- ══════════ STYLES ══════════ -->
-<link rel="stylesheet" href="css/variables.css"/>
-<link rel="stylesheet" href="css/layout.css"/>
-<link rel="stylesheet" href="css/components.css"/>
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Socket.IO -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+
+  <style>
+    /* ======================================================
+       CSS VARIABLES & RESET
+    ====================================================== */
+    :root {
+      --gold:       #c8975b;
+      --gold-light: #e8c898;
+      --gold-dark:  #9a6b3a;
+      --cream:      #fdf6ee;
+      --warm-white: #fffcf8;
+      --ink:        #1a100a;
+      --ink-light:  #4a3728;
+      --ink-muted:  #8a7060;
+      --silver:     #b0a090;
+      --success:    #2d7a4a;
+      --danger:     #c04040;
+      --warning:    #c8783a;
+      --info:       #3a6a8a;
+      --shadow-sm:  0 2px 8px rgba(26,16,10,0.08);
+      --shadow-md:  0 8px 32px rgba(26,16,10,0.12);
+      --shadow-lg:  0 20px 60px rgba(26,16,10,0.18);
+      --radius-sm:  8px;
+      --radius-md:  16px;
+      --radius-lg:  24px;
+      --radius-xl:  32px;
+      --nav-h:      72px;
+      --bottom-h:   80px;
+      --transition: 0.25s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; -webkit-text-size-adjust: 100%; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--warm-white);
+      color: var(--ink);
+      height: 100%;
+      overflow-x: hidden;
+    }
+    img { max-width: 100%; }
+    button { cursor: pointer; font-family: inherit; border: none; outline: none; }
+    input, select, textarea { font-family: inherit; outline: none; }
+    a { text-decoration: none; color: inherit; }
+
+    /* ======================================================
+       TYPOGRAPHY
+    ====================================================== */
+    h1,h2,h3,h4 { font-family: 'Cormorant Garamond', serif; font-weight: 600; line-height: 1.2; }
+    h1 { font-size: clamp(2rem, 6vw, 3.5rem); }
+    h2 { font-size: clamp(1.5rem, 4vw, 2.5rem); }
+    h3 { font-size: clamp(1.2rem, 3vw, 1.8rem); }
+
+    /* ======================================================
+       LAYOUT
+    ====================================================== */
+    .app { display: flex; flex-direction: column; min-height: 100vh; }
+    .page { display: none; flex-direction: column; min-height: 100vh; animation: fadeIn 0.35s ease; }
+    .page.active { display: flex; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+    .main-app { display: none; flex-direction: column; min-height: 100vh; }
+    .main-app.active { display: flex; }
+
+    /* ======================================================
+       TOP NAV
+    ====================================================== */
+    .top-nav {
+      position: sticky; top: 0; z-index: 100;
+      height: var(--nav-h);
+      background: rgba(255,252,248,0.92);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(200,151,91,0.15);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 20px;
+    }
+    .nav-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.6rem; font-weight: 700;
+      color: var(--gold-dark);
+      letter-spacing: 0.02em;
+    }
+    .nav-logo span { color: var(--gold); }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .nav-avatar {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: var(--cream);
+      border: 2px solid var(--gold-light);
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .nav-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .tier-badge {
+      font-size: 10px; font-weight: 600;
+      padding: 3px 8px; border-radius: 20px;
+      letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .tier-silver { background: #e8e0d8; color: #6a5a4a; }
+    .tier-gold   { background: #fdf0d0; color: #9a6b20; }
+    .tier-platinum{ background: linear-gradient(135deg,#e8f0f8,#d8e8f8); color: #3a5a7a; }
+    .tier-sovereign{ background: var(--ink); color: var(--gold); }
+    .tier-percuma { background: #f0f0f0; color: #888; }
+
+    /* Trial countdown */
+    .trial-bar {
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      color: #fff;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 6px 16px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .trial-bar.hidden { display: none; }
+    #trial-countdown { font-weight: 700; font-family: monospace; letter-spacing: 1px; }
+
+    /* ======================================================
+       BOTTOM NAV
+    ====================================================== */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      height: var(--bottom-h);
+      background: rgba(255,252,248,0.96);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(200,151,91,0.12);
+      display: flex; align-items: center; justify-content: space-around;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+      z-index: 90;
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      padding: 8px 16px; border-radius: 16px;
+      cursor: pointer;
+      transition: all var(--transition);
+      font-size: 11px; color: var(--ink-muted); font-weight: 500;
+      position: relative;
+    }
+    .nav-item .nav-icon { font-size: 22px; transition: transform var(--transition); }
+    .nav-item.active { color: var(--gold-dark); }
+    .nav-item.active .nav-icon { transform: scale(1.15); }
+    .nav-badge {
+      position: absolute; top: 4px; right: 10px;
+      background: var(--danger); color: #fff;
+      font-size: 9px; font-weight: 700;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      display: none;
+    }
+    .nav-badge.show { display: flex; }
+
+    /* ======================================================
+       BUTTONS
+    ====================================================== */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 8px; padding: 14px 28px; border-radius: 50px;
+      font-size: 15px; font-weight: 600; letter-spacing: 0.02em;
+      transition: all var(--transition); cursor: pointer;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      color: #fff; box-shadow: 0 4px 20px rgba(200,151,91,0.4);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(200,151,91,0.5); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+    .btn-outline {
+      background: transparent;
+      border: 2px solid var(--gold);
+      color: var(--gold-dark);
+    }
+    .btn-outline:hover { background: var(--cream); }
+    .btn-ghost { background: var(--cream); color: var(--ink-light); }
+    .btn-ghost:hover { background: #f0e8dc; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-sm { padding: 8px 18px; font-size: 13px; }
+    .btn-lg { padding: 18px 36px; font-size: 17px; }
+    .btn-full { width: 100%; }
+    .btn-loading { position: relative; color: transparent !important; }
+    .btn-loading::after {
+      content: '';
+      position: absolute;
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ======================================================
+       FORMS
+    ====================================================== */
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-label { font-size: 13px; font-weight: 600; color: var(--ink-light); letter-spacing: 0.03em; }
+    .form-input {
+      padding: 13px 16px; border-radius: var(--radius-sm);
+      border: 1.5px solid rgba(200,151,91,0.25);
+      background: rgba(253,246,238,0.5);
+      font-size: 15px; color: var(--ink);
+      transition: all var(--transition);
+      width: 100%;
+    }
+    .form-input:focus {
+      border-color: var(--gold);
+      background: var(--cream);
+      box-shadow: 0 0 0 3px rgba(200,151,91,0.12);
+    }
+    .form-input.error { border-color: var(--danger); }
+    .form-input::placeholder { color: var(--silver); }
+    .form-error { font-size: 12px; color: var(--danger); font-weight: 500; display: none; }
+    .form-error.show { display: block; }
+    .form-hint { font-size: 12px; color: var(--ink-muted); }
+    select.form-input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a7060' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 40px; }
+
+    /* ======================================================
+       CARDS
+    ====================================================== */
+    .card {
+      background: #fff;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(200,151,91,0.12);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .card-body { padding: 20px; }
+
+    /* ======================================================
+       ALERTS / TOAST
+    ====================================================== */
+    .toast-container {
+      position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+      z-index: 9999; display: flex; flex-direction: column; gap: 8px;
+      pointer-events: none; min-width: 280px; max-width: 360px;
+    }
+    .toast {
+      padding: 12px 20px; border-radius: var(--radius-sm);
+      font-size: 14px; font-weight: 500;
+      animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards;
+      pointer-events: all; box-shadow: var(--shadow-md);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .toast-success { background: #f0faf5; color: var(--success); border: 1px solid #b0e0c0; }
+    .toast-error   { background: #fdf0f0; color: var(--danger);  border: 1px solid #e0b0b0; }
+    .toast-info    { background: #f0f5fd; color: var(--info);    border: 1px solid #b0c8e8; }
+    .toast-warning { background: #fdf5ee; color: var(--warning); border: 1px solid #e8c8a0; }
+    @keyframes toastIn  { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes toastOut { from { opacity:1; } to { opacity:0; transform:translateY(-10px); } }
+
+    /* ======================================================
+       LANDING PAGE
+    ====================================================== */
+    .landing-hero {
+      background: linear-gradient(160deg, #2a1a0e 0%, #4a2e18 40%, #6a4428 70%, #2a1a0e 100%);
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      padding: 0;
+      position: relative; overflow: hidden;
+    }
+    .hero-pattern {
+      position: absolute; inset: 0;
+      background-image: radial-gradient(circle at 20% 80%, rgba(200,151,91,0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(200,151,91,0.1) 0%, transparent 50%),
+                        url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c8975b' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .hero-nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 24px 28px; position: relative; z-index: 2;
+    }
+    .hero-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.8rem; font-weight: 700; color: var(--gold-light);
+    }
+    .hero-login-btn {
+      padding: 10px 22px; border-radius: 50px;
+      border: 1.5px solid rgba(200,151,91,0.5);
+      color: var(--gold-light); background: transparent;
+      font-size: 14px; font-weight: 500;
+      cursor: pointer; transition: all var(--transition);
+    }
+    .hero-login-btn:hover { background: rgba(200,151,91,0.15); border-color: var(--gold); }
+
+    .hero-content {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 40px 28px; text-align: center;
+      position: relative; z-index: 2;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(200,151,91,0.15);
+      border: 1px solid rgba(200,151,91,0.3);
+      border-radius: 50px; padding: 8px 18px;
+      font-size: 13px; font-weight: 500; color: var(--gold-light);
+      margin-bottom: 28px;
+    }
+    .hero-badge-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--gold);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(0.8)} }
+
+    .hero-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.4rem, 8vw, 4rem);
+      font-weight: 700; color: var(--cream);
+      line-height: 1.1; margin-bottom: 20px;
+    }
+    .hero-title em { color: var(--gold); font-style: italic; }
+    .hero-subtitle {
+      font-size: 16px; color: rgba(253,246,238,0.7);
+      line-height: 1.6; max-width: 340px; margin-bottom: 40px;
+    }
+    .hero-features {
+      display: flex; gap: 16px; margin-bottom: 40px;
+      flex-wrap: wrap; justify-content: center;
+    }
+    .hero-feature {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 50px; padding: 8px 16px;
+      font-size: 13px; color: var(--cream);
+    }
+    .pioneer-counter {
+      background: rgba(200,151,91,0.1);
+      border: 1px solid rgba(200,151,91,0.25);
+      border-radius: var(--radius-sm);
+      padding: 16px 24px;
+      margin-top: 20px;
+    }
+    .pioneer-counter .label { font-size: 12px; color: var(--gold-light); opacity: 0.8; margin-bottom: 4px; }
+    .pioneer-counter .count { font-family: 'Cormorant Garamond', serif; font-size: 2rem; color: var(--gold-light); font-weight: 700; }
+    .pioneer-counter .sublabel { font-size: 12px; color: rgba(253,246,238,0.6); margin-top: 4px; }
+
+    /* ======================================================
+       MULTI-STEP REGISTER
+    ====================================================== */
+    .reg-page {
+      background: var(--warm-white);
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+    }
+    .reg-header {
+      padding: 20px 24px 0;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .back-btn {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--cream); border: 1px solid rgba(200,151,91,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; cursor: pointer; color: var(--ink-light);
+      transition: all var(--transition); flex-shrink: 0;
+    }
+    .back-btn:hover { background: #f0e8dc; }
+    .step-label { font-size: 13px; color: var(--ink-muted); font-weight: 500; }
+
+    .progress-bar {
+      height: 3px; background: rgba(200,151,91,0.15);
+      margin: 16px 24px;
+      border-radius: 2px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; background: linear-gradient(90deg, var(--gold-dark), var(--gold));
+      border-radius: 2px; transition: width 0.5s ease;
+    }
+
+    .reg-body { flex: 1; padding: 8px 24px 100px; overflow-y: auto; }
+    .reg-title { margin-bottom: 6px; }
+    .reg-subtitle { font-size: 14px; color: var(--ink-muted); margin-bottom: 28px; line-height: 1.5; }
+    .form-grid { display: flex; flex-direction: column; gap: 18px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    .reg-footer {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      padding: 16px 24px calc(16px + env(safe-area-inset-bottom, 0));
+      background: rgba(255,252,248,0.95);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid rgba(200,151,91,0.1);
+    }
+
+    /* Photo upload */
+    .photo-upload-area {
+      width: 140px; height: 140px;
+      border-radius: 50%; margin: 0 auto 24px;
+      border: 3px dashed rgba(200,151,91,0.4);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      cursor: pointer; transition: all var(--transition);
+      position: relative; overflow: hidden;
+      background: var(--cream);
+    }
+    .photo-upload-area:hover { border-color: var(--gold); background: rgba(200,151,91,0.05); }
+    .photo-upload-area img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
+    }
+    .photo-upload-icon { font-size: 28px; color: var(--gold-dark); }
+    .photo-upload-text { font-size: 12px; color: var(--ink-muted); text-align: center; margin-top: 6px; }
+    #photo-input, #ic-input { display: none; }
+
+    .terms-row {
+      display: flex; gap: 12px; align-items: flex-start;
+      padding: 16px; border-radius: var(--radius-sm);
+      background: var(--cream); border: 1px solid rgba(200,151,91,0.2);
+    }
+    .terms-row input[type=checkbox] { margin-top: 2px; accent-color: var(--gold); flex-shrink: 0; width: 18px; height: 18px; }
+    .terms-text { font-size: 13px; color: var(--ink-muted); line-height: 1.5; }
+    .terms-link { color: var(--gold-dark); font-weight: 600; }
+
+    /* Captcha */
+    .captcha-box {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 16px; border-radius: var(--radius-sm);
+      border: 1.5px solid rgba(200,151,91,0.25);
+      background: rgba(253,246,238,0.5); cursor: pointer;
+      transition: all var(--transition);
+    }
+    .captcha-box:hover { border-color: var(--gold); }
+    .captcha-box input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--gold); }
+    .captcha-text { font-size: 14px; color: var(--ink-light); }
+
+    /* ======================================================
+       OTP / LOGIN PAGE
+    ====================================================== */
+    .login-page {
+      min-height: 100vh;
+      background: linear-gradient(160deg, #2a1a0e, #4a2e18);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 40px 24px;
+    }
+    .login-card {
+      background: var(--warm-white); border-radius: var(--radius-xl);
+      padding: 40px 32px; width: 100%; max-width: 400px;
+      box-shadow: var(--shadow-lg);
+    }
+    .login-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem; font-weight: 700; color: var(--gold-dark);
+      text-align: center; margin-bottom: 8px;
+    }
+    .login-sub { font-size: 14px; color: var(--ink-muted); text-align: center; margin-bottom: 32px; }
+
+    .otp-input-group { display: flex; gap: 10px; justify-content: center; margin: 24px 0; }
+    .otp-digit {
+      width: 48px; height: 56px;
+      border: 2px solid rgba(200,151,91,0.3);
+      border-radius: var(--radius-sm); background: var(--cream);
+      text-align: center; font-size: 22px; font-weight: 700;
+      color: var(--ink); caret-color: var(--gold);
+      transition: all var(--transition);
+    }
+    .otp-digit:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(200,151,91,0.15); }
+    .otp-digit.filled { border-color: var(--gold); background: #fff; }
+
+    .resend-row { text-align: center; margin-top: 16px; }
+    .resend-btn { color: var(--gold-dark); font-size: 14px; font-weight: 600; cursor: pointer; background: none; }
+    .resend-btn:disabled { color: var(--silver); cursor: not-allowed; }
+    #resend-countdown { font-size: 13px; color: var(--ink-muted); }
+
+    /* ======================================================
+       DISCOVER PAGE
+    ====================================================== */
+    .page-content {
+      flex: 1; overflow-y: auto;
+      padding: calc(var(--nav-h)) 0 calc(var(--bottom-h) + 16px);
+    }
+    .section-header {
+      padding: 20px 20px 12px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .section-title { font-size: 1.5rem; font-family: 'Cormorant Garamond', serif; color: var(--ink); }
+    .section-sub { font-size: 13px; color: var(--ink-muted); }
+
+    .candidates-list { padding: 0 16px; display: flex; flex-direction: column; gap: 14px; }
+    .candidate-card {
+      display: flex; gap: 16px; padding: 18px;
+      background: #fff; border-radius: var(--radius-md);
+      border: 1px solid rgba(200,151,91,0.12);
+      box-shadow: var(--shadow-sm);
+      cursor: pointer; transition: all var(--transition);
+      animation: fadeIn 0.4s ease backwards;
+    }
+    .candidate-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: rgba(200,151,91,0.3); }
+    .candidate-card:nth-child(1) { animation-delay: 0.1s; }
+    .candidate-card:nth-child(2) { animation-delay: 0.2s; }
+    .candidate-card:nth-child(3) { animation-delay: 0.3s; }
+    .candidate-card:nth-child(4) { animation-delay: 0.4s; }
+    .candidate-card:nth-child(5) { animation-delay: 0.5s; }
+    .candidate-avatar {
+      width: 72px; height: 72px; border-radius: var(--radius-sm);
+      overflow: hidden; flex-shrink: 0;
+      background: var(--cream);
+      border: 2px solid rgba(200,151,91,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; color: var(--gold-dark);
+    }
+    .candidate-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .candidate-info { flex: 1; min-width: 0; }
+    .candidate-name { font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+    .candidate-meta { font-size: 13px; color: var(--ink-muted); margin-bottom: 8px; }
+    .match-score-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 50px;
+      font-size: 12px; font-weight: 700;
+    }
+    .score-high { background: #f0faf5; color: var(--success); }
+    .score-mid  { background: #fdf6ee; color: var(--gold-dark); }
+    .candidate-summary { font-size: 12px; color: var(--ink-muted); line-height: 1.4; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chat-btn {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 16px; flex-shrink: 0;
+      transition: all var(--transition);
+    }
+    .chat-btn:hover { transform: scale(1.1); }
+
+    .empty-state {
+      text-align: center; padding: 60px 32px;
+      display: flex; flex-direction: column; align-items: center; gap: 16px;
+    }
+    .empty-icon { font-size: 56px; opacity: 0.4; }
+    .empty-title { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; color: var(--ink-light); }
+    .empty-sub { font-size: 14px; color: var(--ink-muted); line-height: 1.6; max-width: 280px; }
+
+    /* Loading skeleton */
+    .skeleton {
+      background: linear-gradient(90deg, #f0e8dc 25%, #fdf6ee 50%, #f0e8dc 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 8px;
+    }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .skeleton-card { height: 110px; margin: 0 16px 14px; border-radius: var(--radius-md); }
+
+    /* Reset timer */
+    .reset-timer {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--cream); border: 1px solid rgba(200,151,91,0.2);
+      border-radius: 50px; padding: 8px 16px;
+      font-size: 13px; color: var(--ink-muted);
+    }
+    #reset-countdown { font-family: monospace; font-weight: 700; color: var(--gold-dark); }
+
+    /* ======================================================
+       CHAT PAGE
+    ====================================================== */
+    .chat-list { padding: 0 16px; display: flex; flex-direction: column; gap: 2px; }
+    .chat-item {
+      display: flex; gap: 14px; align-items: center;
+      padding: 14px 12px; border-radius: var(--radius-sm);
+      cursor: pointer; transition: background var(--transition);
+    }
+    .chat-item:hover { background: var(--cream); }
+    .chat-avatar {
+      width: 54px; height: 54px; border-radius: 50%;
+      background: var(--cream); overflow: hidden; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; color: var(--gold-dark);
+      border: 2px solid rgba(200,151,91,0.15);
+    }
+    .chat-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .online-dot {
+      width: 12px; height: 12px; background: #2d7a4a;
+      border-radius: 50%; border: 2px solid #fff;
+      position: absolute; bottom: 0; right: 0;
+    }
+    .chat-avatar-wrap { position: relative; flex-shrink: 0; }
+    .chat-info { flex: 1; min-width: 0; }
+    .chat-name { font-size: 15px; font-weight: 600; color: var(--ink); }
+    .chat-last { font-size: 13px; color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+    .chat-time { font-size: 11px; color: var(--silver); text-align: right; flex-shrink: 0; }
+    .unread-badge {
+      background: var(--gold); color: #fff;
+      width: 20px; height: 20px; border-radius: 50%;
+      font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ======================================================
+       CHAT ROOM
+    ====================================================== */
+    .chat-room {
+      display: none; flex-direction: column;
+      position: fixed; inset: 0; z-index: 200;
+      background: var(--warm-white);
+    }
+    .chat-room.open { display: flex; }
+    .chat-room-header {
+      height: var(--nav-h);
+      background: rgba(255,252,248,0.95); backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(200,151,91,0.12);
+      display: flex; align-items: center; gap: 14px;
+      padding: 0 16px;
+    }
+    .chat-partner-avatar {
+      width: 42px; height: 42px; border-radius: 50%;
+      overflow: hidden; background: var(--cream);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; color: var(--gold-dark);
+      border: 2px solid rgba(200,151,91,0.2);
+    }
+    .chat-partner-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .chat-partner-info { flex: 1; }
+    .chat-partner-name { font-size: 15px; font-weight: 600; }
+    .chat-partner-status { font-size: 12px; color: var(--success); }
+    .credits-indicator {
+      font-size: 12px; color: var(--ink-muted);
+      background: var(--cream); padding: 4px 10px; border-radius: 50px;
+    }
+    .credits-indicator.low { color: var(--warning); background: #fdf5ee; }
+    .credits-indicator.empty { color: var(--danger); background: #fdf0f0; }
+
+    .chat-messages {
+      flex: 1; overflow-y: auto; padding: 16px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .msg-bubble {
+      max-width: 72%; padding: 10px 14px;
+      border-radius: 18px; font-size: 14px; line-height: 1.5;
+      animation: bubbleIn 0.2s ease;
+    }
+    @keyframes bubbleIn { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
+    .msg-bubble.sent {
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      color: #fff; border-bottom-right-radius: 4px;
+      align-self: flex-end;
+    }
+    .msg-bubble.received {
+      background: #fff; color: var(--ink);
+      border: 1px solid rgba(200,151,91,0.15);
+      border-bottom-left-radius: 4px;
+      align-self: flex-start;
+    }
+    .msg-time { font-size: 10px; opacity: 0.6; margin-top: 4px; }
+    .msg-sent-row { display: flex; flex-direction: column; align-items: flex-end; }
+    .msg-recv-row { display: flex; flex-direction: column; align-items: flex-start; }
+
+    .typing-indicator {
+      display: none; align-items: center; gap: 6px;
+      padding: 8px 14px;
+      background: #fff; border: 1px solid rgba(200,151,91,0.15);
+      border-radius: 18px; border-bottom-left-radius: 4px;
+      max-width: 80px; align-self: flex-start;
+    }
+    .typing-indicator.show { display: flex; }
+    .typing-dot {
+      width: 6px; height: 6px; background: var(--silver);
+      border-radius: 50%; animation: typing 1.2s infinite;
+    }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typing { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+
+    .chat-input-area {
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0));
+      background: rgba(255,252,248,0.98); backdrop-filter: blur(10px);
+      border-top: 1px solid rgba(200,151,91,0.1);
+    }
+    .quick-replies {
+      display: flex; gap: 8px; overflow-x: auto;
+      padding-bottom: 10px; scrollbar-width: none;
+    }
+    .quick-replies::-webkit-scrollbar { display: none; }
+    .quick-reply-btn {
+      white-space: nowrap; padding: 6px 14px;
+      border: 1.5px solid rgba(200,151,91,0.3);
+      border-radius: 50px; font-size: 12px; color: var(--gold-dark);
+      background: var(--cream); cursor: pointer;
+      transition: all var(--transition); flex-shrink: 0;
+    }
+    .quick-reply-btn:hover { background: rgba(200,151,91,0.1); border-color: var(--gold); }
+    .chat-input-row { display: flex; gap: 10px; align-items: flex-end; }
+    .chat-input {
+      flex: 1; padding: 12px 16px;
+      border: 1.5px solid rgba(200,151,91,0.25);
+      border-radius: 24px; background: rgba(253,246,238,0.5);
+      font-size: 14px; color: var(--ink); resize: none;
+      max-height: 120px; min-height: 44px; overflow-y: auto;
+      transition: all var(--transition);
+    }
+    .chat-input:focus { border-color: var(--gold); background: var(--cream); }
+    .send-btn {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      color: #fff; font-size: 18px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all var(--transition); flex-shrink: 0;
+    }
+    .send-btn:hover { transform: scale(1.08); }
+    .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .upgrade-prompt {
+      background: linear-gradient(135deg, #fdf6ee, #fff8f0);
+      border: 1.5px solid rgba(200,151,91,0.3);
+      border-radius: var(--radius-md);
+      padding: 16px; text-align: center; margin-bottom: 12px;
+      display: none;
+    }
+    .upgrade-prompt.show { display: block; }
+    .upgrade-prompt h4 { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; color: var(--ink); margin-bottom: 8px; }
+    .upgrade-prompt p { font-size: 13px; color: var(--ink-muted); margin-bottom: 12px; }
+
+    /* ======================================================
+       QUIZ PAGE
+    ====================================================== */
+    .quiz-header {
+      padding: 20px 24px 16px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .quiz-progress-text { font-size: 13px; color: var(--ink-muted); margin-left: auto; font-weight: 500; }
+    .quiz-body { padding: 0 24px 120px; }
+    .question-category {
+      display: inline-block;
+      background: var(--cream); border: 1px solid rgba(200,151,91,0.2);
+      border-radius: 50px; padding: 4px 12px;
+      font-size: 11px; font-weight: 600; color: var(--gold-dark);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      margin-bottom: 12px;
+    }
+    .question-text {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.4rem; font-weight: 600; color: var(--ink);
+      line-height: 1.4; margin-bottom: 28px;
+    }
+    .quiz-options { display: flex; flex-direction: column; gap: 12px; }
+    .quiz-option {
+      padding: 16px 18px; border-radius: var(--radius-sm);
+      border: 2px solid rgba(200,151,91,0.2);
+      background: #fff; cursor: pointer;
+      font-size: 14px; color: var(--ink-light); line-height: 1.4;
+      transition: all var(--transition); text-align: left;
+    }
+    .quiz-option:hover { border-color: var(--gold); background: var(--cream); }
+    .quiz-option.selected {
+      border-color: var(--gold-dark);
+      background: linear-gradient(135deg, rgba(200,151,91,0.1), rgba(200,151,91,0.05));
+      color: var(--ink);
+    }
+    .quiz-option.selected::before {
+      content: '✓';
+      margin-right: 10px;
+      color: var(--gold-dark);
+      font-weight: 700;
+    }
+    .bio-textarea {
+      width: 100%; padding: 14px 16px;
+      border: 1.5px solid rgba(200,151,91,0.25);
+      border-radius: var(--radius-sm); background: rgba(253,246,238,0.5);
+      font-size: 14px; color: var(--ink); resize: none;
+      height: 120px; transition: all var(--transition); font-family: inherit;
+    }
+    .bio-textarea:focus { border-color: var(--gold); background: var(--cream); }
+    .char-count { font-size: 12px; color: var(--silver); text-align: right; margin-top: 4px; }
+
+    /* Quiz result */
+    .quiz-result {
+      text-align: center; padding: 40px 24px;
+    }
+    .ici-score-display {
+      width: 140px; height: 140px;
+      border-radius: 50%; margin: 0 auto 24px;
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      box-shadow: 0 8px 32px rgba(200,151,91,0.4);
+    }
+    .ici-score-number { font-family: 'Cormorant Garamond', serif; font-size: 2.8rem; font-weight: 700; color: #fff; line-height: 1; }
+    .ici-score-label { font-size: 11px; color: rgba(255,255,255,0.8); }
+    .result-profile { background: var(--cream); border-radius: var(--radius-md); padding: 20px; margin: 20px 0; text-align: left; }
+    .result-profile h4 { font-size: 1rem; font-weight: 600; margin-bottom: 8px; color: var(--ink); }
+    .result-profile p { font-size: 14px; color: var(--ink-muted); line-height: 1.6; }
+
+    /* ======================================================
+       PREMIUM PAGE
+    ====================================================== */
+    .tier-cards { padding: 0 16px; display: flex; flex-direction: column; gap: 16px; }
+    .tier-card {
+      padding: 24px; border-radius: var(--radius-md);
+      border: 2px solid rgba(200,151,91,0.15);
+      background: #fff; position: relative;
+      transition: all var(--transition);
+    }
+    .tier-card:hover { border-color: rgba(200,151,91,0.4); box-shadow: var(--shadow-md); }
+    .tier-card.popular {
+      border-color: var(--gold);
+      box-shadow: 0 4px 24px rgba(200,151,91,0.2);
+    }
+    .tier-popular-badge {
+      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      color: #fff; font-size: 11px; font-weight: 700;
+      padding: 4px 16px; border-radius: 50px;
+      letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .tier-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
+    .tier-name { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 700; color: var(--ink); }
+    .tier-price { text-align: right; }
+    .tier-price .amount { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 700; color: var(--gold-dark); }
+    .tier-price .period { font-size: 13px; color: var(--ink-muted); }
+    .tier-features { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+    .tier-feature { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--ink-light); }
+    .tier-feature::before { content: '✓'; color: var(--success); font-weight: 700; flex-shrink: 0; }
+
+    /* ======================================================
+       PROFILE PAGE
+    ====================================================== */
+    .profile-hero {
+      background: linear-gradient(160deg, #2a1a0e, #4a2e18);
+      padding: 40px 24px 80px; text-align: center;
+    }
+    .profile-avatar-wrap { position: relative; display: inline-block; margin-bottom: 16px; }
+    .profile-avatar {
+      width: 100px; height: 100px; border-radius: 50%;
+      border: 4px solid rgba(200,151,91,0.4);
+      overflow: hidden; background: rgba(255,255,255,0.1);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 36px; color: var(--gold-light);
+    }
+    .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .profile-edit-avatar {
+      position: absolute; bottom: 0; right: 0;
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--gold); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; cursor: pointer; border: 2px solid #fff;
+    }
+    .profile-name { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; color: var(--cream); font-weight: 600; }
+    .profile-meta { font-size: 14px; color: rgba(253,246,238,0.65); margin-top: 4px; }
+
+    .profile-body {
+      padding: 0 16px 100px;
+      margin-top: -40px; position: relative;
+    }
+    .profile-card { background: #fff; border-radius: var(--radius-md); padding: 20px; margin-bottom: 14px; box-shadow: var(--shadow-sm); }
+    .profile-card-title {
+      font-size: 11px; font-weight: 700; color: var(--gold-dark);
+      text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px;
+    }
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .stat-item { text-align: center; padding: 12px; background: var(--cream); border-radius: var(--radius-sm); }
+    .stat-value { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 700; color: var(--gold-dark); }
+    .stat-label { font-size: 11px; color: var(--ink-muted); margin-top: 2px; }
+    .info-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(200,151,91,0.08); font-size: 14px; }
+    .info-row:last-child { border-bottom: none; }
+    .info-key { color: var(--ink-muted); font-size: 13px; }
+    .info-val { color: var(--ink); font-weight: 500; text-align: right; max-width: 60%; }
+    .verified-tag { color: var(--success); font-size: 12px; font-weight: 600; }
+    .pending-tag  { color: var(--warning); font-size: 12px; font-weight: 600; }
+
+    /* ======================================================
+       STATS PAGE
+    ====================================================== */
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 0 16px 16px; }
+    .stat-card { background: #fff; border-radius: var(--radius-md); padding: 18px 12px; text-align: center; border: 1px solid rgba(200,151,91,0.1); }
+    .stat-card .val { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 700; color: var(--gold-dark); }
+    .stat-card .lbl { font-size: 11px; color: var(--ink-muted); margin-top: 4px; line-height: 1.4; }
+    .ici-ring {
+      width: 120px; height: 120px; margin: 0 auto 20px;
+      border-radius: 50%;
+      background: conic-gradient(var(--gold) 0%, var(--cream) 0%);
+      display: flex; align-items: center; justify-content: center;
+      position: relative; transition: background 1s ease;
+    }
+    .ici-ring::before {
+      content: ''; position: absolute; inset: 12px;
+      border-radius: 50%; background: #fff;
+    }
+    .ici-ring-val { position: relative; z-index: 1; font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 700; color: var(--gold-dark); }
+
+    /* ======================================================
+       MODALS
+    ====================================================== */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 500;
+      background: rgba(26,16,10,0.7);
+      backdrop-filter: blur(4px);
+      display: flex; align-items: flex-end; justify-content: center;
+      opacity: 0; pointer-events: none; transition: all 0.3s ease;
+    }
+    .modal-overlay.show { opacity: 1; pointer-events: all; }
+    .modal-sheet {
+      background: var(--warm-white);
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      width: 100%; max-width: 480px;
+      padding: 20px 24px calc(32px + env(safe-area-inset-bottom, 0));
+      transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32,0.72,0,1);
+      max-height: 90vh; overflow-y: auto;
+    }
+    .modal-overlay.show .modal-sheet { transform: translateY(0); }
+    .modal-handle { width: 36px; height: 4px; background: rgba(200,151,91,0.3); border-radius: 2px; margin: 0 auto 20px; }
+    .modal-title { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; margin-bottom: 8px; }
+    .modal-close { position: absolute; top: 20px; right: 20px; background: var(--cream); border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 16px; color: var(--ink-muted); display: flex; align-items: center; justify-content: center; }
+
+    /* IC Modal */
+    .ic-upload-area {
+      border: 2px dashed rgba(200,151,91,0.4); border-radius: var(--radius-md);
+      padding: 40px; text-align: center; cursor: pointer;
+      transition: all var(--transition); background: var(--cream);
+    }
+    .ic-upload-area:hover { border-color: var(--gold); background: rgba(200,151,91,0.05); }
+    .ic-preview { display: none; }
+    .ic-preview img { width: 100%; border-radius: var(--radius-sm); }
+
+    /* Wingman Modal */
+    .wingman-form { display: flex; flex-direction: column; gap: 16px; }
+
+    /* ======================================================
+       TERMS PAGE
+    ====================================================== */
+    .terms-content { padding: 0 20px 100px; font-size: 14px; line-height: 1.7; color: var(--ink-light); }
+    .terms-content h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; margin: 24px 0 8px; color: var(--ink); }
+    .terms-content h4 { font-size: 13px; font-weight: 700; margin: 16px 0 6px; color: var(--ink); }
+    .terms-content p { margin-bottom: 10px; }
+
+    /* ======================================================
+       MISC UTILS
+    ====================================================== */
+    .divider { height: 1px; background: rgba(200,151,91,0.1); margin: 12px 0; }
+    .text-gold { color: var(--gold-dark); }
+    .text-muted { color: var(--ink-muted); }
+    .text-sm { font-size: 13px; }
+    .text-center { text-align: center; }
+    .mt-8 { margin-top: 8px; }
+    .mt-16 { margin-top: 16px; }
+    .mb-16 { margin-bottom: 16px; }
+    .hidden { display: none !important; }
+    .flex-center { display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .icon { font-style: normal; }
+
+    /* ======================================================
+       RESPONSIVE
+    ====================================================== */
+    @media (min-width: 480px) {
+      .reg-body, .quiz-body { max-width: 440px; margin: 0 auto; }
+      .tier-cards { max-width: 440px; margin: 0 auto; }
+    }
+  </style>
 </head>
 <body>
+<div id="app" class="app">
 
-<!-- AMBIENT -->
-<div id="fx"><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div></div>
-<div class="grain"></div>
-<div class="toast" id="toastEl"></div>
+  <!-- ===================== TOAST CONTAINER ===================== -->
+  <div class="toast-container" id="toast-container"></div>
 
-<!-- ═════════ LANDING ═════════ -->
-<div id="P-land" class="page active">
-  <div class="scroll">
-    <div class="W P col g16" style="padding-top:28px;padding-bottom:44px">
-      <div style="text-align:center" class="fu">
-        <h1 class="serif shimmer" style="font-size:44px;font-weight:800;letter-spacing:-.02em;line-height:1.1">Jodohku</h1>
-        <p style="font-size:11px;color:var(--t2);margin-top:6px;white-space:pre-line;line-height:1.6">Cari jodoh sekufu. Tiada scammer.\nDisahkan IC. Dipadankan oleh AI.</p>
-      </div>
-      <div class="pbar fu1">
-        <span style="color:var(--gold);font-weight:700">🎟️ Pioneer Pass Terbuka —</span>
-        <span style="color:var(--gold2);font-weight:800">7 Hari PERCUMA</span>
-        <span style="font-size:9px;color:var(--t2)">| Baki: <span id="pc" style="color:var(--gold);font-weight:800">2,847</span></span>
-      </div>
-
-      <!-- REGISTRATION -->
-      <div class="glass fu2" style="border-radius:26px;padding:22px">
-        <h2 class="serif gold" style="font-size:28px;font-weight:800;margin-bottom:3px">Daftar Sekarang</h2>
-        <p style="font-size:11px;color:var(--t2);margin-bottom:14px">Percuma untuk 3,000 Pioneer pertama</p>
-        <div class="step-bar"><div class="sb cur" id="rs1"></div><div class="sb" id="rs2"></div><div class="sb" id="rs3"></div></div>
-
-        <!-- STEP 1 -->
-        <div id="reg-s1" class="col g14">
-          <div class="fl"><label class="flb">Nombor Telefon</label><input id="r-ph" type="tel" class="fi" placeholder="0123456789" inputmode="numeric"/></div>
-          <div class="fl"><label class="flb">Nama Panggilan</label><input id="r-nm" type="text" class="fi" placeholder="Nama anda"/></div>
-          <div class="fl"><label class="flb">Tarikh Lahir</label><input id="r-dob" type="date" class="fi"/></div>
-          <div class="fr">
-            <div class="fl"><label class="flb">Jantina</label><select id="r-gd" class="fi"><option value="Lelaki">Lelaki</option><option value="Perempuan">Perempuan</option></select></div>
-            <div class="fl"><label class="flb">Status</label><select id="r-st" class="fi"><option value="Bujang">Bujang</option><option value="Janda">Janda</option><option value="Duda">Duda</option><option value="Ibu Tunggal">Ibu Tunggal</option><option value="Bapa Tunggal">Bapa Tunggal</option></select></div>
-          </div>
-          <div class="fl"><label class="flb">Pendapatan Tahunan</label><select id="r-income" class="fi"><option value="">Pilih julat pendapatan...</option><option value="B40">RM 24,000 – RM 50,000</option><option value="M40">RM 50,001 – RM 100,000</option><option value="T20">RM 100,001 – RM 250,000</option><option value="VVIP">Lebih RM 250,000</option></select></div>
-          <div id="r-msg1" class="mb"></div>
-          <button class="btn btn-p" onclick="regStep1()">Seterusnya →</button>
+  <!-- ===================== LANDING PAGE ===================== -->
+  <div class="page active" id="page-landing">
+    <div class="landing-hero">
+      <div class="hero-pattern"></div>
+      <nav class="hero-nav">
+        <div class="hero-logo">Jodoh<span>ku</span></div>
+        <button class="hero-login-btn" onclick="showPage('page-login')">Log Masuk</button>
+      </nav>
+      <div class="hero-content">
+        <div class="hero-badge">
+          <div class="hero-badge-dot"></div>
+          <span>🎟️ Pioneer Pass — 7 Hari PERCUMA</span>
         </div>
-
-        <!-- STEP 2 -->
-        <div id="reg-s2" style="display:none" class="col g14">
-          <h2 class="serif" style="font-size:21px;font-weight:700;margin-bottom:2px">Pengesahan Identiti</h2>
-          <p style="font-size:11px;color:var(--t2);margin-bottom:8px">Untuk keselamatan semua pengguna. Data dienkripsi PDPA 2010.</p>
-          <div class="fl"><label class="flb">Emel (pemulihan akaun)</label><input id="r-em" type="email" class="fi" placeholder="nama@emel.com"/></div>
-          <div class="fl"><label class="flb">Negeri Tempat Tinggal</label><select id="r-negeri" class="fi"><option value="">Pilih Negeri</option><option>Johor</option><option>Kedah</option><option>Kelantan</option><option>Melaka</option><option>Negeri Sembilan</option><option>Pahang</option><option>Perak</option><option>Perlis</option><option>Pulau Pinang</option><option>Sabah</option><option>Sarawak</option><option>Selangor</option><option>Terengganu</option><option>W.P. Kuala Lumpur</option><option>W.P. Putrajaya</option><option>W.P. Labuan</option></select></div>
-          <div class="fl"><label class="flb">No. IC (4 digit terakhir)</label><input id="r-ic" type="text" class="fi" placeholder="XXXX" maxlength="4" inputmode="numeric"/><span style="font-size:9px;color:var(--t3)">Untuk verifikasi umur. TIDAK disimpan sepenuhnya.</span></div>
-          <div style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid rgba(255,255,255,.06);border-radius:var(--r);cursor:pointer" id="captcha-box" onclick="solveCapt()">
-            <span id="capt-ico" style="font-size:20px">🤖</span><span style="font-size:11px;color:var(--t2)">Saya bukan robot</span><span id="capt-spin" class="spin" style="display:none;margin-left:auto"></span>
-          </div>
-          <div id="r-msg2" class="mb"></div>
-          <button class="btn btn-p" onclick="regStep2()">Seterusnya →</button>
-          <button onclick="document.getElementById('reg-s1').style.display='flex';document.getElementById('reg-s2').style.display='none';stepBar(0)" style="font-size:11px;color:var(--t2);padding:5px;text-align:center">← Kembali</button>
+        <h1 class="hero-title">Cari Jodoh<br><em>Sekufu</em></h1>
+        <p class="hero-subtitle">Disahkan IC. Tiada scammer. Dipadankan oleh AI dengan 30 dimensi keserasian.</p>
+        <div class="hero-features">
+          <div class="hero-feature">🔐 Zero Password</div>
+          <div class="hero-feature">🤖 AI Matchmaker</div>
+          <div class="hero-feature">🛡️ IC Verified</div>
         </div>
+        <button class="btn btn-primary btn-lg" onclick="showPage('page-register')">
+          Daftar Percuma →
+        </button>
+        <div class="pioneer-counter">
+          <div class="label">🎟️ Pioneer Pass Baki</div>
+          <div class="count" id="pioneer-count">...</div>
+          <div class="sublabel">daripada 3,000 slot percuma</div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-        <!-- STEP 3 -->
-        <div id="reg-s3" style="display:none" class="col g14">
-          <h2 class="serif" style="font-size:23px;font-weight:700;margin-bottom:4px">Gambar Profil</h2>
-          <p style="font-size:11px;color:var(--t2);margin-bottom:14px">1 gambar sahaja dibenarkan. Mesti jelas, sopan & menunjukkan wajah anda.</p>
-          <div class="photo-zone" id="reg-pz" onclick="trigUpload('reg-ph-in')" style="max-height:200px">
-            <input type="file" id="reg-ph-in" accept="image/jpeg,image/png,image/webp" style="z-index:3" onchange="handlePhotoUpload(this,'reg-pz','reg-ph-prev')"/>
-            <div id="reg-ph-prev" style="display:none;position:absolute;inset:0;z-index:2"><img id="reg-ph-img" src="" style="width:100%;height:100%;object-fit:cover;border-radius:calc(var(--r3) - 2px)"/></div>
-            <div style="z-index:1;display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px" id="reg-ph-hint">
-              <div style="font-size:36px">📷</div>
-              <!--<span style="font-size:12px;color:var(--t2)">Ketik untuk muat naik gambar</span>-->
-              <span style="font-size:10px;color:var(--t3)">Maksimum 1 gambar • JPG/PNG • 5MB</span>
+  <!-- ===================== REGISTER PAGE ===================== -->
+  <div class="page" id="page-register">
+    <div class="reg-page">
+      <!-- Step 1: Maklumat Asas -->
+      <div id="reg-step-1">
+        <div class="reg-header">
+          <button class="back-btn" onclick="showPage('page-landing')">←</button>
+          <div>
+            <div class="step-label">Langkah 1 daripada 3</div>
+            <div style="font-size:12px;color:var(--ink-muted)">Maklumat Asas</div>
+          </div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:33%"></div></div>
+        <div class="reg-body">
+          <h2 class="reg-title">Daftar Sekarang</h2>
+          <p class="reg-subtitle">Percuma untuk 3,000 Pioneer pertama. Tiada kad kredit diperlukan.</p>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Nombor Telefon *</label>
+              <input class="form-input" id="reg-phone" type="tel" placeholder="cth: 0123456789" maxlength="15">
+              <span class="form-error" id="err-phone"></span>
             </div>
-            <div class="ph-overlay" style="z-index:4"><span style="font-size:22px">✏️</span><span style="font-size:11px;color:white">Tukar Gambar</span></div>
+            <div class="form-group">
+              <label class="form-label">Nama Panggilan *</label>
+              <input class="form-input" id="reg-nickname" type="text" placeholder="cth: Ahmad" maxlength="30">
+              <span class="form-error" id="err-nickname"></span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tarikh Lahir * <span class="form-hint">(Umur 18–55 tahun)</span></label>
+              <input class="form-input" id="reg-dob" type="date">
+              <span class="form-error" id="err-dob"></span>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Jantina *</label>
+                <select class="form-input" id="reg-gender">
+                  <option value="">Pilih</option>
+                  <option value="lelaki">Lelaki</option>
+                  <option value="perempuan">Perempuan</option>
+                </select>
+                <span class="form-error" id="err-gender"></span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Status *</label>
+                <select class="form-input" id="reg-status">
+                  <option value="">Pilih</option>
+                  <option value="bujang">Bujang</option>
+                  <option value="janda">Janda</option>
+                  <option value="duda">Duda</option>
+                  <option value="ibu_tunggal">Ibu Tunggal</option>
+                  <option value="bapa_tunggal">Bapa Tunggal</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Pendapatan Tahunan *</label>
+              <select class="form-input" id="reg-income">
+                <option value="">Pilih julat pendapatan...</option>
+                <option value="rm24k-rm50k">RM 24,000 – RM 50,000</option>
+                <option value="rm50k-rm100k">RM 50,001 – RM 100,000</option>
+                <option value="rm100k-rm250k">RM 100,001 – RM 250,000</option>
+                <option value="rm250k+">Lebih RM 250,000</option>
+              </select>
+              <span class="form-error" id="err-income"></span>
+            </div>
           </div>
-          <label class="cw" onclick="ck('cb-tnc')">
-            <div class="cb" id="cb-tnc"></div>
-            <span class="ct">Saya bersetuju dengan <button onclick="event.stopPropagation();go('P-tnc')" style="color:var(--gold);font-size:11px;font-weight:600;text-decoration:underline">Terma & Syarat</button> dan Polisi Privasi (PDPA 2010). Saya mengesahkan maklumat yang diberikan adalah benar.</span>
-          </label>
-          <div id="r-msg3" class="mb"></div>
-          <button id="r-finbtn" class="btn btn-p glow-btn" onclick="regFinal()">
-            <span id="r-ftxt">Daftar & Aktifkan Pioneer Pass →</span>
-            <span id="r-fspin" class="spin" style="display:none"></span>
+        </div>
+        <div class="reg-footer">
+          <button class="btn btn-primary btn-full" id="btn-step1" onclick="submitStep1()">Seterusnya →</button>
+          <p style="text-align:center;margin-top:12px;font-size:13px;color:var(--ink-muted)">
+            Sudah ada akaun? <span style="color:var(--gold-dark);font-weight:600;cursor:pointer" onclick="showPage('page-login')">Log Masuk</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Step 2: Pengesahan Identiti -->
+      <div id="reg-step-2" class="hidden">
+        <div class="reg-header">
+          <button class="back-btn" onclick="showRegStep(1)">←</button>
+          <div>
+            <div class="step-label">Langkah 2 daripada 3</div>
+            <div style="font-size:12px;color:var(--ink-muted)">Pengesahan Identiti</div>
+          </div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:66%"></div></div>
+        <div class="reg-body">
+          <h2 class="reg-title">Pengesahan Identiti</h2>
+          <p class="reg-subtitle">Untuk keselamatan semua pengguna. Data dienkripsi mengikut PDPA 2010.</p>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Emel (untuk log masuk & pemulihan akaun) *</label>
+              <input class="form-input" id="reg-email" type="email" placeholder="nama@email.com">
+              <span class="form-error" id="err-email"></span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Negeri Tempat Tinggal *</label>
+              <select class="form-input" id="reg-state">
+                <option value="">Pilih Negeri</option>
+                <option>Johor</option><option>Kedah</option><option>Kelantan</option>
+                <option>Melaka</option><option>Negeri Sembilan</option><option>Pahang</option>
+                <option>Perak</option><option>Perlis</option><option>Pulau Pinang</option>
+                <option>Sabah</option><option>Sarawak</option><option>Selangor</option>
+                <option>Terengganu</option><option>W.P. Kuala Lumpur</option>
+                <option>W.P. Putrajaya</option><option>W.P. Labuan</option>
+              </select>
+              <span class="form-error" id="err-state"></span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">No. IC — 4 digit terakhir *</label>
+              <input class="form-input" id="reg-ic" type="tel" placeholder="cth: 1234" maxlength="4" pattern="[0-9]{4}">
+              <span class="form-hint">Untuk verifikasi umur sahaja. TIDAK disimpan sepenuhnya.</span>
+              <span class="form-error" id="err-ic"></span>
+            </div>
+            <div class="form-group">
+              <div class="captcha-box" id="captcha-box" onclick="toggleCaptcha()">
+                <input type="checkbox" id="captcha-check" disabled>
+                <span class="captcha-text" id="captcha-text">🤖 Saya bukan robot</span>
+              </div>
+              <span class="form-error" id="err-captcha"></span>
+            </div>
+          </div>
+        </div>
+        <div class="reg-footer">
+          <button class="btn btn-primary btn-full" id="btn-step2" onclick="submitStep2()">Seterusnya →</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Gambar Profil -->
+      <div id="reg-step-3" class="hidden">
+        <div class="reg-header">
+          <button class="back-btn" onclick="showRegStep(2)">←</button>
+          <div>
+            <div class="step-label">Langkah 3 daripada 3</div>
+            <div style="font-size:12px;color:var(--ink-muted)">Gambar Profil</div>
+          </div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+        <div class="reg-body">
+          <h2 class="reg-title">Gambar Profil</h2>
+          <p class="reg-subtitle">1 gambar sahaja. Mesti jelas, sopan & menunjukkan wajah anda.</p>
+          <div class="photo-upload-area" id="photo-area" onclick="document.getElementById('photo-input').click()">
+            <img id="photo-preview" src="" alt="" style="display:none">
+            <div id="photo-placeholder">
+              <div class="photo-upload-icon">📷</div>
+              <div class="photo-upload-text">Ketik untuk pilih gambar<br><small>JPG/PNG • Maks 5MB</small></div>
+            </div>
+          </div>
+          <input type="file" id="photo-input" accept="image/jpeg,image/png" onchange="previewPhoto(this)">
+          <div class="form-group">
+            <div class="terms-row">
+              <input type="checkbox" id="reg-terms">
+              <div class="terms-text">
+                Saya bersetuju dengan <span class="terms-link" onclick="showModal('modal-terms')">Terma & Syarat</span> dan <span class="terms-link" onclick="showModal('modal-terms')">Polisi Privasi (PDPA 2010)</span>. Saya mengesahkan maklumat yang diberikan adalah benar.
+              </div>
+            </div>
+            <span class="form-error" id="err-terms"></span>
+          </div>
+        </div>
+        <div class="reg-footer">
+          <button class="btn btn-primary btn-full" id="btn-step3" onclick="submitStep3()">
+            🎟️ Daftar & Aktifkan Pioneer Pass
           </button>
-          <button onclick="document.getElementById('reg-s2').style.display='block';document.getElementById('reg-s3').style.display='none';stepBar(1)" style="font-size:11px;color:var(--t2);padding:5px;text-align:center">← Kembali</button>
-        </div>
-
-        <div style="margin-top:14px"><div class="sep"></div>
-        <div style="text-align:center;margin-top:12px;font-size:11px;color:var(--t3)">Sudah ada akaun? <button onclick="go('P-login')" style="color:var(--gold);font-weight:600;font-size:11px">Log Masuk</button></div></div>
-      </div>
-
-      <div class="row g10 fu3">
-        <div class="card-sm f1" style="padding:13px;text-align:center"><div style="font-size:22px;margin-bottom:5px">🔐</div><div style="font-size:9px;color:var(--t2);line-height:1.5">Zero Password<br/>Face ID / OTP</div></div>
-        <div class="card-sm f1" style="padding:13px;text-align:center"><div style="font-size:22px;margin-bottom:5px">🤖</div><div style="font-size:9px;color:var(--t2);line-height:1.5">AI Matchmaker<br/>30 Dimensi</div></div>
-        <div class="card-sm f1" style="padding:13px;text-align:center"><div style="font-size:22px;margin-bottom:5px">🛡️</div><div style="font-size:9px;color:var(--t2);line-height:1.5">IC Verified<br/>Zero Scammer</div></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ═════════ LOGIN ═════════ -->
-<div id="P-login" class="page">
-  <div class="scroll">
-    <div class="W P col g16" style="padding-top:20px;padding-bottom:40px">
-      <button onclick="go('P-land')" style="font-size:12px;color:var(--t2);display:flex;align-items:center;gap:5px;align-self:flex-start">← Kembali</button>
-      <div><h2 class="serif gold" style="font-size:38px;font-weight:800">Log Masuk</h2><p style="font-size:13px;color:var(--t2);margin-top:3px">Masukkan emel anda untuk log masuk</p></div>
-      <div class="glass fu" style="border-radius:24px;padding:22px">
-        <div id="l-s1" class="col g14">
-          <div class="fl"><label class="flb">Alamat Emel</label><input id="l-ph" type="email" class="fi" placeholder="nama@emel.com"/></div>
-          <div id="l-m1" class="mb"></div>
-          <button id="l-b1" class="btn btn-p" onclick="doOTP()"><span id="l-b1t">Hantar Kod OTP</span><span id="l-b1s" class="spin" style="display:none"></span></button>
-        </div>
-        <div id="l-s2" style="display:none" class="col g14">
-          <p style="font-size:12px;color:var(--t2)">Kod dihantar ke <span id="l-phshow" style="color:var(--gold);font-weight:600"></span></p>
-          <div class="fl"><label class="flb">Kod OTP 6 Digit</label><input id="l-otp" type="tel" class="fi" placeholder="• • • • • •" maxlength="6" inputmode="numeric" style="font-size:20px;text-align:center;letter-spacing:.55em;font-weight:700"/></div>
-          <div id="l-m2" class="mb"></div>
-          <button id="l-b2" class="btn btn-p" onclick="doVerify()"><span id="l-b2t">Sahkan & Masuk</span><span id="l-b2s" class="spin" style="display:none"></span></button>
-          <button onclick="backOTP()" style="font-size:11px;color:var(--t2);text-align:center;padding:5px">↺ Hantar semula OTP</button>
         </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- ═════════ DASHBOARD ═════════ -->
-<div id="P-dash" class="page">
-  <div class="tnav">
-    <span class="tnav-logo shimmer">Jodohku</span>
-    <div class="tnav-r">
-      <button onclick="setLang(CL==='ms'?'en':'ms')" style="font-size:11px;color:var(--t3);padding:4px 8px;border-radius:16px;border:1px solid var(--gborder)" id="lang-tog">🌐 EN</button>
-      <span id="nav-badge" class="bdg bsilver">SILVER</span>
-      <div class="av" id="nav-av" onclick="go('P-profile')"><span id="nav-av-ic">👤</span><img id="nav-av-img" src="" style="display:none;width:100%;height:100%;object-fit:cover"/></div>
-    </div>
-  </div>
-  <div id="trial-bar" style="display:none" class="tbar">
-    <span style="color:var(--t2);font-size:10px">⏰ Trial tamat:</span>
-    <span id="trial-time" style="font-family:'Courier New',monospace;font-weight:800;color:var(--red);font-size:13px">--:--:--</span>
-    <button onclick="go('P-pricing')" style="font-size:11px;color:var(--gold);font-weight:600">Langgan →</button>
-  </div>
-  <div id="rmnd-7" style="display:none" class="rmnd-bar rmnd-7"><span>📅</span><span style="flex:1">Langganan anda tamat dalam <strong>7 hari</strong>.</span><button onclick="go('P-pricing');this.closest('.rmnd-bar').style.display='none'" style="font-size:11px;color:var(--gold);font-weight:600;white-space:nowrap">Perbaharui</button></div>
-  <div id="rmnd-3" style="display:none" class="rmnd-bar rmnd-3"><span>⚠️</span><span style="flex:1">Amaran! Langganan tamat dalam <strong>3 hari</strong>.</span><button onclick="go('P-pricing');this.closest('.rmnd-bar').style.display='none'" style="font-size:11px;color:var(--orange);font-weight:600;white-space:nowrap">Perbaharui Sekarang</button></div>
-  <div id="rmnd-1" style="display:none" class="rmnd-bar rmnd-1"><span>🚨</span><span style="flex:1"><strong>Amaran Kritikal:</strong> Langganan tamat ESOK!</span><button onclick="go('P-pricing');this.closest('.rmnd-bar').style.display='none'" style="font-size:11px;color:var(--red);font-weight:700;white-space:nowrap">Perbaharui Segera!</button></div>
+  <!-- ===================== LOGIN PAGE ===================== -->
+  <div class="page" id="page-login">
+    <div class="login-page">
+      <div class="login-card">
+        <div class="login-logo">💍 Jodohku</div>
+        <p class="login-sub">Log masuk dengan OTP — Tanpa kata laluan</p>
 
-  <div class="scroll" id="dash-scroll">
-    <!-- Discover -->
-    <div id="dash-discover">
-      <div class="W P" style="padding-top:14px;padding-bottom:12px">
-        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:14px">
-          <div><h2 class="serif" style="font-size:24px;font-weight:700" id="lbl-discover-title">Calon Hari Ini</h2><p style="font-size:10px;color:var(--t3);margin-top:2px" id="lbl-discover-sub">Kurasi AI eksklusif — Hanya 80%+ padanan</p></div>
-          <div style="text-align:right"><div style="font-size:9px;color:var(--t3)">Reset esok 8 PG</div><div id="next-rf" style="font-size:11px;color:var(--gold);font-family:'Courier New',monospace;font-weight:700;margin-top:1px">08:00</div></div>
+        <!-- Step: Input Email -->
+        <div id="login-email-step">
+          <div class="form-group">
+            <label class="form-label">Alamat Emel</label>
+            <input class="form-input" id="login-email" type="email" placeholder="nama@email.com">
+            <span class="form-error" id="err-login-email"></span>
+          </div>
+          <button class="btn btn-primary btn-full mt-16" id="btn-send-otp" onclick="sendOTP()">
+            Hantar Kod OTP
+          </button>
+          <p class="text-center mt-8 text-sm text-muted">
+            Belum ada akaun? <span class="text-gold" style="cursor:pointer;font-weight:600" onclick="showPage('page-register')">Daftar Percuma</span>
+          </p>
         </div>
-        <div id="f-load" style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:56px 0"><div class="spin spin-lg"></div><p style="font-size:11px;color:var(--t3)" id="lbl-feed-loading" id="lbl-feed-loading">AI sedang menganalisis 30 dimensi keserasian...</p></div>
-        <div id="f-cards" class="col g16" style="display:none"></div>
-        <div id="f-lock" style="display:none" class="card" style="padding:40px 20px">
-          <div style="padding:38px 18px;text-align:center"><div style="font-size:44px;margin-bottom:12px">🔒</div><h3 class="serif" style="font-size:22px;margin-bottom:7px">Kurasi Harian Selesai</h3><p style="font-size:13px;color:var(--t2);line-height:1.7">5 calon hari ini telah dikurasi.<br/>Calon baru hadir esok jam <span style="color:var(--gold);font-weight:600">8:00 PG</span>.</p></div>
+
+        <!-- Step: Input OTP -->
+        <div id="login-otp-step" class="hidden">
+          <p style="font-size:14px;color:var(--ink-muted);text-align:center;margin-bottom:8px">
+            Kod dihantar ke <strong id="otp-email-display"></strong>
+          </p>
+          <div class="otp-input-group">
+            <input class="otp-digit" maxlength="1" type="tel" oninput="otpInput(this,0)" onkeydown="otpKeydown(this,0)">
+            <input class="otp-digit" maxlength="1" type="tel" oninput="otpInput(this,1)" onkeydown="otpKeydown(this,1)">
+            <input class="otp-digit" maxlength="1" type="tel" oninput="otpInput(this,2)" onkeydown="otpKeydown(this,2)">
+            <input class="otp-digit" maxlength="1" type="tel" oninput="otpInput(this,3)" onkeydown="otpKeydown(this,3)">
+            <input class="otp-digit" maxlength="1" type="tel" oninput="otpInput(this,4)" onkeydown="otpKeydown(this,4)">
+            <input class="otp-digit" maxlength="1" type="tel" oninput="otpInput(this,5)" onkeydown="otpKeydown(this,5)">
+          </div>
+          <button class="btn btn-primary btn-full" id="btn-verify-otp" onclick="verifyOTP()" disabled>
+            Sahkan & Masuk
+          </button>
+          <div class="resend-row mt-16">
+            <span id="resend-countdown" class="text-muted text-sm"></span>
+            <button class="resend-btn" id="btn-resend" onclick="resendOTP()" disabled>
+              ↺ Hantar semula OTP
+            </button>
+          </div>
         </div>
-        <div id="low-match-warn" style="display:none" class="low-match-box fu">
-          <div style="font-size:32px;margin-bottom:8px">📋</div>
-          <h3 style="font-size:15px;font-weight:700;color:var(--orange);margin-bottom:6px">Padanan Anda Masih Rendah</h3>
-          <p style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:12px">Skor keserasian anda belum mencapai 80%. Sila lengkapkan atau semak semula Ujian Keserasian 30 Dimensi dan tambah maklumat keperibadian untuk hasil padanan yang lebih tepat.</p>
-          <button class="btn btn-go btn-sm" style="width:auto;margin:0 auto;padding:10px 20px" onclick="go('P-psych')">🧪 Semak Semula Ujian →</button>
-        </div>
+
+        <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:20px" onclick="showPage('page-landing')">← Kembali</button>
       </div>
     </div>
-    <!-- Chat list -->
-    <div id="dash-chat" style="display:none">
-      <div class="W" style="padding-top:8px">
-        <div style="padding:10px 17px"><h2 class="serif" style="font-size:22px;font-weight:700" id="lbl-chat-title">Sembang</h2></div>
-        <div id="chat-empty" style="display:flex;flex-direction:column;align-items:center;gap:12px;padding:52px 20px;text-align:center"><div style="font-size:44px">💬</div><p style="font-size:14px;color:var(--t2)" id="lbl-chat-empty">Tiada padanan lagi</p><p style="font-size:12px;color:var(--t3)" id="lbl-chat-empty-sub">Pergi ke Discover untuk mula!</p></div>
-        <div id="chat-items"></div>
-      </div>
+  </div>
+
+  <!-- ===================== MAIN APP ===================== -->
+  <div class="main-app" id="main-app">
+
+    <!-- Trial Bar -->
+    <div class="trial-bar" id="trial-bar">
+      ⏰ Trial tamat dalam: <span id="trial-countdown">--:--:--</span>
+      &nbsp;|&nbsp;
+      <span style="text-decoration:underline;cursor:pointer" onclick="showPage('page-premium')">Langgan →</span>
     </div>
-    <!-- Insights -->
-    <div id="dash-insights" style="display:none">
-      <div class="W P" style="padding-top:14px;padding-bottom:20px">
-        <h2 class="serif" style="font-size:22px;font-weight:700;margin-bottom:12px" id="lbl-insights-title">📊 Statistik & Wawasan</h2>
-        <div class="col g12" id="insights-content">
-          <div class="glass fu" style="border-radius:20px;padding:18px;text-align:center">
-            <div class="insight-ring" style="margin-bottom:10px">
-              <svg viewBox="0 0 90 90"><circle cx="45" cy="45" r="38" fill="none" stroke="var(--s4)" stroke-width="5"/><circle cx="45" cy="45" r="38" fill="none" stroke="var(--gold)" stroke-width="5" stroke-dasharray="239" stroke-dashoffset="48" stroke-linecap="round" id="ins-ring"/></svg>
-              <span class="val gold" id="ins-score">—</span>
+
+    <!-- Top Nav -->
+    <header class="top-nav">
+      <div class="nav-logo">Jodoh<span>ku</span></div>
+      <div class="nav-right">
+        <span class="tier-badge" id="nav-tier-badge">...</span>
+        <div class="nav-avatar" onclick="switchTab('profile')">
+          <img id="nav-avatar-img" src="" alt="👤" onerror="this.style.display='none'">
+        </div>
+      </div>
+    </header>
+
+    <!-- Tab Content -->
+    <div style="flex:1;overflow:hidden;position:relative">
+
+      <!-- DISCOVER TAB -->
+      <div class="page-content" id="tab-discover" style="display:block">
+        <div class="section-header">
+          <div>
+            <h2 class="section-title">Calon Hari Ini</h2>
+            <div class="section-sub">Kurasi AI eksklusif — Hanya 80%+ padanan</div>
+          </div>
+          <div class="reset-timer">
+            🕐 Reset: <span id="reset-countdown">08:00</span>
+          </div>
+        </div>
+        <div id="discover-loading">
+          <div class="skeleton skeleton-card"></div>
+          <div class="skeleton skeleton-card"></div>
+          <div class="skeleton skeleton-card" style="opacity:0.6"></div>
+        </div>
+        <div class="candidates-list" id="candidates-list"></div>
+        <div id="discover-empty" class="empty-state hidden">
+          <div class="empty-icon">🔍</div>
+          <div class="empty-title">Tiada Padanan Lagi</div>
+          <p class="empty-sub" id="discover-empty-msg">Sila lengkapkan Ujian 30 Dimensi untuk mendapat padanan AI yang tepat.</p>
+          <button class="btn btn-primary" onclick="switchTab('profile');setTimeout(()=>openQuiz(),300)">
+            🧪 Mulakan Ujian →
+          </button>
+        </div>
+      </div>
+
+      <!-- CHAT TAB -->
+      <div class="page-content" id="tab-chat" style="display:none">
+        <div class="section-header">
+          <h2 class="section-title">Sembang</h2>
+        </div>
+        <div id="chat-loading">
+          <div class="skeleton skeleton-card" style="height:72px;margin-bottom:4px"></div>
+          <div class="skeleton skeleton-card" style="height:72px;margin-bottom:4px;opacity:0.7"></div>
+        </div>
+        <div class="chat-list" id="chat-list"></div>
+        <div id="chat-empty" class="empty-state hidden">
+          <div class="empty-icon">💬</div>
+          <div class="empty-title">Tiada Perbualan Lagi</div>
+          <p class="empty-sub">Pergi ke Discover dan mula sembang dengan calon pilihan anda!</p>
+          <button class="btn btn-primary" onclick="switchTab('discover')">💎 Pergi ke Discover</button>
+        </div>
+      </div>
+
+      <!-- STATS TAB -->
+      <div class="page-content" id="tab-stats" style="display:none">
+        <div class="section-header">
+          <h2 class="section-title">📊 Wawasan</h2>
+        </div>
+        <div style="text-align:center;padding:20px 16px">
+          <div class="ici-ring" id="ici-ring">
+            <div class="ici-ring-val" id="ici-ring-val">—</div>
+          </div>
+          <div style="font-size:13px;color:var(--ink-muted)">INDEKS KESERASIAN 30 DIMENSI</div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="val" id="stat-matches">0</div><div class="lbl">Padanan</div></div>
+          <div class="stat-card"><div class="val" id="stat-high">0</div><div class="lbl">90%+ Terbaik</div></div>
+          <div class="stat-card"><div class="val" id="stat-convos">0</div><div class="lbl">Perbualan</div></div>
+        </div>
+        <div style="padding:0 16px 16px">
+          <div class="profile-card">
+            <div class="profile-card-title">Profil AI Anda</div>
+            <div id="ai-profile-display" style="font-size:14px;color:var(--ink-muted);line-height:1.6">
+              Lengkapkan Ujian 30 Dimensi untuk mendapat analisis keperibadian AI yang menyeluruh.
             </div>
-            <div style="font-size:10px;color:var(--t3);margin-bottom:4px">INDEKS KESERASIAN KESELURUHAN</div>
-            <div style="font-size:12px;color:var(--t2)" id="ins-type">Sila lengkapkan ujian 30 dimensi</div>
           </div>
-          <div class="row g8 fu1">
-            <div class="card-sm f1" style="padding:14px;text-align:center"><div class="serif gold" style="font-size:22px;font-weight:700" id="ins-matches">0</div><div style="font-size:9px;color:var(--t3);margin-top:3px">Padanan</div></div>
-            <div class="card-sm f1" style="padding:14px;text-align:center"><div class="serif" style="font-size:22px;font-weight:700;color:var(--green)" id="ins-best">0</div><div style="font-size:9px;color:var(--t3);margin-top:3px">90%+ Terbaik</div></div>
-            <div class="card-sm f1" style="padding:14px;text-align:center"><div class="serif" style="font-size:22px;font-weight:700" id="ins-chats">0</div><div style="font-size:9px;color:var(--t3);margin-top:3px">Perbualan</div></div>
+        </div>
+        <div style="padding:0 16px 100px">
+          <button class="btn btn-outline btn-full" onclick="switchTab('profile');setTimeout(()=>openQuiz(),300)">
+            🧪 Mulakan/Semak Semula Ujian
+          </button>
+        </div>
+      </div>
+
+      <!-- PREMIUM TAB -->
+      <div class="page-content" id="tab-premium" style="display:none">
+        <div class="section-header">
+          <div>
+            <h2 class="section-title">👑 Premium</h2>
+            <div class="section-sub">Pilih tier yang sesuai dengan anda</div>
           </div>
-          <div class="card fu2" style="padding:16px">
-            <div style="font-size:9px;font-weight:700;letter-spacing:.15em;color:var(--t3);margin-bottom:10px">DIMENSI TERTINGGI ANDA</div>
-            <div id="ins-dims" class="col g8"></div>
+        </div>
+        <div class="tier-cards" id="tier-cards">
+          <!-- Dijana oleh JS -->
+        </div>
+      </div>
+
+      <!-- PROFILE TAB -->
+      <div id="tab-profile" style="display:none;overflow-y:auto;padding-bottom:var(--bottom-h)">
+        <div class="profile-hero">
+          <div class="profile-avatar-wrap">
+            <div class="profile-avatar" id="profile-avatar-display">
+              <img id="profile-photo" src="" alt="" onerror="this.style.display='none'">
+              <span id="profile-avatar-emoji">👤</span>
+            </div>
+            <div class="profile-edit-avatar" onclick="document.getElementById('profile-photo-input').click()">✏️</div>
           </div>
-          <div class="card fu3" style="padding:16px">
-            <div style="font-size:9px;font-weight:700;letter-spacing:.15em;color:var(--t3);margin-bottom:10px">PROFIL AI ANDA</div>
-            <p style="font-size:12px;color:var(--t2);line-height:1.65" id="ins-ai-desc">Lengkapkan ujian 30 dimensi untuk mendapat analisis keperibadian AI yang menyeluruh.</p>
+          <input type="file" id="profile-photo-input" accept="image/jpeg,image/png" onchange="uploadProfilePhoto(this)" style="display:none">
+          <h2 class="profile-name" id="profile-name">—</h2>
+          <div class="profile-meta" id="profile-meta">—</div>
+        </div>
+        <div class="profile-body">
+          <div class="profile-card" style="margin-top:0">
+            <div class="stat-grid">
+              <div class="stat-item">
+                <div class="stat-value" id="profile-ici">—</div>
+                <div class="stat-label">Skor ICI</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value" id="profile-credits">—</div>
+                <div class="stat-label">Kredit Mesej</div>
+              </div>
+            </div>
+          </div>
+          <div class="profile-card">
+            <div class="profile-card-title">Status Akaun</div>
+            <div class="info-row"><span class="info-key">Status Langganan</span><span class="info-val" id="info-sub-status">—</span></div>
+            <div class="info-row"><span class="info-key">Tier Aktif</span><span class="info-val" id="info-tier">—</span></div>
+            <div class="info-row"><span class="info-key">Tamat Langganan</span><span class="info-val" id="info-sub-end">—</span></div>
+            <div class="info-row">
+              <span class="info-key">IC Disahkan</span>
+              <span class="info-val" id="info-ic-status">—</span>
+            </div>
+            <div class="info-row">
+              <span class="info-key">Ujian 30 Dimensi</span>
+              <span class="info-val" id="info-quiz-status">—</span>
+            </div>
+          </div>
+          <div class="profile-card">
+            <div class="profile-card-title">Tindakan</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <button class="btn btn-primary btn-full" onclick="switchTab('premium')">👑 Naik Taraf Tier</button>
+              <button class="btn btn-outline btn-full" onclick="openQuiz()">🧪 Ujian Keserasian 30 Dimensi</button>
+              <button class="btn btn-ghost btn-full" onclick="showModal('modal-ic')">🪪 Hantar Semakan IC</button>
+              <button class="btn btn-ghost btn-full" onclick="showModal('modal-asnaf')">🤲 Mohon Status Asnaf</button>
+              <button class="btn btn-ghost btn-full" onclick="showModal('modal-mualaf')">☪️ Daftar Mualaf</button>
+              <button class="btn btn-ghost btn-full" onclick="showModal('modal-wingman')">🤝 AI Wingman — Kerjaya & Pendidikan</button>
+              <button class="btn btn-ghost btn-full" onclick="showModal('modal-terms')">📋 Terma & Syarat</button>
+              <button class="btn btn-danger btn-full" onclick="logout()">Log Keluar</button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <div class="tabs">
-    <button class="tab on" id="tb-d" onclick="switchTab('d')"><span class="tab-ic">💎</span><span class="tab-lb" id="tl-d">Discover</span></button>
-    <button class="tab" id="tb-c" onclick="switchTab('c')"><span class="tab-ic" style="position:relative">💬<span class="notif-dot" id="chat-dot"></span></span><span class="tab-lb" id="tl-c">Sembang</span></button>
-    <button class="tab" id="tb-i" onclick="switchTab('i')"><span class="tab-ic">📊</span><span class="tab-lb" id="tl-i">Wawasan</span></button>
-    <button class="tab" id="tb-t" onclick="go('P-pricing')"><span class="tab-ic">👑</span><span class="tab-lb" id="tl-t">Premium</span></button>
-    <button class="tab" id="tb-p" onclick="go('P-profile')"><span class="tab-ic">👤</span><span class="tab-lb" id="tl-p">Profil</span></button>
-  </div>
-</div>
+    </div><!-- end tab content -->
 
-<!-- ═════════ CHAT WINDOW ═════════ -->
-<div id="P-cwin" class="page">
-  <div class="tnav">
-    <button onclick="go('P-dash');switchTab('c')" style="font-size:12px;color:var(--t2)">← Kembali</button>
-    <div style="text-align:center;flex:1">
-      <div style="font-size:13px;font-weight:600" id="cw-name">—</div>
-      <div style="font-size:9px;color:var(--green)">● Dalam talian</div>
-    </div>
-    <div id="cw-bdg" class="bdg bgold">GOLD</div>
-  </div>
-  <div id="quota-bar" style="display:none;padding:6px 14px;background:rgba(201,168,76,.04);border-bottom:1px solid rgba(201,168,76,.09);font-size:10px;text-align:center;color:var(--t2)">
-    Mesej percuma: <span id="msg-left" style="color:var(--gold);font-weight:700;transition:color .3s">10</span>/10 — <button onclick="triggerBlurPaywall()" style="font-size:10px;color:var(--gold);text-decoration:underline">Langgan untuk tanpa had</button>
-  </div>
-  <div id="advance-bar" style="display:none" class="advance-bar">
-    <span style="font-size:11px;color:var(--t2);flex:1">💕 Perbualan selesa terkesan. Bersedia untuk langkah seterusnya?</span>
-    <button class="advance-btn" onclick="requestAdvance()">Mohon Perkenalan Lanjut →</button>
-  </div>
-  <div id="cw-msgs" class="scroll" style="padding:13px;display:flex;flex-direction:column;gap:8px"></div>
-  <div class="shortcuts-wrap" id="shortcut-bar">
-    <button class="shortcut-btn" data-msg="Assalamualaikum warahmatullahi wabarakatuh 🤲" onclick="useShortcut(this)">Assalamualaikum 🤲</button>
-    <button class="shortcut-btn" data-msg="Salam perkenalan. Saya tertarik dengan profil anda ✨" onclick="useShortcut(this)">Salam perkenalan ✨</button>
-    <button class="shortcut-btn" data-msg="Assalamualaikum, saya tertarik kepada profil awk. Boleh berkenalan?" onclick="useShortcut(this)">Saya tertarik profil awk</button>
-    <button class="shortcut-btn" data-msg="Apa khabar hari ini? Semoga hari anda dipermudahkan 😊" onclick="useShortcut(this)">Apa khabar hari ini?</button>
-    <button class="shortcut-btn" data-msg="Boleh kita berkenalan dengan lebih dekat?" onclick="useShortcut(this)">Boleh kenal lebih dekat?</button>
-    <button class="shortcut-btn" data-msg="Assalamualaikum, awk dari negeri mana ya?" onclick="useShortcut(this)">Awk dari mana ya?</button>
-    <button class="shortcut-btn" data-msg="Saya nampak kita ada banyak persamaan. Apa hobi awk?" onclick="useShortcut(this)">Minat membaca juga ke?</button>
-    <button class="shortcut-btn" data-msg="InsyaAllah, semoga perkenalan ini membawa kebaikan 🤲" onclick="useShortcut(this)">InsyaAllah ada jodoh 🤲</button>
-    <button class="shortcut-btn" data-msg="Terima kasih sudi menerima padanan saya. Saya sangat menghargainya 😊" onclick="useShortcut(this)">Terima kasih sudi reply 😊</button>
-    <button class="shortcut-btn" data-msg="AI tak tipu — 92% keserasian ni! Apa agaknya 8% yang tak ngam tu? 😄" onclick="useShortcut(this)">Apa hobi awk?</button>
-  </div>
-  <div class="chat-in-wrap">
-    <input id="cw-in" class="chat-fi" placeholder="Taip mesej..." onkeydown="if(event.key==='Enter')sendMsg()"/>
-    <button class="chat-snd" onclick="sendMsg()">→</button>
-  </div>
-</div>
+    <!-- Bottom Nav -->
+    <nav class="bottom-nav">
+      <div class="nav-item active" id="nav-discover" onclick="switchTab('discover')">
+        <div class="nav-icon">💎</div>
+        <div>Discover</div>
+      </div>
+      <div class="nav-item" id="nav-chat" onclick="switchTab('chat')">
+        <div class="nav-icon">💬</div>
+        <div>Sembang</div>
+        <div class="nav-badge" id="chat-badge"></div>
+      </div>
+      <div class="nav-item" id="nav-stats" onclick="switchTab('stats')">
+        <div class="nav-icon">📊</div>
+        <div>Wawasan</div>
+      </div>
+      <div class="nav-item" id="nav-premium" onclick="switchTab('premium')">
+        <div class="nav-icon">👑</div>
+        <div>Premium</div>
+      </div>
+      <div class="nav-item" id="nav-profile" onclick="switchTab('profile')">
+        <div class="nav-icon">👤</div>
+        <div>Profil</div>
+      </div>
+    </nav>
 
-<!-- ═════════ PRICING ═════════ -->
-<div id="P-pricing" class="page">
-  <div class="tnav"><button onclick="go('P-dash')" style="font-size:12px;color:var(--t2)">← Kembali</button><span class="serif gold" style="font-size:19px;font-weight:700" id="lbl-pricing-title" id="lbl-pricing-title">Pilih Tier Anda</span><div style="width:70px"></div></div>
-  <div class="scroll">
-    <div class="W P col g12" style="padding-top:14px;padding-bottom:44px">
-      <p style="font-size:12px;color:var(--t2)" id="lbl-pricing-sub">Tier lebih tinggi = akses lebih eksklusif</p>
-      <div class="tc fu1" id="tier-card-Silver">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:11px"><div><div style="font-size:8px;color:var(--t3);letter-spacing:.14em;font-weight:700;margin-bottom:2px">TIER 1</div><div class="serif" style="font-size:20px;font-weight:700;color:rgba(175,175,195,.75)">Silver</div></div><div style="text-align:right"><div class="serif" style="font-size:22px;color:rgba(175,175,195,.75)">RM19.99</div><div style="font-size:8px;color:var(--t3)">/bulan</div></div></div>
-        <div class="col g8" style="margin-bottom:13px"><div style="font-size:11px;color:var(--t2);display:flex;gap:6px"><span style="color:rgba(155,155,175,.55)">✓</span>5 calon sekufu dikurasi AI setiap hari</div><div style="font-size:11px;color:var(--t2);display:flex;gap:6px"><span style="color:rgba(155,155,175,.55)">✓</span>10 mesej percuma per padanan</div><div style="font-size:11px;color:var(--t2);display:flex;gap:6px"><span style="color:rgba(155,155,175,.55)">✓</span>Lencana Verified Member</div><div style="font-size:11px;color:var(--t2);display:flex;gap:6px"><span style="color:rgba(155,155,175,.55)">✓</span>Padanan minimum 80% keserasian</div><div style="font-size:11px;color:var(--t2);display:flex;gap:6px"><span style="color:rgba(155,155,175,.55)">✓</span>Profil IC-verified</div><div style="font-size:11px;color:var(--t2);display:flex;gap:6px"><span style="color:rgba(155,155,175,.55)">✓</span>Ujian Keserasian 30 Dimensi (asas)</div></div>
-        <button class="btn btn-o" onclick="doPayment('Silver',19.99)">Pilih Silver — RM19.99/bln</button>
-      </div>
-      <div class="tc feat fu2" id="tier-card-Gold">
-        <div class="tc-pop">POPULAR</div>
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:11px;padding-right:68px"><div><div style="font-size:8px;color:var(--gold);letter-spacing:.14em;font-weight:700;margin-bottom:2px">TIER 2</div><div class="serif gold" style="font-size:20px;font-weight:800">Gold</div></div><div style="text-align:right"><div class="serif gold" style="font-size:22px">RM59.99</div><div style="font-size:8px;color:var(--t3)">/bulan</div></div></div>
-        <div class="col g8" style="margin-bottom:13px"><div style="font-size:11px;color:var(--text);display:flex;gap:6px"><span style="color:var(--gold)">✓</span>5 calon sekufu dikurasi AI setiap hari</div><div style="font-size:11px;color:var(--text);display:flex;gap:6px"><span style="color:var(--gold)">✓</span>Sembang <strong>tanpa had</strong> dengan semua padanan</div><div style="font-size:11px;color:var(--text);display:flex;gap:6px"><span style="color:var(--gold)">✓</span>Analisis AI 30 Dimensi penuh &amp; terperinci</div><div style="font-size:11px;color:var(--text);display:flex;gap:6px"><span style="color:var(--gold)">✓</span>Keutamaan padanan + Lencana Gold eksklusif</div><div style="font-size:11px;color:var(--text);display:flex;gap:6px"><span style="color:var(--gold)">✓</span>Perkenalan Lanjut selepas 3 hari berbual</div><div style="font-size:11px;color:var(--text);display:flex;gap:6px"><span style="color:var(--gold)">✓</span>IC-verified + laporan keserasian terperinci</div><div style="font-size:11px;color:var(--text);display:flex;gap:6px"><span style="color:var(--gold)">✓</span>Reset harian jam 8:00 PG</div></div>
-        <button class="btn btn-p" onclick="doPayment('Gold',59.99)">Pilih Gold — RM59.99/bln</button>
-      </div>
-      <div class="tc fu3" id="tier-card-Platinum">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:11px"><div><div style="font-size:8px;color:rgba(215,215,255,.45);letter-spacing:.14em;font-weight:700;margin-bottom:2px">TIER 3</div><div class="serif" style="font-size:20px;font-weight:700;color:rgba(215,215,255,.8)">Platinum</div></div><div style="text-align:right"><div class="serif" style="font-size:22px;color:rgba(215,215,255,.8)">RM299.99</div><div style="font-size:8px;color:var(--t3)">/bulan</div></div></div>
-        <div class="col g8" style="margin-bottom:13px"><div style="font-size:11px;color:var(--t2);display:flex;gap:6px"><span style="color:rgba(215,215,255,.45)">✓</span>5 calon sekufu dikurasi AI setiap hari</div><div style="font-size:11px;color:var(--t2);display:flex;gap:6px"><span style="color:rgba(215,215,255,.45)">✓</span>Sembang tanpa had + Perkenalan Lanjut</div><div style="font-size:11px;color:var(--t2);display:flex;gap:6px"><span style="color:rgba(215,215,255,.45)">✓</span>Analisis AI 30 Dimensi + laporan terperinci</div><div style="font-size:11px;color:var(--t2);display:flex;gap:6px"><span style="color:rgba(215,215,255,.45)">✓</span><strong>Invisible Mode</strong> — semak profil tanpa dikesan</div><div style="font-size:11px;color:var(--t2);display:flex;gap:6px"><span style="color:rgba(215,215,255,.45)">✓</span>Mohon nombor WhatsApp calon</div><div style="font-size:11px;color:var(--t2);display:flex;gap:6px"><span style="color:rgba(215,215,255,.45)">✓</span>Filter lanjutan: Net-Worth, Gaya Hidup, Lokasi</div><div style="font-size:11px;color:var(--t2);display:flex;gap:6px"><span style="color:rgba(215,215,255,.45)">✓</span>Lencana Platinum + keutamaan tertinggi + Sokongan VIP</div></div>
-        <button class="btn btn-o" style="border-color:rgba(215,215,255,.12);color:rgba(215,215,255,.55)" onclick="doPayment('Platinum',299.99)">Pilih Platinum — RM299.99/bln</button>
-      </div>
-      <div class="tc fu4" id="tier-card-Sovereign" style="border-color:rgba(120,80,200,.25);background:linear-gradient(160deg,rgba(12,8,22,1) 0%,rgba(20,10,40,.9) 100%)">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:11px"><div><div style="font-size:8px;color:#a855f7;letter-spacing:.14em;font-weight:700;margin-bottom:2px">TIER 4 — JEMPUTAN SAHAJA</div><div class="serif" style="font-size:20px;font-weight:700;color:#c084fc">Black Sovereign</div></div><div style="text-align:right"><div class="serif" style="font-size:18px;color:#c084fc">RM4,999</div><div style="font-size:8px;color:var(--t3)">/tahun</div></div></div>
-        <div class="col g8" style="margin-bottom:13px"><div style="font-size:11px;color:var(--t3);display:flex;gap:6px"><span style="color:#a855f7">✓</span>Matchmaker manusia peribadi (concierge penuh)</div><div style="font-size:11px;color:var(--t3);display:flex;gap:6px"><span style="color:#a855f7">✓</span>Sembang tanpa had + Invisible Mode aktif</div><div style="font-size:11px;color:var(--t3);display:flex;gap:6px"><span style="color:#a855f7">✓</span>Background check fizikal &amp; rekod mahkamah</div><div style="font-size:11px;color:var(--t3);display:flex;gap:6px"><span style="color:#a855f7">✓</span>Urusan temujanji &amp; majlis perkahwinan</div><div style="font-size:11px;color:var(--t3);display:flex;gap:6px"><span style="color:#a855f7">✓</span>Calon eksklusif — tidak kelihatan kepada awam</div><div style="font-size:11px;color:var(--t3);display:flex;gap:6px"><span style="color:#a855f7">✓</span>Sokongan 24/7 VVIP WhatsApp terus</div></div>
-        <button class="btn btn-o" style="border-color:rgba(168,85,247,.35);color:#c084fc" onclick="doPayment('Sovereign',4999)">Mohon Jemputan Black Sovereign</button>
-      </div>
-    </div>
-  </div>
-</div>
+  </div><!-- end main-app -->
 
-<!-- ═════════ PROFILE ═════════ -->
-<div id="P-profile" class="page">
-  <div class="tnav"><button onclick="go('P-dash')" style="font-size:12px;color:var(--t2)">← Kembali</button><span class="serif" style="font-size:18px;font-weight:700" id="lbl-profile-title">Profil Saya</span><div style="width:70px"></div></div>
-  <div class="scroll">
-    <div class="W P col g12" style="padding-top:18px;padding-bottom:44px">
-      <div class="glass fu" style="border-radius:26px;padding:22px;text-align:center">
-        <div style="position:relative;display:inline-block;margin-bottom:12px">
-          <div class="av-big" id="prof-av"><span id="prof-em">👤</span><img id="prof-ph-img" src="" style="display:none;width:100%;height:100%;object-fit:cover"/></div>
-          <div style="position:absolute;bottom:0;right:0"><label style="width:24px;height:24px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px">✏️<input type="file" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="changeProfPhoto(this)"/></label></div>
+  <!-- ===================== QUIZ FLOW ===================== -->
+  <div class="page" id="page-quiz">
+    <div style="min-height:100vh;background:var(--warm-white)">
+      <div class="quiz-header">
+        <button class="back-btn" onclick="exitQuiz()">←</button>
+        <h3 style="font-size:1rem">Ujian 30 Dimensi</h3>
+        <span class="quiz-progress-text" id="quiz-progress-text">1/30</span>
+      </div>
+      <div class="progress-bar" style="margin:0 24px 20px">
+        <div class="progress-fill" id="quiz-progress-bar" style="width:3.3%"></div>
+      </div>
+      <div class="quiz-body" id="quiz-question-area">
+        <!-- Dijana oleh JS -->
+      </div>
+      <div id="quiz-bio-area" class="hidden" style="padding:0 24px 120px">
+        <h3 class="reg-title" style="margin-bottom:8px">✍️ Keperibadian Tambahan</h3>
+        <p class="reg-subtitle">Ceritakan tentang diri anda. AI akan menggunakan maklumat ini untuk padanan yang lebih tepat.</p>
+        <textarea class="bio-textarea" id="quiz-bio" maxlength="500" oninput="updateCharCount(this)"></textarea>
+        <div class="char-count"><span id="bio-char-count">0</span> / 500</div>
+      </div>
+      <div id="quiz-result-area" class="hidden quiz-result">
+        <div class="ici-score-display">
+          <div class="ici-score-number" id="result-ici-score">—</div>
+          <div class="ici-score-label">/ 10 ICI</div>
         </div>
-        <h2 class="serif" style="font-size:21px;font-weight:700" id="prof-nm">—</h2>
-        <p style="font-size:12px;color:var(--t2);margin-top:3px" id="prof-sub">—</p>
-        <div style="display:flex;justify-content:center;gap:6px;margin-top:9px"><span id="prof-bdg" class="bdg bsilver">SILVER</span><span id="prof-ic-bdg" class="bdg bgreen" style="display:none">✓ DISAHKAN</span></div>
+        <h2 style="font-family:'Cormorant Garamond',serif;margin-bottom:8px">🏆 Analisis Selesai!</h2>
+        <p style="color:var(--ink-muted);font-size:14px;margin-bottom:20px">Profil keperibadian 30 dimensi anda telah disimpan.</p>
+        <div class="result-profile" id="result-profile-text"></div>
+        <button class="btn btn-primary btn-full mt-16" onclick="exitQuiz()">Kembali ke Profil →</button>
       </div>
-      <div class="row g8 fu1">
-        <div class="card-sm f1" style="padding:14px;text-align:center"><div class="serif gold" style="font-size:22px;font-weight:700" id="prof-ici">—</div><div style="font-size:9px;color:var(--t3);margin-top:3px">ICI Score</div></div>
-        <div class="card-sm f1" style="padding:14px;text-align:center"><div class="serif" style="font-size:22px;font-weight:700" id="prof-msg">5/5</div><div style="font-size:9px;color:var(--t3);margin-top:3px">Kredit Mesej</div></div>
-        <div class="card-sm f1" style="padding:14px;text-align:center"><div class="serif" style="font-size:22px;font-weight:700" id="prof-mc">0</div><div style="font-size:9px;color:var(--t3);margin-top:3px">Padanan</div></div>
-      </div>
-      <div class="col fu2">
-        <div class="ir"><span style="font-size:12px;color:var(--t2)">Status Langganan</span><span id="pi-sub" style="font-size:12px;font-weight:600;color:var(--t2)">Percuma</span></div>
-        <div class="ir"><span style="font-size:12px;color:var(--t2)">Tier Aktif</span><span id="pi-tier" style="font-size:12px;font-weight:600">Silver</span></div>
-        <div class="ir"><span style="font-size:12px;color:var(--t2)">Tamat Langganan</span><span id="pi-exp" style="font-size:12px;font-weight:500;color:var(--t3)">—</span></div>
-        <div class="ir"><span style="font-size:12px;color:var(--t2)">IC Disahkan</span><span id="pi-ic" style="font-size:12px;font-weight:600;color:var(--orange)">Menunggu</span></div>
-        <div class="ir"><span style="font-size:12px;color:var(--t2)">Ujian 30 Dimensi</span><span id="pi-psy" style="font-size:12px;font-weight:600;color:var(--t3)">Belum selesai</span></div>
-        <div class="ir"><span style="font-size:12px;color:var(--t2)">Skor ICI</span><span id="pi-psysc" style="font-size:12px;font-weight:600;color:var(--gold)">—</span></div>
-      </div>
-      <div id="prof-ai-card" style="display:none" class="personality-card fu3">
-        <div style="font-size:9px;font-weight:800;letter-spacing:.18em;color:var(--t3);margin-bottom:7px">ANALISIS AI KEPERIBADIAN ANDA</div>
-        <div class="serif" style="font-size:16px;font-weight:700;color:var(--gold);margin-bottom:5px" id="prof-ai-type">—</div>
-        <p style="font-size:12px;color:var(--t2);line-height:1.65;margin-bottom:10px" id="prof-ai-desc">—</p>
-        <div id="prof-traits" style="display:flex;flex-wrap:wrap;gap:4px"></div>
-      </div>
-      <div id="prof-wingman-card" style="display:none;background:rgba(201,168,76,.04);border:1px solid rgba(201,168,76,.15);border-radius:18px;padding:16px" class="fu3">
-        <div style="font-size:9px;font-weight:800;letter-spacing:.18em;color:var(--t3);margin-bottom:7px">🤝 AI WINGMAN — ANALISIS KERJAYA & PERIBADI</div>
-        <p style="font-size:12px;color:var(--t2);line-height:1.7;font-style:italic" id="prof-wingman-text">—</p>
-      </div>
-      <div class="col g10 fu4">
-        <button class="btn btn-p" onclick="go('P-pricing')" id="lbl-btn-upgrade" id="lbl-btn-upgrade">👑 Naik Taraf Tier</button>
-        <button class="btn btn-go" onclick="go('P-psych')">🧪 Ujian Keserasian 30 Dimensi</button>
-        <!--<button class="btn" onclick="openOv('ov-ic')" style="background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.25);border-radius:var(--r2);padding:14px;font-size:13px;font-weight:600;color:var(--gold)" id="lbl-btn-ic" id="lbl-btn-ic">📎 Muat Naik IC</button>-->
-        <button class="btn btn-o" onclick="go('P-tnc')">📋 Terma & Syarat</button>
-        <div class="sep" style="margin:4px 0"></div>
-        <button class="btn btn-danger" onclick="doLogout()" id="lbl-btn-logout" id="lbl-btn-logout">Log Keluar</button>
+      <div class="reg-footer" id="quiz-footer">
+        <button class="btn btn-primary btn-full" id="btn-next-question" onclick="nextQuestion()">Seterusnya →</button>
       </div>
     </div>
   </div>
-</div>
 
-<!-- ═════════ PSYCHOMETRIC ═════════ -->
-<div id="P-psych" class="page">
-  <div class="tnav"><button onclick="go('P-profile')" style="font-size:12px;color:var(--t2)">← Kembali</button><span class="serif" style="font-size:17px;font-weight:700" id="lbl-psy-title" id="lbl-psy-title">Ujian 30 Dimensi</span><span id="psy-q-ind" style="font-size:12px;color:var(--t3)">1/30</span></div>
-  <div class="scroll">
-    <div class="W P col g14" style="padding-bottom:44px">
-      <p style="font-size:12px;color:var(--t2);line-height:1.65">Jawab dengan ikhlas. AI menganalisis 30 dimensi keperibadian anda untuk padanan yang lebih tepat. (~10 minit)</p>
-      <div class="step-prog" id="psy-prog"></div>
-      <div id="psy-qs"></div>
-      <div id="psy-freetext" style="display:none" class="glass" style="border-radius:22px;padding:22px">
-        <div style="padding:22px">
-          <h3 class="serif" style="font-size:20px;font-weight:700;margin-bottom:6px">✍️ Keperibadian Tambahan</h3>
-          <p style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:14px">Ceritakan tentang diri anda yang mungkin tidak tercakup dalam soalan di atas. AI akan membaca dan memasukkan maklumat ini ke dalam analisis padanan anda.</p>
-          <textarea id="psy-custom" class="fi" placeholder="Contoh: Saya seorang yang suka memasak masakan Melayu tradisional, gemar membaca buku motivasi, dan sangat menjaga kebersihan rumah. Saya introvert tetapi sangat setia dan penyayang..." style="min-height:120px;resize:vertical"></textarea>
-          <div style="font-size:10px;color:var(--t3);margin-top:6px;text-align:right" id="char-count">0 / 500</div>
-          <button class="btn btn-p" style="margin-top:14px" onclick="submitFreeText()">Selesai & Lihat Keputusan →</button>
+  <!-- ===================== CHAT ROOM ===================== -->
+  <div class="chat-room" id="chat-room">
+    <header class="chat-room-header">
+      <button class="back-btn" onclick="closeChatRoom()">←</button>
+      <div class="chat-partner-avatar" id="room-partner-avatar">
+        <img id="room-partner-photo" src="" onerror="this.style.display='none'">
+        <span id="room-partner-emoji">👤</span>
+      </div>
+      <div class="chat-partner-info">
+        <div class="chat-partner-name" id="room-partner-name">—</div>
+        <div class="chat-partner-status" id="room-partner-status">● Dalam talian</div>
+      </div>
+      <div class="credits-indicator" id="room-credits"></div>
+    </header>
+    <div class="chat-messages" id="chat-messages">
+      <!-- Mesej dijana oleh JS -->
+    </div>
+    <div class="typing-indicator" id="typing-indicator">
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+    </div>
+    <div class="chat-input-area">
+      <div class="upgrade-prompt" id="upgrade-prompt">
+        <h4>🔥 Kredit Mesej Habis</h4>
+        <p>Naik taraf ke Gold untuk mesej tanpa had dan jangan biarkan dia tertunggu-tunggu.</p>
+        <button class="btn btn-primary btn-sm" onclick="closeChatRoom();switchTab('premium')">Naik Taraf Gold — RM59.99/bln →</button>
+      </div>
+      <div class="quick-replies" id="quick-replies">
+        <button class="quick-reply-btn" onclick="useQuickReply(this)">Assalamualaikum 🤲</button>
+        <button class="quick-reply-btn" onclick="useQuickReply(this)">Salam perkenalan ✨</button>
+        <button class="quick-reply-btn" onclick="useQuickReply(this)">Apa khabar hari ini?</button>
+        <button class="quick-reply-btn" onclick="useQuickReply(this)">Boleh kenal lebih dekat?</button>
+        <button class="quick-reply-btn" onclick="useQuickReply(this)">Awk dari mana ya?</button>
+        <button class="quick-reply-btn" onclick="useQuickReply(this)">InsyaAllah ada jodoh 🤲</button>
+        <button class="quick-reply-btn" onclick="useQuickReply(this)">Apa hobi awk?</button>
+      </div>
+      <div class="chat-input-row">
+        <textarea class="chat-input" id="chat-input" placeholder="Taip mesej..." rows="1"
+          onkeydown="chatKeydown(event)" oninput="chatInputChange()"></textarea>
+        <button class="send-btn" id="send-btn" onclick="sendMessage()" disabled>→</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== MODALS ===================== -->
+
+  <!-- Modal: IC Verify -->
+  <div class="modal-overlay" id="modal-ic" onclick="closeModalOnBg(event,'modal-ic')">
+    <div class="modal-sheet" style="position:relative">
+      <div class="modal-handle"></div>
+      <button class="modal-close" onclick="closeModal('modal-ic')">✕</button>
+      <h3 class="modal-title">🪪 Sahkan Identiti Anda</h3>
+      <p style="font-size:14px;color:var(--ink-muted);margin-bottom:20px;line-height:1.5">
+        Muat naik gambar IC anda (depan sahaja). Data dienkripsi AES-256 & dipadam selepas verifikasi.
+      </p>
+      <div class="ic-upload-area" id="ic-upload-area" onclick="document.getElementById('ic-input').click()">
+        <div id="ic-placeholder">
+          <div style="font-size:36px;margin-bottom:8px">🪪</div>
+          <div style="font-size:14px;font-weight:600;color:var(--ink-light)">Pilih Gambar IC</div>
+          <div style="font-size:12px;color:var(--ink-muted);margin-top:6px">JPG / PNG • Maks 5MB</div>
+        </div>
+        <div class="ic-preview" id="ic-preview">
+          <img id="ic-preview-img" src="" alt="IC Preview">
         </div>
       </div>
-      <div id="psy-res" style="display:none">
-        <div class="glass" style="border-radius:24px;padding:26px;text-align:center">
-          <div style="font-size:50px;margin-bottom:12px;animation:popIn .5s ease">🏆</div>
-          <h3 class="serif gold" style="font-size:26px;margin-bottom:5px">Analisis Selesai!</h3>
-          <p style="font-size:13px;color:var(--t2);margin-bottom:16px">Profil keperibadian 30 dimensi anda telah disimpan</p>
-          <div style="background:rgba(0,0,0,.3);border-radius:14px;padding:16px;margin-bottom:14px">
-            <div class="serif gold" style="font-size:38px;font-weight:800" id="psy-sc">8.2</div>
-            <div style="font-size:10px;color:var(--t3);margin-top:4px">/ 10 — Indeks Keserasian 30 Dimensi</div>
-          </div>
-          <div class="personality-card" style="text-align:left;margin-bottom:14px">
-            <div style="font-size:9px;font-weight:800;letter-spacing:.18em;color:var(--t3);margin-bottom:7px">PROFIL PERSONALITI LENGKAP ANDA</div>
-            <div class="serif" style="font-size:17px;font-weight:700;color:var(--gold);margin-bottom:5px" id="psy-type">—</div>
-            <p style="font-size:12px;color:var(--t2);line-height:1.65;margin-bottom:10px" id="psy-desc">—</p>
-            <div id="psy-dim-wrap" style="display:flex;flex-wrap:wrap;gap:5px"></div>
-          </div>
-          <button class="btn btn-p" onclick="go('P-profile')">Kembali ke Profil →</button>
-        </div>
+      <input type="file" id="ic-input" accept="image/jpeg,image/png" onchange="previewIC(this)">
+      <div style="margin-top:16px;font-size:13px;color:var(--ink-muted);display:flex;flex-direction:column;gap:6px">
+        <div>✅ Pastikan IC jelas & tidak kabur</div>
+        <div>✅ Muat naik depan IC sahaja</div>
+        <div>🔒 Data dienkripsi AES-256 (PDPA 2010)</div>
+        <div>🗑️ Imej dipadam selepas verifikasi selesai</div>
       </div>
-    </div>
-  </div>
-</div>
-
-<!-- ═════════ T&C ═════════ -->
-<div id="P-tnc" class="page">
-  <div class="tnav"><button onclick="go('P-land')" style="font-size:12px;color:var(--t2)">← Kembali</button><span class="serif gold" style="font-size:17px;font-weight:700">Terma & Syarat</span><div style="width:70px"></div></div>
-  <div class="scroll">
-    <div class="W P" style="padding-bottom:44px">
-      <p style="font-size:10px;color:var(--t3);margin-bottom:18px">Dikemas kini: 1 Mac 2026 • PDPA 2010 Malaysia</p>
-      <div class="glass" style="border-radius:24px;padding:22px;display:flex;flex-direction:column;gap:18px">
-        <div><h3 class="serif" style="font-size:20px;margin-bottom:12px">A. Terma Penggunaan Platform</h3>
-        <div class="col g14">
-          <div><h4 style="font-size:11px;font-weight:700;color:var(--gold);margin-bottom:4px">1. Kelayakan & Integriti</h4><p style="font-size:11px;color:var(--t2);line-height:1.75">Pengguna mestilah warganegara Malaysia berumur 18–55 tahun. Status perkahwinan mesti diisytiharkan dengan benar.</p></div>
-          <div><h4 style="font-size:11px;font-weight:700;color:var(--gold);margin-bottom:4px">2. Polisi Anti-Scam</h4><p style="font-size:11px;color:var(--t2);line-height:1.75">AI memantau gelagat mencurigakan. Akaun yang ditandakan boleh digantung serta-merta.</p></div>
-          <div><h4 style="font-size:11px;font-weight:700;color:var(--gold);margin-bottom:4px">3. Polisi Gambar & Kandungan</h4><p style="font-size:11px;color:var(--t2);line-height:1.75">Hanya 1 gambar profil. Mesti jelas, sopan & menunjukkan wajah anda. Tiada muat naik dokumen/gambar dalam chat.</p></div>
-          <div><h4 style="font-size:11px;font-weight:700;color:var(--gold);margin-bottom:4px">4. Polisi Perkenalan Lanjut</h4><p style="font-size:11px;color:var(--t2);line-height:1.75">Selepas 3 hari berturut-turut berbual, kedua-dua pihak boleh memohon Perkenalan Lanjut. Ini termasuk perkongsian maklumat tambahan dengan persetujuan bersama.</p></div>
-          <div><h4 style="font-size:11px;font-weight:700;color:var(--gold);margin-bottom:4px">5. Penafian Liabiliti</h4><p style="font-size:11px;color:var(--t2);line-height:1.75">Jodohku adalah medium digital sahaja. Pengguna bertanggungjawab sepenuhnya.</p></div>
-        </div></div>
-        <div class="sep"></div>
-        <div><h3 class="serif" style="font-size:20px;margin-bottom:12px">B. Polisi Privasi (PDPA 2010)</h3>
-        <div class="col g14">
-          <div><h4 style="font-size:11px;font-weight:700;color:var(--gold);margin-bottom:4px">1. Data & Perlindungan</h4><p style="font-size:11px;color:var(--t2);line-height:1.75">Data disulitkan AES-256. IC tidak disimpan sepenuhnya. Chat tidak menyokong muat naik fail/gambar untuk keselamatan.</p></div>
-          <div><h4 style="font-size:11px;font-weight:700;color:var(--gold);margin-bottom:4px">2. Penggunaan Data</h4><p style="font-size:11px;color:var(--t2);line-height:1.75">Nombor telefon tidak didedahkan tanpa kebenaran. Data tidak dijual kepada pihak ketiga.</p></div>
-          <div><h4 style="font-size:11px;font-weight:700;color:var(--gold);margin-bottom:4px">3. Hak Pengguna</h4><p style="font-size:11px;color:var(--t2);line-height:1.75">Anda berhak akses, pembetulan, atau pemadaman data. Hubungi <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="c9babcb9b9a6bbbd89a3a6ada6a1a2bce7a4b0">[email&#160;protected]</a></p></div>
-        </div></div>
-        <div class="sep"></div>
-        <div><h3 class="serif" style="font-size:20px;margin-bottom:12px">C. Keselamatan Platform</h3>
-        <div class="col g14">
-          <div><h4 style="font-size:11px;font-weight:700;color:var(--gold);margin-bottom:4px">1. Pengesahan Berlapis</h4><p style="font-size:11px;color:var(--t2);line-height:1.75">OTP, tarikh lahir, IC separa, CAPTCHA, emel — semua memastikan setiap akaun adalah manusia nyata.</p></div>
-          <div><h4 style="font-size:11px;font-weight:700;color:var(--gold);margin-bottom:4px">2. Rate Limiting</h4><p style="font-size:11px;color:var(--t2);line-height:1.75">Maksimum 5 percubaan OTP sejam. IP mencurigakan diblok automatik.</p></div>
-        </div></div>
-      </div>
-      <button class="btn btn-p" style="margin-top:18px" onclick="go('P-land')">Saya Faham & Bersetuju →</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═════════ ADVANCE RELATIONSHIP ═════════ -->
-<div id="P-advance" class="page">
-  <div class="tnav"><button onclick="go('P-cwin')" style="font-size:12px;color:var(--t2)">← Kembali</button><span class="serif gold" style="font-size:17px;font-weight:700" id="lbl-advance-title" id="lbl-advance-title">Perkenalan Lanjut</span><div style="width:70px"></div></div>
-  <div class="scroll">
-    <div class="W P col g14" style="padding-top:18px;padding-bottom:44px">
-      <div class="glass fu" style="border-radius:24px;padding:22px;text-align:center">
-        <div style="font-size:48px;margin-bottom:12px;animation:popIn .5s ease">💍</div>
-        <h3 class="serif gold" style="font-size:24px;margin-bottom:6px">Tahniah!</h3>
-        <p style="font-size:13px;color:var(--t2);line-height:1.65;margin-bottom:16px">Anda dan <span id="adv-name" style="color:var(--gold);font-weight:600">—</span> telah berbual selama 3 hari berturut-turut. Ini menunjukkan keserasian yang baik!</p>
-      </div>
-      <div class="card fu1" style="padding:18px">
-        <div style="font-size:9px;font-weight:700;letter-spacing:.15em;color:var(--t3);margin-bottom:12px">LANGKAH SETERUSNYA</div>
-        <div class="col g10">
-          <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:18px">📞</span><div><div style="font-size:12px;font-weight:600;margin-bottom:2px">Mohon Nombor Telefon</div><p style="font-size:11px;color:var(--t2)">Dengan persetujuan kedua-dua pihak, nombor WhatsApp boleh dikongsi.</p></div></div>
-          <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:18px">👨‍👩‍👧</span><div><div style="font-size:12px;font-weight:600;margin-bottom:2px">Libatkan Wali / Keluarga</div><p style="font-size:11px;color:var(--t2)">Maklumkan kepada keluarga tentang niat serius anda. Jodohku menyokong proses ta'aruf yang beradab.</p></div></div>
-          <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:18px">☕</span><div><div style="font-size:12px;font-weight:600;margin-bottom:2px">Pertemuan Pertama</div><p style="font-size:11px;color:var(--t2)">Atur pertemuan di tempat awam dengan kehadiran keluarga atau orang dipercayai.</p></div></div>
-          <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:18px">📋</span><div><div style="font-size:12px;font-weight:600;margin-bottom:2px">Pengesahan Background (Premium)</div><p style="font-size:11px;color:var(--t2)">Ahli Platinum/Sovereign boleh memohon semakan latar belakang profesional.</p></div></div>
-        </div>
-      </div>
-      <button class="btn btn-p fu2" onclick="requestWhatsApp()">📞 Mohon Nombor WhatsApp →</button>
-      <button class="btn btn-go fu3" onclick="go('P-cwin')">Kembali ke Perbualan</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═════════ OVERLAYS ═════════ -->
-<div class="ov" id="ov-pay"><div class="modal" style="max-width:380px">
-  <div class="tc" style="margin-bottom:14px">
-    <div style="font-size:36px;margin-bottom:8px">🔥</div>
-    <h3 class="serif gold" style="font-size:22px;margin-bottom:4px">Perbualan Semakin Hangat.</h3>
-    <p style="font-size:12px;color:var(--t2);line-height:1.6">Anda telah mencapai had 10 mesej Silver. Jangan biarkan dia tertunggu-tunggu.</p>
-  </div>
-  <div class="col g8" style="margin-bottom:14px">
-    <div style="opacity:.5;border:1px solid var(--gborder);border-radius:13px;padding:12px;position:relative">
-      <div style="position:absolute;top:0;right:0;background:var(--s3);font-size:8px;padding:3px 8px;border-radius:0 12px 0 8px;color:var(--t3);font-weight:700">SEMASA</div>
-      <div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:10px;color:var(--t3)">Silver</div><p style="font-size:10px;color:var(--t3);text-decoration:line-through;margin-top:2px">10 Mesej Sahaja</p></div><div class="serif" style="font-size:16px;color:var(--t3)">RM19.99</div></div>
-    </div>
-    <div style="background:rgba(201,168,76,.07);border:1.5px solid var(--gold);border-radius:13px;padding:14px;position:relative">
-      <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--gold);color:#000;font-size:9px;font-weight:800;padding:3px 12px;border-radius:10px;white-space:nowrap">⭐ PILIHAN VVIP</div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div><div class="serif gold" style="font-size:16px;font-weight:800">Gold</div></div><div class="serif gold" style="font-size:20px;font-weight:800">RM59.99<span style="font-size:9px;color:var(--t3)">/bln</span></div></div>
-      <div style="font-size:10px;color:var(--t2)">✓ Mesej tanpa had &nbsp;✓ AI 30 Dimensi &nbsp;✓ Keutamaan padanan</div>
-      <button class="btn btn-p" onclick="closeOv('ov-pay');doPayment('Gold',59.99)" style="margin-top:10px;padding:11px">Pilih Gold — RM59.99/bln →</button>
-    </div>
-    <div style="border:1px solid rgba(215,215,255,.1);border-radius:13px;padding:12px">
-      <div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:10px;color:rgba(215,215,255,.55)">Platinum</div><div style="font-size:9px;color:var(--t3);margin-top:2px">Invisible Mode + WhatsApp</div></div><div class="serif" style="font-size:15px;color:rgba(215,215,255,.55)">RM299.99</div></div>
-    </div>
-    <div style="border:1px solid rgba(168,85,247,.2);border-radius:13px;padding:12px;background:rgba(168,85,247,.04)">
-      <div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:10px;color:#a855f7">Black Sovereign</div><div style="font-size:9px;color:var(--t3);margin-top:2px">Human Matchmaker + Background Check</div></div><div class="serif" style="font-size:13px;color:#a855f7">RM4,999/thn</div></div>
-    </div>
-  </div>
-  <button onclick="closeOv('ov-pay')" style="width:100%;padding:10px;font-size:11px;color:var(--t3)">Teruskan dengan baki <span id="pay-left">0</span> mesej percuma</button>
-</div></div>
-
-<div class="ov" id="ov-match"><div class="modal tc"><div style="font-size:52px;margin-bottom:10px;animation:popIn .6s ease">💫</div><h3 class="serif gold" style="font-size:28px;margin-bottom:4px">Padanan Ditemui!</h3><p style="font-size:14px;color:var(--t2);margin-bottom:2px" id="m-name">—</p><div style="display:flex;align-items:center;justify-content:center;gap:5px;margin-bottom:6px"><span style="font-size:11px;color:var(--t3)">Keserasian:</span><span class="serif gold" style="font-size:20px;font-weight:800" id="m-score">88%</span></div><div id="m-match-badge" style="text-align:center;margin-bottom:10px"></div><div class="ai-box" style="text-align:left;margin-bottom:16px"><div class="ai-lbl">AI ANALISIS 30 DIMENSI</div><p style="font-size:11px;color:var(--t2);font-style:italic;line-height:1.6" id="m-verdict">—</p></div><button class="btn btn-p" onclick="closeMatchGo()" style="margin-bottom:8px" id="lbl-match-chat" id="lbl-match-chat">Mula Berbual Sekarang →</button><button onclick="closeOv('ov-match')" style="width:100%;padding:9px;font-size:11px;color:var(--t3)" id="lbl-match-skip" id="lbl-match-skip">Teruskan mencari calon lain</button></div></div>
-
-<div class="ov" id="ov-pay-proc"><div class="modal tc"><div style="margin-bottom:16px"><div class="spin spin-lg" style="margin:0 auto"></div></div><h3 class="serif" style="font-size:20px;margin-bottom:6px">Memproses Pembayaran...</h3><p style="font-size:12px;color:var(--t2)">Disambungkan ke ToyyibPay. Sila tunggu.</p><div style="margin-top:16px;padding:12px;background:var(--s2);border-radius:12px;border:1px solid var(--gborder)"><div style="font-size:11px;color:var(--t3)">Jumlah:</div><div class="serif gold" style="font-size:22px;font-weight:700;margin-top:2px" id="pay-amt">RM0</div><div style="font-size:11px;color:var(--t2);margin-top:1px" id="pay-tier-show">—</div></div></div></div>
-
-<div class="ov" id="ov-consent"><div class="modal tc"><div style="font-size:38px;margin-bottom:10px">🔐</div><h3 class="serif" style="font-size:20px;margin-bottom:7px">Permohonan Nombor</h3><p style="font-size:12px;color:var(--t2);line-height:1.65;margin-bottom:14px">Ahli VVIP memohon nombor WhatsApp anda.</p><div style="background:rgba(0,0,0,.28);border-radius:13px;padding:14px;margin-bottom:16px;border:1px solid var(--gborder)"><div class="serif" style="font-size:16px;margin-bottom:2px" id="con-name">—</div><div style="font-size:11px;color:var(--t3)" id="con-info">—</div></div><div class="row g9"><button onclick="respondCon(false)" style="flex:1;padding:13px;background:var(--s3);border:1px solid var(--gborder);border-radius:13px;font-size:12px;font-weight:600;color:var(--t2)">Belum Bersedia</button><button onclick="respondCon(true)" style="flex:1;padding:13px;background:linear-gradient(135deg,var(--gold),var(--gdark));border-radius:13px;font-size:12px;font-weight:800;color:#000">Beri Kebenaran ✓</button></div></div></div>
-
-<!-- ═════════ PROGRESSIVE PROFILING OVERLAY ═════════ -->
-<div class="ov" id="ov-progressive"><div class="modal" style="max-width:380px">
-  <div style="font-size:36px;margin-bottom:10px;text-align:center">🧠</div>
-  <h3 class="serif gold" style="font-size:21px;margin-bottom:4px;text-align:center">Lengkapkan Senjata Anda</h3>
-  <p style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:16px;text-align:center">Bantu AI Wingman kami membaca tahap pemikiran anda. 30 saat sahaja.</p>
-  <div class="col g12">
-    <div class="fl">
-      <label class="flb">Tahap Pendidikan Tertinggi</label>
-      <select id="pp-education" class="fi">
-        <option value="">Pilih tahap pendidikan...</option>
-        <option value="SPM">SPM / Setaraf</option>
-        <option value="Diploma">Diploma</option>
-        <option value="Degree">Ijazah Sarjana Muda (Degree)</option>
-        <option value="Master">Sarjana (Master's)</option>
-        <option value="PhD">Doktor Falsafah (PhD)</option>
-        <option value="Profesional">Kelayakan Profesional (ACCA, Ir, Dr, dll)</option>
-      </select>
-    </div>
-    <div class="fl">
-      <label class="flb">Sektor Pekerjaan Semasa</label>
-      <select id="pp-occupation" class="fi">
-        <option value="">Pilih sektor pekerjaan...</option>
-        <option value="Doktor/Medikal">Doktor / Pakar Perubatan</option>
-        <option value="Jurutera">Jurutera (Engineer)</option>
-        <option value="Akauntan">Akauntan / Kewangan</option>
-        <option value="Pensyarah">Pensyarah / Akademik</option>
-        <option value="Sales/Marketing">Eksekutif Jualan / Pemasaran</option>
-        <option value="Business">Ahli Perniagaan / Founder</option>
-        <option value="Peguam">Peguam / Perundangan</option>
-        <option value="Sektor Awam">Penjawat Awam / Kerajaan</option>
-        <option value="Lain-lain">Lain-lain Sektor</option>
-      </select>
-    </div>
-    <div style="background:rgba(201,168,76,.05);border:1px solid rgba(201,168,76,.15);border-radius:13px;padding:13px">
-      <div style="font-size:9px;color:var(--gold);font-weight:700;letter-spacing:.14em;margin-bottom:4px">AI WINGMAN — AKTIF</div>
-      <p style="font-size:11px;color:var(--t2);line-height:1.6">Sistem memilih 30 soalan rawak dari 300 bank data rahsia kami untuk analisis keserasian yang unik setiap sesi.</p>
-    </div>
-    <button class="btn btn-p" onclick="saveExtendedProfile()">Simpan & Mula Pencarian →</button>
-    <button onclick="skipExtendedProfile()" style="font-size:11px;color:var(--t3);padding:8px;text-align:center">Langkau buat masa ini</button>
-  </div>
-</div></div>
-
-
-<!-- ═════════ IC UPLOAD OVERLAY ═════════ -->
-<div id="ov-ic" class="ov">
-  <div class="modal tc" style="max-width:380px">
-    <h3 class="serif gold" style="font-size:22px;font-weight:700;margin-bottom:6px">Sahkan Identiti Anda</h3>
-    <p style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:16px">Muat naik gambar IC anda (depan sahaja).<br/>Data dienkripsi &amp; dipadam selepas verifikasi.</p>
-    <div onclick="document.getElementById('ic-file-input').click()" style="border:2px dashed var(--gborder2);border-radius:var(--r2);padding:28px;text-align:center;cursor:pointer;transition:var(--trans);margin-bottom:14px">
-      <input type="file" id="ic-file-input" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="handleICUpload(this)"/>
-      <div id="ic-preview-wrap" style="display:none;position:relative">
-        <img id="ic-preview-img" style="width:100%;border-radius:12px;max-height:200px;object-fit:contain"/>
-        <div onclick="clearIC(event)" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.7);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;color:#fff">✕</div>
-      </div>
-      <div id="ic-placeholder">
-        <div style="font-size:36px;margin-bottom:8px">🪪</div>
-        <div style="font-size:13px;font-weight:600;color:var(--t2)">Pilih Gambar IC</div>
-        <div style="font-size:10px;color:var(--t3);margin-top:4px">JPG / PNG • Maks 5MB</div>
-      </div>
-    </div>
-    <div id="ic-status-msg" class="mb" style="margin-bottom:10px"></div>
-    <div class="col g6" style="margin-bottom:16px;text-align:left">
-      <div style="font-size:10px;color:var(--t3)">✅ Pastikan IC jelas &amp; tidak kabur</div>
-      <div style="font-size:10px;color:var(--t3)">✅ Muat naik depan IC sahaja</div>
-      <div style="font-size:10px;color:var(--t3)">🔒 Data dienkripsi AES-256 (PDPA 2010)</div>
-      <div style="font-size:10px;color:var(--t3)">🗑️ Imej dipadam selepas verifikasi selesai</div>
-    </div>
-    <div class="col g8">
-      <button id="ic-submit-btn" class="btn btn-p" onclick="submitIC()" disabled style="opacity:.4;display:flex;align-items:center;justify-content:center;gap:8px">
-        <span>Hantar untuk Semakan</span>
-        <span id="ic-spin" class="spin" style="display:none"></span>
+      <button class="btn btn-primary btn-full" style="margin-top:20px" id="btn-submit-ic" onclick="submitIC()">
+        Hantar untuk Semakan
       </button>
-      <button onclick="closeOv('ov-ic')" style="padding:10px;font-size:12px;color:var(--t3)">Batal</button>
     </div>
   </div>
-</div>
 
-<!-- ══════════ SCRIPTS ══════════ -->
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="js/state.js"></script>
-<script src="js/validation.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/feed.js"></script>
-<script src="js/chat.js"></script>
-<script src="js/profile.js"></script>
-<script src="js/psychometric.js"></script>
+  <!-- Modal: Terms -->
+  <div class="modal-overlay" id="modal-terms" onclick="closeModalOnBg(event,'modal-terms')">
+    <div class="modal-sheet" style="position:relative;max-height:85vh">
+      <div class="modal-handle"></div>
+      <button class="modal-close" onclick="closeModal('modal-terms')">✕</button>
+      <h3 class="modal-title">📋 Terma & Syarat</h3>
+      <div style="font-size:11px;color:var(--ink-muted);margin-bottom:20px">Dikemas kini: 1 Mac 2026 • PDPA 2010 Malaysia</div>
+      <div class="terms-content" style="padding:0;margin:0">
+        <h3>A. Terma Penggunaan Platform</h3>
+        <h4>1. Kelayakan & Integriti</h4>
+        <p>Pengguna mestilah warganegara Malaysia berumur 18–55 tahun. Status perkahwinan mesti diisytiharkan dengan benar.</p>
+        <h4>2. Polisi Anti-Scam</h4>
+        <p>AI memantau gelagat mencurigakan. Akaun yang ditandakan boleh digantung serta-merta.</p>
+        <h4>3. Polisi Gambar & Kandungan</h4>
+        <p>Hanya 1 gambar profil. Mesti jelas, sopan & menunjukkan wajah anda.</p>
+        <h4>4. Polisi Perkenalan Lanjut</h4>
+        <p>Selepas 3 hari berturut-turut berbual, kedua-dua pihak boleh memohon Perkenalan Lanjut.</p>
+        <h4>5. Penafian Liabiliti</h4>
+        <p>Jodohku adalah medium digital sahaja. Pengguna bertanggungjawab sepenuhnya.</p>
+        <h3>B. Polisi Privasi (PDPA 2010)</h3>
+        <h4>1. Data & Perlindungan</h4>
+        <p>Data disulitkan AES-256. IC tidak disimpan sepenuhnya. Chat tidak menyokong muat naik fail/gambar.</p>
+        <h4>2. Penggunaan Data</h4>
+        <p>Nombor telefon tidak didedahkan tanpa kebenaran. Data tidak dijual kepada pihak ketiga.</p>
+        <h4>3. Hak Pengguna</h4>
+        <p>Anda berhak akses, pembetulan, atau pemadaman data. Hubungi: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="eb989e9b9b84999fab81848f8483809ec58692">[email&#160;protected]</a></p>
+        <h3>C. Keselamatan Platform</h3>
+        <h4>1. Pengesahan Berlapis</h4>
+        <p>OTP, tarikh lahir, IC separa, CAPTCHA, emel — semua memastikan setiap akaun adalah manusia nyata.</p>
+        <h4>2. Rate Limiting</h4>
+        <p>Maksimum 5 percubaan OTP sejam. IP mencurigakan diblok automatik.</p>
+      </div>
+      <button class="btn btn-primary btn-full" style="margin-top:20px" onclick="closeModal('modal-terms')">
+        Saya Faham & Bersetuju →
+      </button>
+    </div>
+  </div>
 
-<!-- INIT -->
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const maxDob = new Date(); maxDob.setFullYear(maxDob.getFullYear() - 18);
-  const dobEl = document.getElementById('r-dob'); if (dobEl) dobEl.max = maxDob.toISOString().slice(0, 10);
-  const otpEl = document.getElementById('l-otp'); if (otpEl) otpEl.addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6); });
-  document.querySelectorAll('.ov').forEach(ov => ov.addEventListener('click', e => { if (e.target === ov && ov.id !== 'ov-pay-proc' && ov.id !== 'ov-progressive') ov.classList.remove('show'); }));
-  initPsyQuestions(); // Randomise 30 from 300-question bank
-  loadPioneer();
-  // Show footer only when on dashboard or profile
-  const footer = document.getElementById('site-footer');
-  const observer = new MutationObserver(() => {
-    const dash = document.getElementById('P-dash');
-    const profile = document.getElementById('P-profile');
-    if (footer) footer.style.display = (dash && dash.classList.contains('active')) || (profile && profile.classList.contains('active')) ? 'block' : 'none';
-  });
-  document.querySelectorAll('.page').forEach(p => observer.observe(p, { attributes: true, attributeFilter: ['class'] }));
-  // Apply saved language on load
-  if (typeof applyLang === 'function') applyLang(S.lang || 'ms');
-  const _lt = document.getElementById('lang-tog'); if (_lt) _lt.textContent = '🌐 ' + ((S.lang||'ms')=='ms'?'EN':'BM');
-});
-</script>
-<!-- ══════════ FOOTER ══════════ -->
-<footer id="site-footer" style="display:none;border-top:1px solid rgba(255,255,255,.06);background:#050505">
-  <div id="footer-inner" style="display:flex;flex-direction:column;gap:0;padding:24px 20px">
-    <div style="padding-bottom:18px">
-      <div class="serif gold" style="font-size:16px;font-weight:700;margin-bottom:4px">Jodohku — Legacy VVIP</div>
-      <p style="font-size:10px;color:var(--t3);line-height:1.6">Sistem Pemadanan Elit dengan Sokongan Kecerdasan Buatan (AI). Platform jodoh halal pertama Malaysia.</p>
-      <p style="font-size:9px;color:rgba(255,255,255,.18);margin-top:6px">© 2026 Asas Technologies (M) Sdn Bhd. (No. Syarikat: 1234567-X)</p>
-    </div>
-    <div style="border-top:1px solid rgba(201,168,76,.08);padding:18px 0">
-      <div style="font-size:9px;color:var(--t3);letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px">Ibu Pejabat</div>
-      <p style="font-size:11px;color:var(--t2);line-height:1.6">Level 30, Menara Prestige, Jalan Pinang,<br/>54200 Kuala Lumpur.</p>
-    </div>
-    <div style="border-top:1px solid rgba(201,168,76,.08);padding-top:18px">
-      <div style="font-size:9px;color:var(--t3);letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px">Hubungan VVIP</div>
-      <p style="font-size:11px;color:var(--t2);line-height:1.8">📧 vvip@jodohku.com<br/>📞 03-8888 0000<br/>💬 WhatsApp Eksklusif</p>
-      <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">
-        <span style="font-size:9px;padding:3px 8px;border:1px solid rgba(201,168,76,.2);border-radius:20px;color:var(--t3)">PDPA 2010</span>
-        <span style="font-size:9px;padding:3px 8px;border:1px solid rgba(201,168,76,.2);border-radius:20px;color:var(--t3)">SSL Secured</span>
-        <span style="font-size:9px;padding:3px 8px;border:1px solid rgba(201,168,76,.2);border-radius:20px;color:var(--t3)">Halal Platform</span>
+  <!-- Modal: AI Wingman -->
+  <div class="modal-overlay" id="modal-wingman" onclick="closeModalOnBg(event,'modal-wingman')">
+    <div class="modal-sheet" style="position:relative">
+      <div class="modal-handle"></div>
+      <button class="modal-close" onclick="closeModal('modal-wingman')">✕</button>
+      <h3 class="modal-title">🤝 AI Wingman</h3>
+      <p style="font-size:14px;color:var(--ink-muted);margin-bottom:20px">Bantu AI menganalisis kerjaya & tahap pemikiran anda untuk padanan yang lebih tepat.</p>
+      <div class="wingman-form">
+        <div class="form-group">
+          <label class="form-label">Tahap Pendidikan Tertinggi</label>
+          <select class="form-input" id="wingman-edu">
+            <option value="">Pilih tahap pendidikan...</option>
+            <option value="spm">SPM / Setaraf</option>
+            <option value="diploma">Diploma</option>
+            <option value="degree">Ijazah Sarjana Muda (Degree)</option>
+            <option value="masters">Sarjana (Master's)</option>
+            <option value="phd">Doktor Falsafah (PhD)</option>
+            <option value="professional">Kelayakan Profesional (ACCA, Ir, Dr, dll)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Sektor Pekerjaan Semasa</label>
+          <select class="form-input" id="wingman-sector">
+            <option value="">Pilih sektor pekerjaan...</option>
+            <option value="medical">Doktor / Pakar Perubatan</option>
+            <option value="engineering">Jurutera (Engineer)</option>
+            <option value="finance">Akauntan / Kewangan</option>
+            <option value="academic">Pensyarah / Akademik</option>
+            <option value="sales">Eksekutif Jualan / Pemasaran</option>
+            <option value="business">Ahli Perniagaan / Founder</option>
+            <option value="legal">Peguam / Perundangan</option>
+            <option value="government">Penjawat Awam / Kerajaan</option>
+            <option value="other">Lain-lain Sektor</option>
+          </select>
+        </div>
+        <div style="background:var(--cream);border-radius:var(--radius-sm);padding:14px;font-size:13px;color:var(--ink-muted)">
+          🤖 <strong>AI WINGMAN — AKTIF</strong><br>
+          Sistem memilih 30 soalan rawak dari 300 bank data untuk analisis keserasian yang unik setiap sesi.
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:20px">
+        <button class="btn btn-ghost" onclick="closeModal('modal-wingman')">Langkau</button>
+        <button class="btn btn-primary" style="flex:1" onclick="saveWingman()">Simpan & Mula Pencarian →</button>
       </div>
     </div>
   </div>
-</footer>
-<style>
-@media(min-width:600px){
-  #footer-inner{flex-direction:row !important;padding:32px 40px !important}
-  #footer-inner>div{flex:1;padding:0 24px !important;border-top:none !important;border-left:1px solid rgba(201,168,76,.08)}
-  #footer-inner>div:first-child{border-left:none;padding-left:0 !important}
+
+  <!-- Modal: Payment Processing -->
+  <div class="modal-overlay" id="modal-payment" onclick="closeModalOnBg(event,'modal-payment')">
+    <div class="modal-sheet" style="position:relative">
+      <div class="modal-handle"></div>
+      <h3 class="modal-title" id="payment-modal-title">Memproses Pembayaran...</h3>
+      <div id="payment-processing" style="text-align:center;padding:20px 0">
+        <div style="font-size:40px;margin-bottom:16px">💳</div>
+        <p style="color:var(--ink-muted);margin-bottom:8px">Disambungkan ke ToyyibPay...</p>
+        <div style="height:4px;background:var(--cream);border-radius:2px;overflow:hidden">
+          <div id="payment-progress" style="height:100%;width:0%;background:var(--gold);transition:width 2s ease"></div>
+        </div>
+      </div>
+      <div id="payment-amount-row" style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:var(--cream);border-radius:var(--radius-sm);margin-bottom:16px">
+        <span style="font-size:14px;color:var(--ink-muted)">Jumlah</span>
+        <span style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:700;color:var(--gold-dark)" id="payment-amount">RM —</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Asnaf Application -->
+  <div class="modal-overlay" id="modal-asnaf" onclick="closeModalOnBg(event,'modal-asnaf')">
+    <div class="modal-sheet" style="position:relative;max-height:90vh;overflow-y:auto">
+      <div class="modal-handle"></div>
+      <button class="modal-close" onclick="closeModal('modal-asnaf')">✕</button>
+      <h3 class="modal-title">🤲 Permohonan Status Asnaf</h3>
+      <p style="font-size:13px;color:var(--ink-muted);margin-bottom:20px;line-height:1.5">
+        Untuk mendapat akses percuma atau subsidi, sila lengkapkan borang ini. Semua dokumen disulitkan dan hanya dilihat oleh admin berlesen.
+      </p>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div>
+          <label style="font-size:13px;font-weight:600;color:var(--ink-light);display:block;margin-bottom:4px">Nama Penuh (seperti dalam IC)</label>
+          <input class="form-input" id="asnaf-name" type="text" placeholder="Nama penuh">
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;color:var(--ink-light);display:block;margin-bottom:4px">No. IC</label>
+          <input class="form-input" id="asnaf-ic" type="text" placeholder="000000-00-0000">
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;color:var(--ink-light);display:block;margin-bottom:4px">Alamat Penuh</label>
+          <input class="form-input" id="asnaf-address" type="text" placeholder="Alamat lengkap">
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;color:var(--ink-light);display:block;margin-bottom:4px">Kategori Asnaf</label>
+          <select class="form-input" id="asnaf-category">
+            <option value="">-- Pilih Kategori --</option>
+            <option value="Fakir">Fakir</option>
+            <option value="Miskin">Miskin</option>
+            <option value="Amil">Amil</option>
+            <option value="Muallaf">Muallaf</option>
+            <option value="Riqab">Riqab (Membebaskan diri dari hutang)</option>
+            <option value="Gharimin">Gharimin (Berhutang)</option>
+            <option value="Fisabilillah">Fisabilillah</option>
+            <option value="Ibnussabil">Ibnussabil (Musafir)</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;color:var(--ink-light);display:block;margin-bottom:4px">Pendapatan Bulanan (RM)</label>
+          <input class="form-input" id="asnaf-income" type="number" placeholder="cth: 1500">
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;color:var(--ink-light);display:block;margin-bottom:4px">Bilangan Tanggungan</label>
+          <input class="form-input" id="asnaf-dependents" type="number" placeholder="cth: 3" min="0">
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;color:var(--ink-light);display:block;margin-bottom:6px">Dokumen Sokongan (Slip gaji / Surat miskin / Lain)</label>
+          <div class="ic-upload-area" id="asnaf-doc-area" onclick="document.getElementById('asnaf-doc-input').click()" style="padding:16px;text-align:center">
+            <div id="asnaf-doc-placeholder">
+              <div style="font-size:28px">📄</div>
+              <div style="font-size:13px;font-weight:600;color:var(--ink-light);margin-top:6px">Pilih Dokumen</div>
+              <div style="font-size:11px;color:var(--ink-muted);margin-top:4px">JPG, PNG atau PDF • Maks 10MB</div>
+            </div>
+            <div id="asnaf-doc-chosen" style="display:none;font-size:13px;color:var(--success);font-weight:600"></div>
+          </div>
+          <input type="file" id="asnaf-doc-input" accept="image/jpeg,image/png,application/pdf" style="display:none" onchange="onAsnafDocChosen(this)">
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;color:var(--ink-light);display:block;margin-bottom:6px">Gambar IC (Opsional)</label>
+          <div class="ic-upload-area" onclick="document.getElementById('asnaf-ic-input').click()" style="padding:12px;text-align:center">
+            <div id="asnaf-ic-placeholder" style="font-size:12px;color:var(--ink-muted)">🪪 Pilih gambar IC (opsional)</div>
+            <div id="asnaf-ic-chosen" style="display:none;font-size:12px;color:var(--success);font-weight:600"></div>
+          </div>
+          <input type="file" id="asnaf-ic-input" accept="image/jpeg,image/png" style="display:none" onchange="onAsnafICChosen(this)">
+        </div>
+      </div>
+      <div style="margin-top:16px;font-size:12px;color:var(--ink-muted)">🔒 Data PDPA 2010 dilindungi • Semakan 3-5 hari bekerja</div>
+      <button class="btn btn-primary btn-full" style="margin-top:16px" id="btn-submit-asnaf" onclick="submitAsnaf()">Hantar Permohonan Asnaf</button>
+    </div>
+  </div>
+
+  <!-- Modal: Mualaf Application -->
+  <div class="modal-overlay" id="modal-mualaf" onclick="closeModalOnBg(event,'modal-mualaf')">
+    <div class="modal-sheet" style="position:relative;max-height:90vh;overflow-y:auto">
+      <div class="modal-handle"></div>
+      <button class="modal-close" onclick="closeModal('modal-mualaf')">✕</button>
+      <h3 class="modal-title">☪️ Pendaftaran Mualaf</h3>
+      <p style="font-size:13px;color:var(--ink-muted);margin-bottom:20px;line-height:1.5">
+        Saudara/i Muslim baru, kami mengucapkan selamat datang. Daftarkan status Mualaf anda untuk mendapat padanan yang lebih sesuai.
+      </p>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div>
+          <label style="font-size:13px;font-weight:600;color:var(--ink-light);display:block;margin-bottom:4px">Nama Penuh (seperti dalam IC)</label>
+          <input class="form-input" id="mualaf-name" type="text" placeholder="Nama penuh">
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;color:var(--ink-light);display:block;margin-bottom:4px">No. IC</label>
+          <input class="form-input" id="mualaf-ic" type="text" placeholder="000000-00-0000">
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;color:var(--ink-light);display:block;margin-bottom:4px">Tarikh Memeluk Islam</label>
+          <input class="form-input" id="mualaf-date" type="date">
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;color:var(--ink-light);display:block;margin-bottom:4px">Negeri Pengislaman</label>
+          <select class="form-input" id="mualaf-state">
+            <option value="">-- Pilih Negeri --</option>
+            <option>Johor</option><option>Kedah</option><option>Kelantan</option>
+            <option>Melaka</option><option>Negeri Sembilan</option><option>Pahang</option>
+            <option>Perak</option><option>Perlis</option><option>Pulau Pinang</option>
+            <option>Sabah</option><option>Sarawak</option><option>Selangor</option>
+            <option>Terengganu</option><option>Kuala Lumpur</option><option>Labuan</option><option>Putrajaya</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;color:var(--ink-light);display:block;margin-bottom:6px">Sijil Pemelukan Islam (Sijil Mualaf)</label>
+          <div class="ic-upload-area" id="mualaf-sijil-area" onclick="document.getElementById('mualaf-sijil-input').click()" style="padding:16px;text-align:center">
+            <div id="mualaf-sijil-placeholder">
+              <div style="font-size:28px">📜</div>
+              <div style="font-size:13px;font-weight:600;color:var(--ink-light);margin-top:6px">Muat Naik Sijil Mualaf</div>
+              <div style="font-size:11px;color:var(--ink-muted);margin-top:4px">JPG, PNG atau PDF • Maks 10MB</div>
+            </div>
+            <div id="mualaf-sijil-chosen" style="display:none;font-size:13px;color:var(--success);font-weight:600"></div>
+          </div>
+          <input type="file" id="mualaf-sijil-input" accept="image/jpeg,image/png,application/pdf" style="display:none" onchange="onMualafSijilChosen(this)">
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:600;color:var(--ink-light);display:block;margin-bottom:6px">Gambar IC (Opsional)</label>
+          <div class="ic-upload-area" onclick="document.getElementById('mualaf-ic-input').click()" style="padding:12px;text-align:center">
+            <div id="mualaf-ic-placeholder" style="font-size:12px;color:var(--ink-muted)">🪪 Pilih gambar IC (opsional)</div>
+            <div id="mualaf-ic-chosen" style="display:none;font-size:12px;color:var(--success);font-weight:600"></div>
+          </div>
+          <input type="file" id="mualaf-ic-input" accept="image/jpeg,image/png" style="display:none" onchange="onMualafICChosen(this)">
+        </div>
+      </div>
+      <div style="margin-top:16px;font-size:12px;color:var(--ink-muted)">🔒 Data PDPA 2010 dilindungi • Semakan 3-5 hari bekerja</div>
+      <button class="btn btn-primary btn-full" style="margin-top:16px" id="btn-submit-mualaf" onclick="submitMualaf()">Hantar Pendaftaran Mualaf</button>
+    </div>
+  </div>
+
+</div><!-- end app -->
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+/* ============================================================
+   JODOHKU FRONTEND JAVASCRIPT
+   File: frontend.html (embedded script)
+   Versi: 2.0.0 (Fixed & Production-Ready)
+============================================================ */
+
+const API = 'http://localhost:8000/api'; // ← Tukar ke URL backend production anda (cth: https://jodohku-api.onrender.com/api)
+
+/* ── STATE ── */
+let appState = {
+  token: localStorage.getItem('jk_token') || null,
+  user:  JSON.parse(localStorage.getItem('jk_user') || 'null'),
+  currentTab: 'discover',
+  currentMatch: null,
+  quizQuestions: [],
+  quizAnswers: {},
+  quizIndex: 0,
+  tempToken: null,
+  socket: null,
+  trialTimer: null,
+  resetTimer: null,
+  resendTimer: null,
+  otpEmail: '',
+};
+
+/* ============================================================
+   INIT
+============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  if (appState.token && appState.user) {
+    initApp();
+  } else {
+    showPage('page-landing');
+    fetchPioneerCount();
+  }
+});
+
+function initApp() {
+  document.getElementById('page-landing').classList.remove('active');
+  document.getElementById('page-register').classList.remove('active');
+  document.getElementById('page-login').classList.remove('active');
+  document.getElementById('page-quiz').classList.remove('active');
+  document.getElementById('main-app').classList.add('active');
+  loadUserProfile();
+  connectSocket();
+  renderTiers();
+  startResetTimer();
 }
-@media(min-width:1024px){#footer-inner{padding:40px 80px !important}}
-</style>
+
+/* ============================================================
+   PAGE / TAB NAVIGATION
+============================================================ */
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('main-app').classList.remove('active');
+  const pg = document.getElementById(id);
+  if (pg) pg.classList.add('active');
+}
+
+function switchTab(tab) {
+  appState.currentTab = tab;
+  const tabs = ['discover','chat','stats','premium','profile'];
+  tabs.forEach(t => {
+    document.getElementById(`tab-${t}`).style.display = t === tab ? 'block' : 'none';
+    document.getElementById(`nav-${t}`)?.classList.toggle('active', t === tab);
+  });
+  if (tab === 'discover') loadDiscover();
+  if (tab === 'chat') loadChats();
+  if (tab === 'stats') loadStats();
+}
+
+/* ============================================================
+   TOAST NOTIFICATIONS
+============================================================ */
+function toast(msg, type='info') {
+  const icons = { success:'✅', error:'❌', info:'ℹ️', warning:'⚠️' };
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
+  const container = document.getElementById('toast-container');
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 3200);
+}
+
+/* ============================================================
+   API HELPER
+============================================================ */
+async function api(method, endpoint, body, isFormData=false) {
+  const headers = {};
+  if (appState.token) headers['Authorization'] = `Bearer ${appState.token}`;
+  if (!isFormData) headers['Content-Type'] = 'application/json';
+
+  const opts = { method, headers };
+  if (body) opts.body = isFormData ? body : JSON.stringify(body);
+
+  try {
+    const res = await fetch(`${API}${endpoint}`, opts);
+    const data = await res.json();
+    if (!res.ok && data.error) return { success:false, error:data.error, status:res.status };
+    return data;
+  } catch(e) {
+    return { success:false, error:'Tiada sambungan ke pelayan. Sila cuba lagi.' };
+  }
+}
+
+/* ============================================================
+   PIONEER COUNT
+============================================================ */
+async function fetchPioneerCount() {
+  const data = await api('GET', '/pioneer');
+  if (data.success) {
+    document.getElementById('pioneer-count').textContent = data.remaining.toLocaleString();
+  }
+}
+
+/* ============================================================
+   REGISTER — STEP 1
+============================================================ */
+async function submitStep1() {
+  const phone    = document.getElementById('reg-phone').value.trim();
+  const nickname = document.getElementById('reg-nickname').value.trim();
+  const dob      = document.getElementById('reg-dob').value;
+  const gender   = document.getElementById('reg-gender').value;
+  const status   = document.getElementById('reg-status').value;
+  const income   = document.getElementById('reg-income').value;
+
+  clearErrors();
+  let valid = true;
+
+  if (!phone || phone.length < 9)         { showError('err-phone', 'Nombor telefon tidak sah'); valid=false; }
+  if (!nickname || nickname.length < 2)   { showError('err-nickname', 'Nama panggilan terlalu pendek'); valid=false; }
+  if (!dob)                               { showError('err-dob', 'Tarikh lahir diperlukan'); valid=false; }
+  if (!gender)                            { showError('err-gender', 'Sila pilih jantina'); valid=false; }
+  if (!income)                            { showError('err-income', 'Sila pilih pendapatan'); valid=false; }
+  if (!valid) return;
+
+  setLoading('btn-step1', true);
+  const res = await api('POST', '/auth/register/step1', { phone, nickname, dob, gender, status, income });
+  setLoading('btn-step1', false);
+
+  if (!res.success) {
+    if (res.error?.includes('telefon')) showError('err-phone', res.error);
+    else toast(res.error, 'error');
+    return;
+  }
+
+  appState.tempToken = res.tempToken;
+  showRegStep(2);
+}
+
+/* ── REGISTER STEP 2 ── */
+async function submitStep2() {
+  const email   = document.getElementById('reg-email').value.trim();
+  const state   = document.getElementById('reg-state').value;
+  const ic_last4= document.getElementById('reg-ic').value.trim();
+  const captcha = document.getElementById('captcha-check').checked;
+
+  clearErrors();
+  let valid = true;
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError('err-email','Format email tidak sah'); valid=false; }
+  if (!state)                             { showError('err-state','Sila pilih negeri'); valid=false; }
+  if (!ic_last4 || !/^\d{4}$/.test(ic_last4)) { showError('err-ic','Masukkan 4 digit terakhir IC yang sah'); valid=false; }
+  if (!captcha)                           { showError('err-captcha','Sila sahkan anda bukan robot'); valid=false; }
+  if (!valid) return;
+
+  setLoading('btn-step2', true);
+  const res = await api('POST', '/auth/register/step2', {
+    tempToken: appState.tempToken, email, state, ic_last4, captchaPass:true
+  });
+  setLoading('btn-step2', false);
+
+  if (!res.success) {
+    if (res.error?.includes('email')) showError('err-email', res.error);
+    else toast(res.error, 'error');
+    return;
+  }
+
+  appState.tempToken = res.tempToken;
+  showRegStep(3);
+}
+
+/* ── REGISTER STEP 3 ── */
+async function submitStep3() {
+  const terms = document.getElementById('reg-terms').checked;
+  if (!terms) { showError('err-terms','Anda perlu bersetuju dengan Terma & Syarat'); return; }
+
+  const photoInput = document.getElementById('photo-input');
+  const formData = new FormData();
+  formData.append('tempToken', appState.tempToken);
+  formData.append('agreeTerms', 'true');
+  if (photoInput.files[0]) formData.append('photo', photoInput.files[0]);
+
+  setLoading('btn-step3', true);
+  const res = await api('POST', '/auth/register/step3', formData, true);
+  setLoading('btn-step3', false);
+
+  if (!res.success) { toast(res.error, 'error'); return; }
+
+  appState.token = res.token;
+  localStorage.setItem('jk_token', res.token);
+  toast(res.message, 'success');
+
+  // Load user
+  const profile = await api('GET', '/profile');
+  if (profile.success) {
+    appState.user = profile.user;
+    localStorage.setItem('jk_user', JSON.stringify(profile.user));
+  }
+
+  initApp();
+}
+
+function showRegStep(n) {
+  [1,2,3].forEach(i => {
+    const el = document.getElementById(`reg-step-${i}`);
+    if (el) el.classList.toggle('hidden', i !== n);
+  });
+}
+
+/* ── CAPTCHA Simulasi ── */
+function toggleCaptcha() {
+  const cb = document.getElementById('captcha-check');
+  if (!cb.checked) {
+    setTimeout(() => {
+      cb.checked = true;
+      document.getElementById('captcha-text').textContent = '✅ Bukan robot';
+    }, 800);
+  }
+}
+
+/* ============================================================
+   OTP LOGIN
+============================================================ */
+async function sendOTP() {
+  const email = document.getElementById('login-email').value.trim();
+  clearErrors();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showError('err-login-email','Format email tidak sah');
+    return;
+  }
+
+  setLoading('btn-send-otp', true);
+  const res = await api('POST', '/auth/otp/send', { email });
+  setLoading('btn-send-otp', false);
+
+  if (!res.success) {
+    showError('err-login-email', res.error);
+    return;
+  }
+
+  appState.otpEmail = email;
+  document.getElementById('otp-email-display').textContent = email.replace(/(.{2}).*(@.*)/, '$1***$2');
+  document.getElementById('login-email-step').classList.add('hidden');
+  document.getElementById('login-otp-step').classList.remove('hidden');
+  document.querySelectorAll('.otp-digit')[0].focus();
+
+  // Dev mode: auto-fill OTP jika ada dalam response
+  if (res.dev_otp) {
+    toast(`[DEV] OTP: ${res.dev_otp}`, 'info');
+    const digits = res.dev_otp.split('');
+    document.querySelectorAll('.otp-digit').forEach((el,i) => {
+      el.value = digits[i] || '';
+      if (digits[i]) el.classList.add('filled');
+    });
+    checkOTPComplete();
+  }
+
+  startResendTimer(60);
+  toast(res.message, 'success');
+}
+
+async function verifyOTP() {
+  const digits = [...document.querySelectorAll('.otp-digit')].map(d=>d.value).join('');
+  if (digits.length < 6) { toast('Sila masukkan 6 digit OTP', 'warning'); return; }
+
+  setLoading('btn-verify-otp', true);
+  const res = await api('POST', '/auth/otp/verify', { email: appState.otpEmail, otp: digits });
+  setLoading('btn-verify-otp', false);
+
+  if (!res.success) {
+    toast(res.error, 'error');
+    // Highlight error
+    document.querySelectorAll('.otp-digit').forEach(d => d.style.borderColor='var(--danger)');
+    setTimeout(() => document.querySelectorAll('.otp-digit').forEach(d => {
+      d.style.borderColor=''; d.value=''; d.classList.remove('filled');
+    }), 1000);
+    return;
+  }
+
+  appState.token = res.token;
+  appState.user  = res.user;
+  localStorage.setItem('jk_token', res.token);
+  localStorage.setItem('jk_user', JSON.stringify(res.user));
+  toast('Selamat datang kembali! 👋', 'success');
+  initApp();
+}
+
+function otpInput(el, idx) {
+  el.value = el.value.replace(/\D/g,'').slice(-1);
+  if (el.value) {
+    el.classList.add('filled');
+    const next = document.querySelectorAll('.otp-digit')[idx+1];
+    if (next) next.focus();
+  }
+  checkOTPComplete();
+}
+
+function otpKeydown(el, idx) {
+  if (event.key === 'Backspace' && !el.value) {
+    const prev = document.querySelectorAll('.otp-digit')[idx-1];
+    if (prev) { prev.value=''; prev.classList.remove('filled'); prev.focus(); }
+  }
+}
+
+function checkOTPComplete() {
+  const all = [...document.querySelectorAll('.otp-digit')].map(d=>d.value).join('');
+  document.getElementById('btn-verify-otp').disabled = all.length < 6;
+}
+
+async function resendOTP() {
+  document.getElementById('btn-resend').disabled = true;
+  const res = await api('POST', '/auth/otp/send', { email: appState.otpEmail });
+  if (res.success) {
+    toast('OTP baru dihantar!', 'success');
+    startResendTimer(60);
+    document.querySelectorAll('.otp-digit').forEach(d => { d.value=''; d.classList.remove('filled'); });
+    document.getElementById('btn-verify-otp').disabled = true;
+
+    if (res.dev_otp) {
+      toast(`[DEV] OTP: ${res.dev_otp}`, 'info');
+      const digits = res.dev_otp.split('');
+      document.querySelectorAll('.otp-digit').forEach((el,i) => {
+        el.value = digits[i]||''; if(digits[i]) el.classList.add('filled');
+      });
+      checkOTPComplete();
+    }
+  } else {
+    toast(res.error, 'error');
+  }
+}
+
+function startResendTimer(seconds) {
+  let s = seconds;
+  const btn = document.getElementById('btn-resend');
+  const count = document.getElementById('resend-countdown');
+  btn.disabled = true;
+  clearInterval(appState.resendTimer);
+  appState.resendTimer = setInterval(() => {
+    s--;
+    count.textContent = `Cuba semula dalam ${s}s`;
+    if (s <= 0) {
+      clearInterval(appState.resendTimer);
+      count.textContent = '';
+      btn.disabled = false;
+    }
+  }, 1000);
+}
+
+/* ============================================================
+   USER PROFILE LOAD
+============================================================ */
+async function loadUserProfile() {
+  const res = await api('GET', '/profile');
+  if (!res.success) { if(res.status===401) logout(); return; }
+
+  appState.user = res.user;
+  localStorage.setItem('jk_user', JSON.stringify(res.user));
+  renderUserUI(res.user);
+  loadDiscover();
+  loadChats();
+}
+
+function renderUserUI(user) {
+  if (!user) return;
+
+  // Avatar
+  const avatarImg = document.getElementById('nav-avatar-img');
+  if (user.profile_photo) {
+    avatarImg.src = user.profile_photo;
+    document.getElementById('profile-photo').src = user.profile_photo;
+    document.getElementById('profile-avatar-emoji').style.display='none';
+  }
+
+  // Tier badge
+  const badge = document.getElementById('nav-tier-badge');
+  badge.textContent = (user.tier||'percuma').toUpperCase();
+  badge.className = `tier-badge tier-${user.tier||'percuma'}`;
+
+  // Trial bar
+  if (user.trial_end) {
+    document.getElementById('trial-bar').classList.remove('hidden');
+    startTrialCountdown(new Date(user.trial_end));
+  }
+
+  // Profile page
+  document.getElementById('profile-name').textContent = user.nickname || '—';
+  const age = user.dob ? Math.floor((Date.now()-new Date(user.dob))/(365.25*24*60*60*1000)) : '—';
+  document.getElementById('profile-meta').textContent = `${age} tahun • ${user.state||'—'} • ${user.gender==='lelaki'?'Lelaki':'Perempuan'}`;
+  document.getElementById('profile-ici').textContent = user.ici_score ? `${user.ici_score}/10` : '—';
+  document.getElementById('profile-credits').textContent = user.message_credits || 0;
+  document.getElementById('info-sub-status').textContent = user.subscription_end ? 'Aktif' : (user.trial_end ? 'Trial' : 'Percuma');
+  document.getElementById('info-tier').textContent = (user.tier||'percuma').charAt(0).toUpperCase()+(user.tier||'percuma').slice(1);
+  document.getElementById('info-sub-end').textContent = user.subscription_end ? new Date(user.subscription_end).toLocaleDateString('ms-MY') : '—';
+  document.getElementById('info-ic-status').innerHTML = user.ic_verified
+    ? '<span class="verified-tag">✓ Disahkan</span>'
+    : '<span class="pending-tag">⏳ Menunggu</span>';
+  document.getElementById('info-quiz-status').innerHTML = user.dimension_data
+    ? '<span class="verified-tag">✓ Selesai</span>'
+    : '<span class="pending-tag">Belum selesai</span>';
+}
+
+/* ============================================================
+   DISCOVER
+============================================================ */
+async function loadDiscover() {
+  document.getElementById('discover-loading').style.display='block';
+  document.getElementById('candidates-list').innerHTML='';
+  document.getElementById('discover-empty').classList.add('hidden');
+
+  const res = await api('GET', '/discover');
+  document.getElementById('discover-loading').style.display='none';
+
+  if (!res.success) { toast(res.error,'error'); return; }
+
+  if (!res.candidates || res.candidates.length === 0) {
+    document.getElementById('discover-empty').classList.remove('hidden');
+    document.getElementById('discover-empty-msg').textContent =
+      res.reason === 'quiz_incomplete'
+        ? 'Sila lengkapkan Ujian 30 Dimensi untuk mendapat padanan AI yang tepat.'
+        : 'Tiada calon baru hari ini. Calon baru hadir esok jam 8:00 PG.';
+    return;
+  }
+
+  const list = document.getElementById('candidates-list');
+  res.candidates.forEach(c => {
+    const card = document.createElement('div');
+    card.className = 'candidate-card';
+    card.innerHTML = `
+      <div class="candidate-avatar">
+        ${c.photo
+          ? `<img src="${c.photo}" onerror="this.style.display='none'">`
+          : '👤'}
+      </div>
+      <div class="candidate-info">
+        <div class="candidate-name">${escHtml(c.nickname)}</div>
+        <div class="candidate-meta">${c.age} tahun • ${escHtml(c.state)} • <span class="tier-badge tier-${c.tier}" style="font-size:9px">${(c.tier||'').toUpperCase()}</span></div>
+        <div>
+          <span class="match-score-badge ${c.match_score>=90?'score-high':'score-mid'}">
+            💕 ${c.match_score}% Keserasian
+          </span>
+        </div>
+        ${c.ai_summary ? `<div class="candidate-summary">${escHtml(c.ai_summary)}</div>` : ''}
+      </div>
+      <div class="chat-btn" onclick="startChat('${c.id}','${escHtml(c.nickname)}','${c.photo||''}');event.stopPropagation()">→</div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+/* ============================================================
+   CHAT LIST
+============================================================ */
+async function loadChats() {
+  document.getElementById('chat-loading').style.display='block';
+  document.getElementById('chat-list').innerHTML='';
+  document.getElementById('chat-empty').classList.add('hidden');
+
+  const res = await api('GET', '/matches');
+  document.getElementById('chat-loading').style.display='none';
+
+  if (!res.success) return;
+
+  const list = document.getElementById('chat-list');
+  if (!res.matches || res.matches.length===0) {
+    document.getElementById('chat-empty').classList.remove('hidden');
+    return;
+  }
+
+  // Update unread badge
+  const totalUnread = res.matches.reduce((s,m)=>s+(m.unread||0),0);
+  const badge = document.getElementById('chat-badge');
+  if (totalUnread > 0) { badge.textContent = totalUnread; badge.classList.add('show'); }
+  else badge.classList.remove('show');
+
+  res.matches.forEach(m => {
+    const timeStr = m.last_chat ? formatTime(new Date(m.last_chat)) : '';
+    const item = document.createElement('div');
+    item.className = 'chat-item';
+    item.onclick = () => openChatRoom(m.id, m.partner_name, m.partner_photo, m.partner_tier);
+    item.innerHTML = `
+      <div class="chat-avatar-wrap">
+        <div class="chat-avatar">
+          ${m.partner_photo
+            ? `<img src="${m.partner_photo}" onerror="this.style.display='none'">`
+            : '👤'}
+        </div>
+      </div>
+      <div class="chat-info">
+        <div class="chat-name">${escHtml(m.partner_name||'—')}</div>
+        <div class="chat-last">${escHtml(m.last_message||'Mulakan perbualan...')}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+        <div class="chat-time">${timeStr}</div>
+        ${m.unread>0 ? `<div class="unread-badge">${m.unread}</div>` : ''}
+      </div>
+    `;
+    list.appendChild(item);
+  });
+}
+
+/* ============================================================
+   START CHAT (from Discover)
+============================================================ */
+async function startChat(targetId, name, photo) {
+  const res = await api('POST', '/matches/create', { targetUserId: targetId });
+  if (!res.success) { toast(res.error,'error'); return; }
+  openChatRoom(res.match_id, name, photo);
+}
+
+/* ============================================================
+   CHAT ROOM
+============================================================ */
+function openChatRoom(matchId, partnerName, partnerPhoto, partnerTier) {
+  appState.currentMatch = matchId;
+
+  document.getElementById('room-partner-name').textContent = partnerName || '—';
+  document.getElementById('room-partner-status').textContent = '● Dalam talian';
+
+  const partnerPhoto_el = document.getElementById('room-partner-photo');
+  if (partnerPhoto) {
+    partnerPhoto_el.src = partnerPhoto;
+    document.getElementById('room-partner-emoji').style.display='none';
+  } else {
+    partnerPhoto_el.style.display='none';
+    document.getElementById('room-partner-emoji').style.display='';
+  }
+
+  document.getElementById('chat-room').classList.add('open');
+  loadMessages(matchId);
+
+  // Join Socket.IO room
+  if (appState.socket) appState.socket.emit('join_match', matchId);
+}
+
+function closeChatRoom() {
+  document.getElementById('chat-room').classList.remove('open');
+  appState.currentMatch = null;
+}
+
+async function loadMessages(matchId) {
+  const res = await api('GET', `/messages/${matchId}`);
+  if (!res.success) { toast(res.error,'error'); return; }
+
+  const container = document.getElementById('chat-messages');
+  container.innerHTML='';
+
+  res.messages.forEach(msg => appendMessage(msg, msg.sender_id === appState.user?.id));
+
+  container.scrollTop = container.scrollHeight;
+
+  // Kredit indicator
+  updateCreditsUI(res.user_credits, res.user_tier);
+
+  // Upgrade prompt
+  if (res.user_credits === 0 && (res.user_tier==='silver'||res.user_tier==='percuma')) {
+    document.getElementById('upgrade-prompt').classList.add('show');
+    document.getElementById('send-btn').disabled = true;
+    document.getElementById('chat-input').disabled = true;
+  }
+}
+
+function appendMessage(msg, isSent) {
+  const container = document.getElementById('chat-messages');
+  const row = document.createElement('div');
+  row.className = isSent ? 'msg-sent-row' : 'msg-recv-row';
+  const time = msg.created_at ? formatTime(new Date(msg.created_at)) : '';
+  row.innerHTML = `
+    <div class="msg-bubble ${isSent?'sent':'received'}">
+      ${escHtml(msg.content)}
+      <div class="msg-time">${time}</div>
+    </div>
+  `;
+  container.appendChild(row);
+  container.scrollTop = container.scrollHeight;
+}
+
+function updateCreditsUI(credits, tier) {
+  const el = document.getElementById('room-credits');
+  if (tier==='gold'||tier==='platinum'||tier==='sovereign') {
+    el.textContent = '∞ Tanpa had';
+    el.className = 'credits-indicator';
+  } else {
+    el.textContent = `${credits}/10 kredit`;
+    el.className = `credits-indicator ${credits<=3 ? (credits===0?'empty':'low') : ''}`;
+  }
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const content = input.value.trim();
+  if (!content || !appState.currentMatch) return;
+
+  document.getElementById('send-btn').disabled = true;
+  const res = await api('POST', `/messages/${appState.currentMatch}`, { content });
+  document.getElementById('send-btn').disabled = false;
+
+  if (!res.success) {
+    if (res.upgrade_required) {
+      document.getElementById('upgrade-prompt').classList.add('show');
+      document.getElementById('chat-input').disabled = true;
+      document.getElementById('send-btn').disabled = true;
+    } else {
+      toast(res.error, 'error');
+    }
+    return;
+  }
+
+  input.value = '';
+  input.style.height='44px';
+  appendMessage(res.message, true);
+  updateCreditsUI(res.remaining_credits, appState.user?.tier);
+}
+
+function chatKeydown(e) {
+  if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function chatInputChange() {
+  const input = document.getElementById('chat-input');
+  const btn = document.getElementById('send-btn');
+  btn.disabled = !input.value.trim();
+  // Auto resize
+  input.style.height='44px';
+  input.style.height = Math.min(input.scrollHeight, 120)+'px';
+
+  // Typing indicator via socket
+  if (appState.socket && appState.currentMatch) {
+    appState.socket.emit('typing', { matchId: appState.currentMatch, isTyping: input.value.length>0 });
+  }
+}
+
+function useQuickReply(btn) {
+  const input = document.getElementById('chat-input');
+  input.value = btn.textContent;
+  input.dispatchEvent(new Event('input'));
+  document.getElementById('send-btn').disabled = false;
+  input.focus();
+}
+
+/* ============================================================
+   STATS
+============================================================ */
+async function loadStats() {
+  const res = await api('GET', '/stats');
+  if (!res.success) return;
+
+  const { stats } = res;
+  document.getElementById('stat-matches').textContent = stats.total_matches||0;
+  document.getElementById('stat-high').textContent = stats.high_matches||0;
+  document.getElementById('stat-convos').textContent = stats.total_convos||0;
+  document.getElementById('ici-ring-val').textContent = stats.ici_score ? `${stats.ici_score}` : '—';
+
+  // Animate ICI ring
+  const score = parseFloat(stats.ici_score||0);
+  const pct = (score/10)*100;
+  document.getElementById('ici-ring').style.background =
+    `conic-gradient(var(--gold) ${pct}%, var(--cream) ${pct}%)`;
+
+  if (stats.ai_profile) {
+    document.getElementById('ai-profile-display').innerHTML = `
+      <p style="font-weight:500;color:var(--ink);margin-bottom:8px">${escHtml(stats.ai_profile.summary||'')}</p>
+      <p style="font-size:13px"><strong>Ideal:</strong> ${escHtml(stats.ai_profile.ideal_partner||'')}</p>
+    `;
+  }
+}
+
+/* ============================================================
+   PREMIUM / TIERS
+============================================================ */
+async function renderTiers() {
+  const res = await api('GET', '/premium/tiers');
+  if (!res.success) return;
+
+  const container = document.getElementById('tier-cards');
+  container.innerHTML='';
+
+  res.tiers.forEach(tier => {
+    const card = document.createElement('div');
+    card.className = `tier-card ${tier.popular ? 'popular' : ''}`;
+    card.innerHTML = `
+      ${tier.popular ? '<div class="tier-popular-badge">⭐ POPULAR</div>' : ''}
+      <div class="tier-header">
+        <div class="tier-name">${tier.name}</div>
+        <div class="tier-price">
+          <div class="amount">RM${tier.price}</div>
+          <div class="period">/${tier.period}</div>
+        </div>
+      </div>
+      <div class="tier-features">
+        ${tier.features.map(f=>`<div class="tier-feature">${escHtml(f)}</div>`).join('')}
+      </div>
+      ${!tier.invite_only
+        ? `<button class="btn btn-${tier.popular?'primary':'outline'} btn-full" onclick="initiatePayment('${tier.id}',${tier.price},'${tier.name}')">
+            Pilih ${tier.name} — RM${tier.price}/${tier.period}
+           </button>`
+        : `<button class="btn btn-ghost btn-full" onclick="toast('Sila hubungi admin untuk Black Sovereign','info')">
+            Mohon Jemputan
+           </button>`
+      }
+    `;
+    container.appendChild(card);
+  });
+}
+
+async function initiatePayment(tierId, amount, tierName) {
+  showModal('modal-payment');
+  document.getElementById('payment-modal-title').textContent = `Memproses Pembayaran...`;
+  document.getElementById('payment-amount').textContent = `RM${amount}`;
+
+  // Animate progress bar
+  const bar = document.getElementById('payment-progress');
+  bar.style.width='0%';
+  setTimeout(()=>bar.style.width='70%', 100);
+
+  const res = await api('POST', '/payment/create', { tier: tierId });
+
+  if (!res.success) {
+    closeModal('modal-payment');
+    toast(res.error, 'error');
+    return;
+  }
+
+  bar.style.width='100%';
+  setTimeout(() => {
+    closeModal('modal-payment');
+    // Dalam production: redirect ke ToyyibPay
+    if (res.payment_url) window.location.href = res.payment_url;
+  }, 800);
+}
+
+/* ============================================================
+   QUIZ — 30 DIMENSI
+============================================================ */
+async function openQuiz() {
+  const res = await api('GET', '/quiz/questions');
+  if (!res.success) { toast(res.error,'error'); return; }
+
+  appState.quizQuestions = res.questions;
+  appState.quizAnswers   = {};
+  appState.quizIndex     = 0;
+
+  document.getElementById('quiz-result-area').classList.add('hidden');
+  document.getElementById('quiz-bio-area').classList.add('hidden');
+  document.getElementById('quiz-footer').classList.remove('hidden');
+  showPage('page-quiz');
+  renderQuestion(0);
+}
+
+function renderQuestion(idx) {
+  const questions = appState.quizQuestions;
+  const bioIdx    = questions.length; // extra step
+
+  if (idx >= questions.length) {
+    // Show bio step
+    document.getElementById('quiz-question-area').innerHTML='';
+    document.getElementById('quiz-bio-area').classList.remove('hidden');
+    document.getElementById('quiz-footer').innerHTML =
+      '<button class="btn btn-primary btn-full" onclick="submitQuiz()">Selesai & Lihat Keputusan →</button>';
+    document.getElementById('quiz-progress-text').textContent = `Langkah Akhir`;
+    document.getElementById('quiz-progress-bar').style.width='100%';
+    return;
+  }
+
+  const q = questions[idx];
+  const opts = q.options || [];
+  const cats = { personaliti:'Personaliti',agama:'Agama',kewangan:'Kewangan',keluarga:'Keluarga',gaya_hidup:'Gaya Hidup',komunikasi:'Komunikasi',masa_depan:'Masa Depan',keserasian:'Keserasian' };
+
+  document.getElementById('quiz-progress-text').textContent = `${idx+1}/30`;
+  document.getElementById('quiz-progress-bar').style.width = `${((idx+1)/30)*100}%`;
+
+  document.getElementById('quiz-question-area').innerHTML = `
+    <div class="question-category">${cats[q.category]||q.category}</div>
+    <div class="question-text">${escHtml(q.question_bm)}</div>
+    <div class="quiz-options">
+      ${opts.map((opt,oi)=>`
+        <button class="quiz-option ${appState.quizAnswers[q.id]===oi?'selected':''}"
+          onclick="selectAnswer(${q.id},${oi},this)">
+          ${escHtml(opt)}
+        </button>
+      `).join('')}
+    </div>
+  `;
+}
+
+function selectAnswer(qId, optIdx, el) {
+  appState.quizAnswers[qId] = optIdx;
+  document.querySelectorAll('.quiz-option').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function nextQuestion() {
+  const q = appState.quizQuestions[appState.quizIndex];
+  if (q && appState.quizAnswers[q.id] === undefined) {
+    toast('Sila pilih satu jawapan', 'warning');
+    return;
+  }
+  appState.quizIndex++;
+  renderQuestion(appState.quizIndex);
+  window.scrollTo(0,0);
+}
+
+async function submitQuiz() {
+  const bio = document.getElementById('quiz-bio').value;
+
+  const btn = document.querySelector('#quiz-footer button');
+  if (btn) { btn.classList.add('btn-loading'); btn.disabled=true; }
+
+  const res = await api('POST', '/quiz/submit', {
+    answers: appState.quizAnswers,
+    personalityBio: bio
+  });
+
+  if (btn) { btn.classList.remove('btn-loading'); btn.disabled=false; }
+
+  if (!res.success) { toast(res.error,'error'); return; }
+
+  // Show result
+  document.getElementById('quiz-bio-area').classList.add('hidden');
+  document.getElementById('quiz-footer').classList.add('hidden');
+  document.getElementById('quiz-result-area').classList.remove('hidden');
+  document.getElementById('result-ici-score').textContent = res.ici_score;
+  document.getElementById('quiz-progress-bar').style.width='100%';
+
+  if (res.ai_profile) {
+    document.getElementById('result-profile-text').innerHTML = `
+      <h4>Profil Keperibadian Anda</h4>
+      <p>${escHtml(res.ai_profile.summary||'')}</p>
+      ${res.ai_profile.ideal_partner ? `<p style="margin-top:8px"><strong>Pasangan Ideal:</strong> ${escHtml(res.ai_profile.ideal_partner)}</p>` : ''}
+    `;
+  }
+
+  // Refresh user profile
+  const profile = await api('GET', '/profile');
+  if (profile.success) {
+    appState.user = profile.user;
+    localStorage.setItem('jk_user', JSON.stringify(profile.user));
+  }
+
+  toast('Analisis selesai! 🎉', 'success');
+}
+
+function exitQuiz() {
+  showPage('page-landing');
+  initApp();
+}
+
+function updateCharCount(el) {
+  document.getElementById('bio-char-count').textContent = el.value.length;
+}
+
+/* ============================================================
+   IC VERIFICATION
+============================================================ */
+function previewIC(input) {
+  if (!input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('ic-placeholder').style.display='none';
+    document.getElementById('ic-preview').style.display='block';
+    document.getElementById('ic-preview-img').src = e.target.result;
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+async function submitIC() {
+  const input = document.getElementById('ic-input');
+  if (!input.files[0]) { toast('Sila pilih gambar IC dahulu','warning'); return; }
+
+  const formData = new FormData();
+  formData.append('ic_photo', input.files[0]);
+
+  setLoading('btn-submit-ic', true);
+  const res = await api('POST', '/profile/ic-verify', formData, true);
+  setLoading('btn-submit-ic', false);
+
+  if (!res.success) { toast(res.error,'error'); return; }
+
+  toast(res.message, 'success');
+  closeModal('modal-ic');
+
+  // Reset
+  document.getElementById('ic-placeholder').style.display='block';
+  document.getElementById('ic-preview').style.display='none';
+  input.value='';
+}
+
+/* ============================================================
+   PROFILE PHOTO UPLOAD
+============================================================ */
+function previewPhoto(input) {
+  if (!input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('photo-preview').src = e.target.result;
+    document.getElementById('photo-preview').style.display='block';
+    document.getElementById('photo-placeholder').style.display='none';
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+async function uploadProfilePhoto(input) {
+  if (!input.files[0]) return;
+  const formData = new FormData();
+  formData.append('photo', input.files[0]);
+
+  toast('Memuat naik gambar...', 'info');
+  const res = await api('POST', '/profile/photo', formData, true);
+
+  if (!res.success) { toast(res.error,'error'); return; }
+
+  const src = res.photo;
+  document.getElementById('profile-photo').src = src;
+  document.getElementById('nav-avatar-img').src = src;
+  document.getElementById('profile-avatar-emoji').style.display='none';
+  toast('Gambar berjaya dikemaskini!', 'success');
+}
+
+/* ============================================================
+   WINGMAN
+============================================================ */
+async function saveWingman() {
+  const edu    = document.getElementById('wingman-edu').value;
+  const sector = document.getElementById('wingman-sector').value;
+
+  if (!edu || !sector) { toast('Sila pilih pendidikan dan sektor', 'warning'); return; }
+
+  const res = await api('POST', '/wingman', { education:edu, sector });
+  if (!res.success) { toast(res.error,'error'); return; }
+
+  toast('AI Wingman dikemaskini! ✅', 'success');
+  closeModal('modal-wingman');
+}
+
+/* ============================================================
+   SOCKET.IO
+============================================================ */
+function connectSocket() {
+  if (!appState.token) return;
+
+  try {
+    appState.socket = io(API.replace("/api",""), { auth:{ token:appState.token } });
+
+    appState.socket.on('new_message', (msg) => {
+      if (appState.currentMatch === msg.match_id) {
+        const isSent = msg.sender_id === appState.user?.id;
+        appendMessage(msg, isSent);
+        appState.socket.emit('message_seen', { matchId: msg.match_id });
+      } else {
+        // Update unread badge
+        const badge = document.getElementById('chat-badge');
+        const current = parseInt(badge.textContent||'0');
+        badge.textContent = current+1;
+        badge.classList.add('show');
+      }
+    });
+
+    appState.socket.on('typing', ({ userId, isTyping }) => {
+      if (userId !== appState.user?.id) {
+        document.getElementById('typing-indicator').classList.toggle('show', isTyping);
+      }
+    });
+
+    appState.socket.on('connect_error', () => {
+      console.log('[Socket] Sambungan gagal — mode offline');
+    });
+  } catch(e) {
+    console.log('[Socket] Socket.IO tidak tersedia');
+  }
+}
+
+/* ============================================================
+   TIMERS
+============================================================ */
+function startTrialCountdown(endDate) {
+  clearInterval(appState.trialTimer);
+  const el = document.getElementById('trial-countdown');
+
+  function update() {
+    const diff = endDate - Date.now();
+    if (diff <= 0) {
+      el.textContent = 'TAMAT';
+      clearInterval(appState.trialTimer);
+      document.getElementById('trial-bar').style.background='var(--danger)';
+      return;
+    }
+    const h = Math.floor(diff/3600000);
+    const m = Math.floor((diff%3600000)/60000);
+    const s = Math.floor((diff%60000)/1000);
+    el.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+
+  update();
+  appState.trialTimer = setInterval(update, 1000);
+}
+
+function startResetTimer() {
+  clearInterval(appState.resetTimer);
+  const el = document.getElementById('reset-countdown');
+
+  function update() {
+    const now = new Date();
+    const reset = new Date();
+    reset.setHours(8,0,0,0);
+    if (now >= reset) reset.setDate(reset.getDate()+1);
+    const diff = reset - now;
+    const h = Math.floor(diff/3600000);
+    const m = Math.floor((diff%3600000)/60000);
+    el.textContent = `${String(h).padStart(2,'0')}j ${String(m).padStart(2,'0')}m`;
+  }
+
+  update();
+  appState.resetTimer = setInterval(update, 60000);
+}
+
+/* ============================================================
+   MODALS
+============================================================ */
+function showModal(id) {
+  document.getElementById(id).classList.add('show');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+function closeModalOnBg(e, id) {
+  if (e.target.id === id) closeModal(id);
+}
+
+/* ============================================================
+   LOGOUT
+============================================================ */
+function logout() {
+  clearInterval(appState.trialTimer);
+  clearInterval(appState.resetTimer);
+  if (appState.socket) appState.socket.disconnect();
+  localStorage.removeItem('jk_token');
+  localStorage.removeItem('jk_user');
+  appState.token = null;
+  appState.user  = null;
+  document.getElementById('main-app').classList.remove('active');
+  showPage('page-landing');
+  fetchPioneerCount();
+  toast('Anda telah log keluar', 'info');
+}
+
+/* ============================================================
+   UTILS
+============================================================ */
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatTime(date) {
+  const now = new Date();
+  const diff = now - date;
+  if (diff < 60000) return 'Baru';
+  if (diff < 3600000) return `${Math.floor(diff/60000)}m`;
+  if (diff < 86400000) return `${Math.floor(diff/3600000)}j`;
+  if (diff < 604800000) return `${Math.floor(diff/86400000)}h`;
+  return date.toLocaleDateString('ms-MY', {day:'numeric',month:'short'});
+}
+
+function setLoading(btnId, loading) {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.disabled = loading;
+  if (loading) btn.classList.add('btn-loading');
+  else btn.classList.remove('btn-loading');
+}
+
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  const input = el.previousElementSibling;
+  if (input && input.classList.contains('form-input')) input.classList.add('error');
+}
+
+function clearErrors() {
+  document.querySelectorAll('.form-error').forEach(el => { el.classList.remove('show'); el.textContent=''; });
+  document.querySelectorAll('.form-input.error').forEach(el => el.classList.remove('error'));
+}
+
+/* ── Handle payment callback dari URL ── */
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('payment_success') === 'true') {
+  const tier = urlParams.get('tier');
+  const ref  = urlParams.get('ref');
+  if (tier && ref && appState.token) {
+    api('POST', '/payment/verify', { payment_id:ref, tier }).then(res => {
+      if (res.success) {
+        toast(`🎉 Langganan ${tier.charAt(0).toUpperCase()+tier.slice(1)} berjaya diaktifkan!`, 'success');
+        appState.user = res.user;
+         localStorage.setItem('jk_user', JSON.stringify(res.user));
+        renderUserUI(res.user);
+      }
+    });
+  }
+}
+
+/* ============================================================
+   ASNAF APPLICATION
+============================================================ */
+function onAsnafDocChosen(input) {
+  const f = input.files[0];
+  if (!f) return;
+  document.getElementById('asnaf-doc-placeholder').style.display = 'none';
+  document.getElementById('asnaf-doc-chosen').style.display = 'block';
+  document.getElementById('asnaf-doc-chosen').textContent = `✅ ${f.name}`;
+}
+function onAsnafICChosen(input) {
+  const f = input.files[0];
+  if (!f) return;
+  document.getElementById('asnaf-ic-placeholder').style.display = 'none';
+  document.getElementById('asnaf-ic-chosen').style.display = 'block';
+  document.getElementById('asnaf-ic-chosen').textContent = `✅ ${f.name}`;
+}
+async function submitAsnaf() {
+  const name       = document.getElementById('asnaf-name').value.trim();
+  const ic         = document.getElementById('asnaf-ic').value.trim();
+  const address    = document.getElementById('asnaf-address').value.trim();
+  const category   = document.getElementById('asnaf-category').value;
+  const income     = document.getElementById('asnaf-income').value.trim();
+  const dependents = document.getElementById('asnaf-dependents').value.trim();
+  const docInput   = document.getElementById('asnaf-doc-input');
+  const icInput    = document.getElementById('asnaf-ic-input');
+
+  if (!name || !ic || !address || !category || !income) {
+    toast('Sila lengkapkan semua maklumat wajib', 'warning'); return;
+  }
+  if (!docInput.files[0]) {
+    toast('Sila muat naik dokumen sokongan', 'warning'); return;
+  }
+
+  const formData = new FormData();
+  formData.append('full_name', name);
+  formData.append('ic_number', ic);
+  formData.append('address', address);
+  formData.append('asnaf_category', category);
+  formData.append('monthly_income', income);
+  formData.append('dependents', dependents || '0');
+  formData.append('supporting_doc', docInput.files[0]);
+  if (icInput.files[0]) formData.append('ic_photo', icInput.files[0]);
+
+  setLoading('btn-submit-asnaf', true);
+  const res = await api('POST', '/applications/asnaf', formData, true);
+  setLoading('btn-submit-asnaf', false);
+
+  if (!res.success) { toast(res.error || 'Gagal hantar permohonan', 'error'); return; }
+  toast(`✅ ${res.message}`, 'success');
+  closeModal('modal-asnaf');
+  // Reset form
+  ['asnaf-name','asnaf-ic','asnaf-address','asnaf-income','asnaf-dependents'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('asnaf-category').value = '';
+  document.getElementById('asnaf-doc-placeholder').style.display = '';
+  document.getElementById('asnaf-doc-chosen').style.display = 'none';
+}
+
+/* ============================================================
+   MUALAF APPLICATION
+============================================================ */
+function onMualafSijilChosen(input) {
+  const f = input.files[0];
+  if (!f) return;
+  document.getElementById('mualaf-sijil-placeholder').style.display = 'none';
+  document.getElementById('mualaf-sijil-chosen').style.display = 'block';
+  document.getElementById('mualaf-sijil-chosen').textContent = `✅ ${f.name}`;
+}
+function onMualafICChosen(input) {
+  const f = input.files[0];
+  if (!f) return;
+  document.getElementById('mualaf-ic-placeholder').style.display = 'none';
+  document.getElementById('mualaf-ic-chosen').style.display = 'block';
+  document.getElementById('mualaf-ic-chosen').textContent = `✅ ${f.name}`;
+}
+async function submitMualaf() {
+  const name  = document.getElementById('mualaf-name').value.trim();
+  const ic    = document.getElementById('mualaf-ic').value.trim();
+  const date  = document.getElementById('mualaf-date').value;
+  const state = document.getElementById('mualaf-state').value;
+  const sijilInput = document.getElementById('mualaf-sijil-input');
+  const icInput    = document.getElementById('mualaf-ic-input');
+
+  if (!name || !ic || !date || !state) {
+    toast('Sila lengkapkan semua maklumat wajib', 'warning'); return;
+  }
+  if (!sijilInput.files[0]) {
+    toast('Sila muat naik Sijil Mualaf', 'warning'); return;
+  }
+
+  const formData = new FormData();
+  formData.append('full_name', name);
+  formData.append('ic_number', ic);
+  formData.append('conversion_date', date);
+  formData.append('conversion_state', state);
+  formData.append('sijil_mualaf', sijilInput.files[0]);
+  if (icInput.files[0]) formData.append('ic_photo', icInput.files[0]);
+
+  setLoading('btn-submit-mualaf', true);
+  const res = await api('POST', '/applications/mualaf', formData, true);
+  setLoading('btn-submit-mualaf', false);
+
+  if (!res.success) { toast(res.error || 'Gagal hantar permohonan', 'error'); return; }
+  toast(`✅ ${res.message}`, 'success');
+  closeModal('modal-mualaf');
+  ['mualaf-name','mualaf-ic','mualaf-date'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('mualaf-state').value = '';
+  document.getElementById('mualaf-sijil-placeholder').style.display = '';
+  document.getElementById('mualaf-sijil-chosen').style.display = 'none';
+}
+
+</script>
 </body>
 </html>
