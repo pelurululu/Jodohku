@@ -6,6 +6,7 @@ Frontend auth.js calls:
   POST /auth/email/request-otp-by-email         → {status}
   POST /auth/email/verify-otp-by-email          → {user_id, access_token, tier, name, msg_count}
 """
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -221,42 +222,45 @@ def _login_response(user):
 #  Email sender helper (uses SMTP from config)
 # ═══════════════════════════════════════════════════
 async def _send_email_otp(email: str, otp: str, name: str):
-    """Send OTP via Gmail SMTP. Requires EMAIL_* vars in .env"""
+    if not settings.BREVO_API_KEY:
+        logger.warning(f"[EMAIL] BREVO_API_KEY tidak dikonfigurasi. OTP {otp} tidak dihantar ke {email}.")
+        return
+
+    url = "https://api.brevo.com/v3/smtp/email"
+    headers = {
+        "accept": "application/json",
+        "api-key": settings.BREVO_API_KEY,
+        "content-type": "application/json"
+    }
+
+    # Your existing HTML template
+    html_content = f"""
+    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#05050E;color:#ECEBF8;border-radius:16px">
+      <h2 style="color:#C9A84C;font-size:22px;margin-bottom:8px">Jodohku — Log Masuk</h2>
+      <p style="color:#9494BC;margin-bottom:24px">Salam {name},</p>
+      <p style="margin-bottom:16px">Kod OTP anda untuk log masuk:</p>
+      <div style="background:#15152B;border:1px solid rgba(201,168,76,.25);border-radius:12px;padding:20px;text-align:center;margin-bottom:24px">
+        <span style="font-size:36px;font-weight:800;letter-spacing:8px;color:#C9A84C">{otp}</span>
+      </div>
+      <p style="color:#5A5A80;font-size:12px">Kod ini sah selama 10 minit. Jangan kongsi kod ini dengan sesiapa.</p>
+      <p style="color:#5A5A80;font-size:11px;margin-top:16px">© 2026 Asas Technologies (M) Sdn Bhd</p>
+    </div>
+    """
+
+    payload = {
+        "sender": {"name": settings.BREVO_SENDER_NAME, "email": settings.BREVO_SENDER_EMAIL},
+        "to": [{"email": email, "name": name}],
+        "subject": f"Kod Log Masuk Jodohku: {otp}",
+        "htmlContent": html_content
+    }
+
     try:
-        import smtplib
-        from email.mime.text import MIMEText
-        from email.mime.multipart import MIMEMultipart
-        from app.config import settings
-
-        if not settings.EMAIL_HOST or not settings.EMAIL_USER:
-            logger.warning("[EMAIL] EMAIL_HOST/EMAIL_USER tidak dikonfigurasi — OTP tidak dihantar.")
-            return
-
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = f"Kod Log Masuk Jodohku: {otp}"
-        msg["From"] = f"Jodohku <{settings.EMAIL_USER}>"
-        msg["To"] = email
-
-        html = f"""
-        <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#05050E;color:#ECEBF8;border-radius:16px">
-          <h2 style="color:#C9A84C;font-size:22px;margin-bottom:8px">Jodohku — Log Masuk</h2>
-          <p style="color:#9494BC;margin-bottom:24px">Salam {name},</p>
-          <p style="margin-bottom:16px">Kod OTP anda untuk log masuk:</p>
-          <div style="background:#15152B;border:1px solid rgba(201,168,76,.25);border-radius:12px;padding:20px;text-align:center;margin-bottom:24px">
-            <span style="font-size:36px;font-weight:800;letter-spacing:8px;color:#C9A84C">{otp}</span>
-          </div>
-          <p style="color:#5A5A80;font-size:12px">Kod ini sah selama 10 minit. Jangan kongsi kod ini dengan sesiapa.</p>
-          <p style="color:#5A5A80;font-size:11px;margin-top:16px">© 2026 Asas Technologies (M) Sdn Bhd</p>
-        </div>
-        """
-        msg.attach(MIMEText(html, "html"))
-
-        with smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT) as server:
-            server.starttls()
-            server.login(settings.EMAIL_USER, settings.EMAIL_PASSWORD)
-            server.sendmail(settings.EMAIL_USER, email, msg.as_string())
-
-        logger.info(f"[EMAIL] OTP dihantar ke {email}")
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(url, headers=headers, json=payload)
+            response.raise_for_status()
+            logger.info(f"[EMAIL] OTP dihantar ke {email} melalui Brevo")
+    except httpx.HTTPStatusError as e:
+        logger.error(f"[EMAIL] Ralat API Brevo untuk {email}: {e.response.text}")
     except Exception as e:
         logger.error(f"[EMAIL] Gagal hantar OTP ke {email}: {e}")
 
