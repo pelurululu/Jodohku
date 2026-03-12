@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jodohku — Panel Admin</title>
+  <style>
+    :root {
+      --gold: #C9A84C;
+      --gold-light: #E8C97A;
+      --gold-dark: #9B7A2E;
+      --bg: #05050E;
+      --surface: #0D0D1F;
+      --surface2: #15152B;
+      --border: rgba(201,168,76,0.18);
+      --ink: #ECEBF8;
+      --ink-muted: #9494BC;
+      --silver: #6B6B8A;
+      --success: #4CAF82;
+      --danger: #E05C5C;
+      --warning: #E09B3C;
+      --info: #5C9EE0;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; }
+
+    /* ── LOGIN PAGE ── */
+    .login-wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+    .login-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 40px 32px; width: 100%; max-width: 380px; }
+    .login-logo { font-family: Georgia, serif; font-size: 1.8rem; color: var(--gold-light); text-align: center; margin-bottom: 8px; }
+    .login-sub { font-size: 13px; color: var(--ink-muted); text-align: center; margin-bottom: 32px; }
+    .form-label { font-size: 12px; font-weight: 600; color: var(--ink-muted); letter-spacing: 0.5px; text-transform: uppercase; display: block; margin-bottom: 6px; }
+    .form-input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; color: var(--ink); font-size: 14px; outline: none; transition: border-color 0.2s; margin-bottom: 16px; }
+    .form-input:focus { border-color: var(--gold); }
+
+    /* ── LAYOUT ── */
+    .app { display: none; min-height: 100vh; }
+    .app.active { display: flex; }
+    .sidebar { width: 240px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+    .sidebar-logo { padding: 24px 20px 16px; border-bottom: 1px solid var(--border); }
+    .sidebar-logo-text { font-family: Georgia, serif; font-size: 1.3rem; color: var(--gold-light); }
+    .sidebar-logo-sub { font-size: 11px; color: var(--ink-muted); margin-top: 2px; }
+    .nav-section { padding: 16px 12px 8px; font-size: 10px; color: var(--silver); letter-spacing: 1px; text-transform: uppercase; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: var(--radius-sm); margin: 2px 8px; cursor: pointer; font-size: 14px; color: var(--ink-muted); transition: all 0.15s; }
+    .nav-item:hover { background: rgba(201,168,76,0.08); color: var(--ink); }
+    .nav-item.active { background: rgba(201,168,76,0.12); color: var(--gold-light); }
+    .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+    .nav-badge { background: var(--danger); color: #fff; font-size: 10px; font-weight: 700; border-radius: 10px; padding: 1px 6px; margin-left: auto; }
+    .sidebar-footer { margin-top: auto; padding: 16px; border-top: 1px solid var(--border); }
+
+    /* ── MAIN CONTENT ── */
+    .main { flex: 1; overflow-y: auto; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+    .page-title { font-size: 1.1rem; font-weight: 700; color: var(--ink); }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .admin-badge { font-size: 12px; background: rgba(201,168,76,0.12); border: 1px solid var(--border); border-radius: 20px; padding: 4px 12px; color: var(--gold-light); }
+    .content { padding: 24px; }
+
+    /* ── STAT CARDS ── */
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 18px; }
+    .stat-label { font-size: 11px; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .stat-value { font-family: Georgia, serif; font-size: 2rem; color: var(--gold-light); font-weight: 700; line-height: 1; }
+    .stat-sub { font-size: 11px; color: var(--silver); margin-top: 4px; }
+    .stat-card.danger .stat-value { color: var(--danger); }
+    .stat-card.success .stat-value { color: var(--success); }
+
+    /* ── TABLE ── */
+    .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .table-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+    .table-title { font-size: 15px; font-weight: 700; }
+    .table-actions { display: flex; gap: 8px; align-items: center; }
+    .search-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; color: var(--ink); font-size: 13px; outline: none; width: 220px; }
+    .search-box:focus { border-color: var(--gold); }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 10px 16px; font-size: 11px; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); font-weight: 600; }
+    td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    tr:last-child td { border-bottom: none; }
+    .empty-row td { text-align: center; color: var(--silver); padding: 32px; }
+
+    /* ── BADGES ── */
+    .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; border-radius: 20px; padding: 3px 10px; }
+    .badge-gold { background: rgba(201,168,76,0.15); color: var(--gold-light); }
+    .badge-silver { background: rgba(192,192,192,0.12); color: #C0C0C0; }
+    .badge-success { background: rgba(76,175,130,0.15); color: var(--success); }
+    .badge-danger { background: rgba(224,92,92,0.15); color: var(--danger); }
+    .badge-warning { background: rgba(224,155,60,0.15); color: var(--warning); }
+    .badge-info { background: rgba(92,158,224,0.15); color: var(--info); }
+    .badge-muted { background: rgba(255,255,255,0.06); color: var(--ink-muted); }
+
+    /* ── BUTTONS ── */
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius-sm); border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.15s; }
+    .btn-sm { padding: 5px 12px; font-size: 12px; }
+    .btn-primary { background: linear-gradient(135deg, var(--gold-dark), var(--gold)); color: #fff; }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-success { background: rgba(76,175,130,0.15); color: var(--success); border: 1px solid rgba(76,175,130,0.3); }
+    .btn-success:hover { background: rgba(76,175,130,0.25); }
+    .btn-danger { background: rgba(224,92,92,0.15); color: var(--danger); border: 1px solid rgba(224,92,92,0.3); }
+    .btn-danger:hover { background: rgba(224,92,92,0.25); }
+    .btn-ghost { background: transparent; color: var(--ink-muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { color: var(--ink); border-color: var(--gold); }
+
+    /* ── USER DETAIL MODAL ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; display: none; align-items: center; justify-content: center; padding: 24px; }
+    .modal-overlay.show { display: flex; }
+    .modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 560px; max-height: 85vh; overflow-y: auto; }
+    .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--border); }
+    .modal-head-title { font-size: 16px; font-weight: 700; }
+    .modal-close { background: none; border: none; color: var(--ink-muted); font-size: 20px; cursor: pointer; padding: 4px; }
+    .modal-close:hover { color: var(--ink); }
+    .modal-body { padding: 24px; }
+    .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-key { font-size: 12px; color: var(--ink-muted); font-weight: 500; }
+    .detail-val { font-size: 13px; color: var(--ink); font-weight: 500; text-align: right; }
+    .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+
+    /* ── TABS ── */
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* ── APPLICATION DETAIL ── */
+    .doc-preview { width: 100%; max-height: 300px; object-fit: contain; border-radius: var(--radius-sm); border: 1px solid var(--border); margin: 8px 0; }
+    .doc-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--gold); text-decoration: none; padding: 6px 12px; background: rgba(201,168,76,0.1); border-radius: var(--radius-sm); }
+    .doc-link:hover { background: rgba(201,168,76,0.2); }
+
+    /* ── PAGINATION ── */
+    .pagination { display: flex; align-items: center; gap: 8px; padding: 16px 20px; border-top: 1px solid var(--border); justify-content: flex-end; }
+    .page-btn { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface2); color: var(--ink-muted); cursor: pointer; font-size: 13px; }
+    .page-btn.active { background: rgba(201,168,76,0.15); color: var(--gold-light); border-color: var(--gold); }
+    .page-btn:hover:not(.active) { border-color: var(--gold); color: var(--ink); }
+
+    /* ── FILTER BAR ── */
+    .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+    .filter-btn { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--ink-muted); cursor: pointer; font-size: 12px; transition: all 0.15s; }
+    .filter-btn.active { background: rgba(201,168,76,0.12); color: var(--gold-light); border-color: var(--gold); }
+
+    /* ── TOAST ── */
+    #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+    .toast { display: flex; align-items: center; gap: 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; font-size: 13px; color: var(--ink); min-width: 260px; animation: toastIn 0.2s ease; }
+    .toast-success { border-color: rgba(76,175,130,0.4); }
+    .toast-error { border-color: rgba(224,92,92,0.4); }
+    @keyframes toastIn { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ── AVATAR ── */
+    .avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .sidebar { width: 200px; }
+      .content { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="toast-container"></div>
+
+<!-- ── LOGIN PAGE ── -->
+<div id="page-login" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px">
+  <div class="login-card">
+    <div class="login-logo">💍 Jodohku</div>
+    <p class="login-sub">Panel Pengurusan Admin</p>
+    <label class="form-label">Nama Pengguna</label>
+    <input class="form-input" id="admin-username" type="text" placeholder="admin" autocomplete="off">
+    <label class="form-label">Kata Laluan</label>
+    <input class="form-input" id="admin-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doAdminLogin()">
+    <span id="login-error" style="display:none;color:var(--danger);font-size:13px;margin-bottom:12px;display:block"></span>
+    <button class="btn btn-primary" style="width:100%;padding:12px" id="btn-login" onclick="doAdminLogin()">Log Masuk →</button>
+    <p style="font-size:11px;color:var(--silver);text-align:center;margin-top:16px">Akses terhad kepada pentadbir berlesen sahaja</p>
+  </div>
+</div>
+
+<!-- ── MAIN APP ── -->
+<div class="app" id="main-app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-text">💍 Jodohku</div>
+      <div class="sidebar-logo-sub">Panel Admin v1.0</div>
+    </div>
+
+    <div class="nav-section">Utama</div>
+    <div class="nav-item active" onclick="switchSection('dashboard')">
+      <span class="icon">📊</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="switchSection('users')">
+      <span class="icon">👥</span> Pengguna
+    </div>
+    <div class="nav-item" onclick="switchSection('ic-pending')">
+      <span class="icon">🪪</span> Semakan IC
+      <span class="nav-badge" id="badge-ic">0</span>
+    </div>
+
+    <div class="nav-section">Permohonan</div>
+    <div class="nav-item" onclick="switchSection('asnaf')">
+      <span class="icon">🤲</span> Permohonan Asnaf
+      <span class="nav-badge" id="badge-asnaf">0</span>
+    </div>
+    <div class="nav-item" onclick="switchSection('mualaf')">
+      <span class="icon">☪️</span> Pendaftaran Mualaf
+      <span class="nav-badge" id="badge-mualaf">0</span>
+    </div>
+
+    <div class="nav-section">Sistem</div>
+    <div class="nav-item" onclick="switchSection('matches')">
+      <span class="icon">💕</span> Padanan
+    </div>
+    <div class="nav-item" onclick="switchSection('payments')">
+      <span class="icon">💳</span> Pembayaran
+    </div>
+
+    <div class="sidebar-footer">
+      <button class="btn btn-ghost" style="width:100%" onclick="doLogout()">🚪 Log Keluar</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div class="page-title" id="page-title-text">Dashboard</div>
+      <div class="topbar-right">
+        <span class="admin-badge">👑 Admin</span>
+        <button class="btn btn-ghost btn-sm" onclick="refreshCurrent()">↻ Muat Semula</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="section active" id="sec-dashboard">
+        <div class="stat-grid" id="stat-grid">
+          <div class="stat-card"><div class="stat-label">Jumlah Pengguna</div><div class="stat-value" id="s-total">—</div></div>
+          <div class="stat-card success"><div class="stat-label">Pengguna Premium</div><div class="stat-value" id="s-premium">—</div></div>
+          <div class="stat-card"><div class="stat-label">Padanan Dibuat</div><div class="stat-value" id="s-matches">—</div></div>
+          <div class="stat-card"><div class="stat-label">Mesej Dihantar</div><div class="stat-value" id="s-messages">—</div></div>
+          <div class="stat-card warning"><div class="stat-label">IC Menunggu</div><div class="stat-value" id="s-ic">—</div></div>
+          <div class="stat-card warning"><div class="stat-label">Permohonan Tertangguh</div><div class="stat-value" id="s-apps">—</div></div>
+          <div class="stat-card"><div class="stat-label">Pioneer Dituntut</div><div class="stat-value" id="s-pioneer">—</div><div class="stat-sub" id="s-pioneer-remain">— baki</div></div>
+          <div class="stat-card success"><div class="stat-label">Pengguna Disahkan</div><div class="stat-value" id="s-verified">—</div></div>
+        </div>
+      </div>
+
+      <!-- USERS -->
+      <div class="section" id="sec-users">
+        <div class="table-wrap">
+          <div class="table-header">
+            <div class="table-title">Senarai Pengguna</div>
+            <div class="table-actions">
+              <input class="search-box" id="user-search" placeholder="🔍 Cari nama, emel, telefon..." oninput="searchUsers()">
+            </div>
+          </div>
+          <table>
+            <thead><tr>
+              <th>Pengguna</th><th>Telefon</th><th>Umur</th><th>Tier</th><th>IC</th><th>Ujian</th><th>Daftar</th><th>Tindakan</th>
+            </tr></thead>
+            <tbody id="users-tbody"><tr class="empty-row"><td colspan="8">Memuatkan...</td></tr></tbody>
+          </table>
+          <div class="pagination" id="users-pagination"></div>
+        </div>
+      </div>
+
+      <!-- IC PENDING -->
+      <div class="section" id="sec-ic-pending">
+        <div class="table-wrap">
+          <div class="table-header">
+            <div class="table-title">🪪 IC Menunggu Semakan</div>
+          </div>
+          <table>
+            <thead><tr><th>Pengguna</th><th>UID</th><th>Telefon</th><th>Gambar IC</th><th>Tindakan</th></tr></thead>
+            <tbody id="ic-tbody"><tr class="empty-row"><td colspan="5">Tiada rekod</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ASNAF -->
+      <div class="section" id="sec-asnaf">
+        <div class="filter-bar">
+          <button class="filter-btn active" onclick="filterApps('asnaf','all',this)">Semua</button>
+          <button class="filter-btn" onclick="filterApps('asnaf','pending',this)">⏳ Menunggu</button>
+          <button class="filter-btn" onclick="filterApps('asnaf','approved',this)">✅ Diluluskan</button>
+          <button class="filter-btn" onclick="filterApps('asnaf','rejected',this)">❌ Ditolak</button>
+        </div>
+        <div class="table-wrap">
+          <div class="table-header"><div class="table-title">🤲 Permohonan Asnaf</div></div>
+          <table>
+            <thead><tr><th>ID Permohonan</th><th>Pemohon</th><th>Kategori</th><th>Pendapatan</th><th>Status</th><th>Tarikh</th><th>Tindakan</th></tr></thead>
+            <tbody id="asnaf-tbody"><tr class="empty-row"><td colspan="7">Tiada permohonan</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- MUALAF -->
+      <div class="section" id="sec-mualaf">
+        <div class="filter-bar">
+          <button class="filter-btn active" onclick="filterApps('mualaf','all',this)">Semua</button>
+          <button class="filter-btn" onclick="filterApps('mualaf','pending',this)">⏳ Menunggu</button>
+          <button class="filter-btn" onclick="filterApps('mualaf','approved',this)">✅ Diluluskan</button>
+          <button class="filter-btn" onclick="filterApps('mualaf','rejected',this)">❌ Ditolak</button>
+        </div>
+        <div class="table-wrap">
+          <div class="table-header"><div class="table-title">☪️ Pendaftaran Mualaf</div></div>
+          <table>
+            <thead><tr><th>ID Permohonan</th><th>Pemohon</th><th>Tarikh Islam</th><th>Negeri</th><th>Status</th><th>Tarikh Hantar</th><th>Tindakan</th></tr></thead>
+          <tbody id="mualaf-tbody"><tr class="empty-row"><td colspan="7">Tiada permohonan</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- MATCHES (placeholder) -->
+      <div class="section" id="sec-matches">
+        <div style="text-align:center;padding:60px;color:var(--ink-muted)">
+          <div style="font-size:48px;margin-bottom:16px">💕</div>
+          <div style="font-size:16px;font-weight:600;margin-bottom:8px">Padanan Aktif</div>
+          <div style="font-size:13px">Ciri ini dalam pembangunan</div>
+        </div>
+      </div>
+
+      <!-- PAYMENTS (placeholder) -->
+      <div class="section" id="sec-payments">
+        <div style="text-align:center;padding:60px;color:var(--ink-muted)">
+          <div style="font-size:48px;margin-bottom:16px">💳</div>
+          <div style="font-size:16px;font-weight:600;margin-bottom:8px">Rekod Pembayaran</div>
+          <div style="font-size:13px">Ciri ini dalam pembangunan</div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </main>
+</div><!-- /app -->
+
+<!-- ── USER DETAIL MODAL ── -->
+<div class="modal-overlay" id="modal-user" onclick="if(event.target.id==='modal-user')closeModal('modal-user')">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-head-title" id="modal-user-title">Butiran Pengguna</div>
+      <button class="modal-close" onclick="closeModal('modal-user')">✕</button>
+    </div>
+    <div class="modal-body" id="modal-user-body">Memuatkan...</div>
+    <div class="modal-footer" id="modal-user-footer"></div>
+  </div>
+</div>
+
+<!-- ── APPLICATION DETAIL MODAL ── -->
+<div class="modal-overlay" id="modal-app" onclick="if(event.target.id==='modal-app')closeModal('modal-app')">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-head-title" id="modal-app-title">Butiran Permohonan</div>
+      <button class="modal-close" onclick="closeModal('modal-app')">✕</button>
+    </div>
+    <div class="modal-body" id="modal-app-body">Memuatkan...</div>
+    <div class="modal-footer" id="modal-app-footer"></div>
+  </div>
+</div>
+
+<!-- ── REVIEW MODAL ── -->
+<div class="modal-overlay" id="modal-review" onclick="if(event.target.id==='modal-review')closeModal('modal-review')">
+  <div class="modal-box" style="max-width:420px">
+    <div class="modal-head">
+      <div class="modal-head-title" id="review-title">Semak Permohonan</div>
+      <button class="modal-close" onclick="closeModal('modal-review')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--ink-muted);margin-bottom:16px" id="review-desc"></p>
+      <label class="form-label">Nota Admin (Opsional)</label>
+      <textarea id="review-note" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;color:var(--ink);font-size:13px;resize:vertical;min-height:80px;outline:none" placeholder="Sebab lulus/tolak..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" id="btn-review-reject" onclick="confirmReview('reject')">❌ Tolak</button>
+      <button class="btn btn-success" id="btn-review-approve" onclick="confirmReview('approve')">✅ Lulus</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   JODOHKU ADMIN PANEL
+============================================================ */
+
+// ← Tukar ke URL backend anda
+const API = 'http://localhost:8000/api';
+
+let adminToken = localStorage.getItem('jk_admin_token') || null;
+let currentSection = 'dashboard';
+let currentPage = 1;
+let reviewContext = null; // { type: 'ic'|'app', id, action }
+let _asnafFilter = 'all';
+let _mualafFilter = 'all';
+
+/* ── INIT ── */
+document.addEventListener('DOMContentLoaded', () => {
+  if (adminToken) {
+    showApp();
+  } else {
+    document.getElementById('page-login').style.display = 'flex';
+    document.getElementById('main-app').style.display = 'none';
+  }
+});
+
+/* ── ADMIN API HELPER ── */
+async function adminApi(method, path, body = null) {
+  const headers = { 'Content-Type': 'application/json', 'X-Admin-Token': adminToken || '' };
+  const opts = { method, headers };
+  if (body) opts.body = JSON.stringify(body);
+  try {
+    const res = await fetch(`${API}${path}`, opts);
+    const data = await res.json();
+    if (res.status === 401) { doLogout(); throw new Error('Sesi tamat'); }
+    return data;
+  } catch(e) {
+    return { success: false, error: e.message || 'Ralat rangkaian' };
+  }
+}
+
+/* ── LOGIN ── */
+async function doAdminLogin() {
+  const username = document.getElementById('admin-username').value.trim();
+  const password = document.getElementById('admin-password').value;
+  if (!username || !password) { showLoginError('Sila isi semua maklumat.'); return; }
+
+  const btn = document.getElementById('btn-login');
+  btn.textContent = 'Memuatkan...'; btn.disabled = true;
+  const res = await adminApi('POST', '/admin/login', { username, password });
+  btn.textContent = 'Log Masuk →'; btn.disabled = false;
+
+  if (!res.success) { showLoginError(res.error || 'Log masuk gagal.'); return; }
+
+  adminToken = res.admin_token;
+  localStorage.setItem('jk_admin_token', adminToken);
+  showApp();
+}
+
+function showLoginError(msg) {
+  const el = document.getElementById('login-error');
+  el.textContent = msg; el.style.display = 'block';
+}
+
+function showApp() {
+  document.getElementById('page-login').style.display = 'none';
+  document.getElementById('main-app').style.display = 'flex';
+  document.getElementById('main-app').classList.add('active');
+  loadDashboard();
+}
+
+function doLogout() {
+  adminToken = null;
+  localStorage.removeItem('jk_admin_token');
+  document.getElementById('main-app').style.display = 'none';
+  document.getElementById('page-login').style.display = 'flex';
+  document.getElementById('admin-password').value = '';
+}
+
+/* ── SECTION NAVIGATION ── */
+function switchSection(name) {
+  currentSection = name;
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(`sec-${name}`).classList.add('active');
+  const titles = {
+    dashboard: 'Dashboard', users: 'Pengguna', 'ic-pending': 'Semakan IC',
+    asnaf: 'Permohonan Asnaf', mualaf: 'Pendaftaran Mualaf',
+    matches: 'Padanan', payments: 'Pembayaran',
+  };
+  document.getElementById('page-title-text').textContent = titles[name] || name;
+  event.currentTarget.classList.add('active');
+  refreshCurrent();
+}
+
+function refreshCurrent() {
+  const loaders = {
+    dashboard: loadDashboard,
+    users: () => loadUsers(1),
+    'ic-pending': loadICPending,
+    asnaf: () => loadApplications('asnaf', _asnafFilter),
+    mualaf: () => loadApplications('mualaf', _mualafFilter),
+  };
+  if (loaders[currentSection]) loaders[currentSection]();
+}
+
+/* ── DASHBOARD ── */
+async function loadDashboard() {
+  const res = await adminApi('GET', '/admin/stats');
+  if (!res.success) { toast(res.error, 'error'); return; }
+  const s = res.stats;
+  document.getElementById('s-total').textContent = s.total_users?.toLocaleString() ?? '—';
+  document.getElementById('s-premium').textContent = s.premium_users?.toLocaleString() ?? '—';
+  document.getElementById('s-matches').textContent = s.total_matches?.toLocaleString() ?? '—';
+  document.getElementById('s-messages').textContent = s.total_messages?.toLocaleString() ?? '—';
+  document.getElementById('s-ic').textContent = s.pending_ic ?? '—';
+  document.getElementById('s-apps').textContent = s.pending_applications ?? '—';
+  document.getElementById('s-pioneer').textContent = s.pioneer_claimed?.toLocaleString() ?? '—';
+  document.getElementById('s-pioneer-remain').textContent = `${s.pioneer_remaining?.toLocaleString() ?? '—'} baki`;
+  document.getElementById('s-verified').textContent = s.verified_users?.toLocaleString() ?? '—';
+
+  // Update badges
+  document.getElementById('badge-ic').textContent = s.pending_ic || 0;
+  document.getElementById('badge-asnaf').textContent = s.asnaf_applications || 0;
+  document.getElementById('badge-mualaf').textContent = s.mualaf_applications || 0;
+}
+
+/* ── USERS ── */
+let searchTimeout;
+function searchUsers() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => loadUsers(1), 400);
+}
+
+async function loadUsers(page = 1) {
+  currentPage = page;
+  const search = document.getElementById('user-search')?.value || '';
+  const res = await adminApi('GET', `/admin/users?page=${page}&limit=15&search=${encodeURIComponent(search)}`);
+  if (!res.success) { toast(res.error, 'error'); return; }
+
+  const tbody = document.getElementById('users-tbody');
+  if (!res.users?.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="8">Tiada pengguna dijumpai</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = res.users.map(u => {
+    const tier = u.tier_full || u.tier || 'Basic';
+    const tierClass = tier.toLowerCase().includes('sovereign') ? 'badge-gold' :
+                      tier.toLowerCase().includes('platinum') ? 'badge-info' :
+                      tier.toLowerCase().includes('gold') ? 'badge-gold' :
+                      tier.toLowerCase().includes('silver') ? 'badge-silver' : 'badge-muted';
+    const icBadge = u.ic_verified === 'pending' ? `<span class="badge badge-warning">⏳ Menunggu</span>` :
+                    u.ic_verified === true || u.ic_verified === 'true' ? `<span class="badge badge-success">✓ Sah</span>` :
+                    `<span class="badge badge-muted">—</span>`;
+    const psy = u.psy_done ? `<span class="badge badge-success">✓ Siap</span>` : `<span class="badge badge-muted">Belum</span>`;
+    const banned = u.is_banned ? `<span class="badge badge-danger">Diblok</span>` : '';
+    const regDate = u.created_at ? new Date(u.created_at).toLocaleDateString('ms-MY', {day:'numeric',month:'short',year:'2-digit'}) : '—';
+    return `
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="avatar" style="font-size:16px">
+              ${u.profile_photo ? `<img src="${escHtml(u.profile_photo)}" onerror="this.style.display='none'">` : '👤'}
+            </div>
+            <div>
+              <div style="font-weight:600;font-size:13px">${escHtml(u.full_name || u.nickname)}</div>
+              <div style="font-size:11px;color:var(--silver)">${escHtml(u.email || '')} ${banned}</div>
+            </div>
+          </div>
+        </td>
+        <td style="font-size:12px;color:var(--ink-muted)">${escHtml(u.phone||'—')}</td>
+        <td>${u.age || '—'}</td>
+        <td><span class="badge ${tierClass}">${tier}</span></td>
+        <td>${icBadge}</td>
+        <td>${psy}</td>
+        <td style="font-size:11px;color:var(--silver)">${regDate}</td>
+        <td>
+          <button class="btn btn-ghost btn-sm" onclick="viewUser('${u.uid}')">Lihat</button>
+        </td>
+      </tr>`;
+  }).join('');
+
+  // Pagination
+  const pages = res.pages || 1;
+  const pag = document.getElementById('users-pagination');
+  pag.innerHTML = '';
+  for (let i = 1; i <= Math.min(pages, 10); i++) {
+    const btn = document.createElement('button');
+    btn.className = `page-btn ${i === page ? 'active' : ''}`;
+    btn.textContent = i;
+    btn.onclick = () => loadUsers(i);
+    pag.appendChild(btn);
+  }
+}
+
+async function viewUser(uid) {
+  document.getElementById('modal-user-title').textContent = `Butiran — ${uid}`;
+  document.getElementById('modal-user-body').innerHTML = '<div style="text-align:center;padding:32px;color:var(--silver)">Memuatkan...</div>';
+  showModal('modal-user');
+
+  const res = await adminApi('GET', `/admin/users/${uid}`);
+  if (!res.success) {
+    document.getElementById('modal-user-body').innerHTML = `<p style="color:var(--danger)">${escHtml(res.error)}</p>`;
+    return;
+  }
+  const u = res.user;
+  const rows = [
+    ['UID', u.uid], ['Nama', u.full_name || u.nickname], ['Emel', u.email],
+    ['Telefon', u.phone], ['Umur', u.age], ['Jantina', u.gender],
+    ['Status', u.status], ['Negeri', u.state], ['Tier', u.tier_full || u.tier],
+    ['Premium', u.is_premium ? '✅ Ya' : '❌ Tidak'],
+    ['IC Status', u.ic_verified_status || '—'],
+    ['Disahkan', u.is_verified ? '✅ Disahkan' : '❌ Belum'],
+    ['Ujian Psych', u.psy_done ? `✅ Selesai (${u.ici_score})` : '❌ Belum'],
+    ['Diblok', u.is_banned ? '⛔ Ya' : '✅ Tidak'],
+    ['Daftar', u.created_at ? new Date(u.created_at).toLocaleString('ms-MY') : '—'],
+  ];
+
+  document.getElementById('modal-user-body').innerHTML = rows.map(([k,v]) => `
+    <div class="detail-row"><span class="detail-key">${k}</span><span class="detail-val">${escHtml(String(v ?? '—'))}</span></div>
+  `).join('') + (u.profile_photo ? `<div style="margin-top:12px"><img src="${escHtml(u.profile_photo)}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--border)"></div>` : '');
+
+  const footer = document.getElementById('modal-user-footer');
+  const isBanned = u.is_banned;
+  footer.innerHTML = `
+    <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-user')">Tutup</button>
+    ${u.ic_verified_status === 'pending' ? `
+      <button class="btn btn-danger btn-sm" onclick="approveIC('${uid}', false)">❌ Tolak IC</button>
+      <button class="btn btn-success btn-sm" onclick="approveIC('${uid}', true)">✅ Lulus IC</button>
+    ` : ''}
+    <button class="btn ${isBanned ? 'btn-success' : 'btn-danger'} btn-sm" onclick="toggleBan('${uid}', ${!isBanned})">
+      ${isBanned ? '✅ Buka Blok' : '⛔ Blok Pengguna'}
+    </button>
+  `;
+}
+
+async function approveIC(uid, approved) {
+  const res = await adminApi('PATCH', `/admin/users/${uid}`, {
+    is_verified: approved, ic_verified: approved ? 'true' : 'rejected'
+  });
+  if (res.success) {
+    toast(approved ? `✅ IC ${uid} diluluskan` : `❌ IC ${uid} ditolak`, approved ? 'success' : 'error');
+    closeModal('modal-user');
+    loadICPending();
+  } else toast(res.error, 'error');
+}
+
+async function toggleBan(uid, ban) {
+  const res = await adminApi('PATCH', `/admin/users/${uid}`, { is_banned: ban });
+  if (res.success) {
+    toast(ban ? `⛔ ${uid} diblok` : `✅ ${uid} dibuka blok`, ban ? 'error' : 'success');
+    closeModal('modal-user');
+    loadUsers(currentPage);
+  } else toast(res.error, 'error');
+}
+
+/* ── IC PENDING ── */
+async function loadICPending() {
+  const res = await adminApi('GET', '/admin/ic-pending');
+  if (!res.success) { toast(res.error, 'error'); return; }
+
+  document.getElementById('badge-ic').textContent = res.total || 0;
+  const tbody = document.getElementById('ic-tbody');
+  if (!res.pending?.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="5">✅ Tiada IC menunggu semakan</td></tr>'; return;
+  }
+  tbody.innerHTML = res.pending.map(u => `
+    <tr>
+      <td><strong>${escHtml(u.full_name || u.nickname)}</strong></td>
+      <td><span style="font-size:12px;color:var(--silver)">${u.uid}</span></td>
+      <td style="font-size:12px">${escHtml(u.phone || '—')}</td>
+      <td>${u.photo_url && !u.photo_url.endsWith('...')
+        ? `<a href="${escHtml(u.photo_url)}" target="_blank" class="doc-link">📎 Lihat IC</a>`
+        : '<span style="color:var(--silver);font-size:12px">—</span>'}</td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-danger btn-sm" onclick="approveIC('${u.uid}',false)">❌ Tolak</button>
+        <button class="btn btn-success btn-sm" onclick="approveIC('${u.uid}',true)">✅ Lulus</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+/* ── APPLICATIONS ── */
+async function loadApplications(type, filter = 'all') {
+  const typeParam = type === 'all' ? '' : `?type=${type}`;
+  const res = await adminApi('GET', `/applications/list${typeParam}`);
+  if (!res.success) { toast(res.error, 'error'); return; }
+
+  let apps = (res.applications || []).filter(a => a.type === type);
+  if (filter !== 'all') apps = apps.filter(a => a.status === filter);
+
+  const badge = document.getElementById(`badge-${type}`);
+  if (badge) badge.textContent = apps.filter(a => a.status === 'pending').length || 0;
+
+  const tbody = document.getElementById(`${type}-tbody`);
+  if (!apps.length) {
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="7">Tiada permohonan ${filter !== 'all' ? filter : ''}</td></tr>`; return;
+  }
+
+  if (type === 'asnaf') {
+    tbody.innerHTML = apps.map(a => `
+      <tr>
+        <td style="font-size:12px;font-weight:600">${a.id}</td>
+        <td>${escHtml(a.full_name)}<br><span style="font-size:11px;color:var(--silver)">${escHtml(a.user_email||'')}</span></td>
+        <td><span class="badge badge-info">${a.asnaf_category || '—'}</span></td>
+        <td style="font-size:13px">RM${a.monthly_income || '—'}/bln</td>
+        <td>${statusBadge(a.status)}</td>
+        <td style="font-size:11px;color:var(--silver)">${a.submitted_at ? new Date(a.submitted_at).toLocaleDateString('ms-MY') : '—'}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="viewApp('${a.id}')">Semak</button></td>
+      </tr>
+    `).join('');
+  } else {
+    tbody.innerHTML = apps.map(a => `
+      <tr>
+        <td style="font-size:12px;font-weight:600">${a.id}</td>
+        <td>${escHtml(a.full_name)}<br><span style="font-size:11px;color:var(--silver)">${escHtml(a.user_email||'')}</span></td>
+        <td style="font-size:12px">${a.conversion_date || '—'}</td>
+        <td style="font-size:12px">${escHtml(a.conversion_state || '—')}</td>
+        <td>${statusBadge(a.status)}</td>
+        <td style="font-size:11px;color:var(--silver)">${a.submitted_at ? new Date(a.submitted_at).toLocaleDateString('ms-MY') : '—'}</td>
+        <td><button class="btn btn-ghost btn-sm" onclick="viewApp('${a.id}')">Semak</button></td>
+      </tr>
+    `).join('');
+  }
+}
+
+function statusBadge(status) {
+  const map = { pending: 'badge-warning', approved: 'badge-success', rejected: 'badge-danger' };
+  const labels = { pending: '⏳ Menunggu', approved: '✅ Diluluskan', rejected: '❌ Ditolak' };
+  return `<span class="badge ${map[status] || 'badge-muted'}">${labels[status] || status}</span>`;
+}
+
+function filterApps(type, filter, btn) {
+  if (type === 'asnaf') _asnafFilter = filter;
+  else _mualafFilter = filter;
+  document.querySelectorAll(`#sec-${type} .filter-btn`).forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadApplications(type, filter);
+}
+
+async function viewApp(appId) {
+  // Find app from cached data (re-fetch for accuracy)
+  const res = await adminApi('GET', '/applications/list');
+  const app = (res.applications || []).find(a => a.id === appId);
+  if (!app) { toast('Permohonan tidak ditemui', 'error'); return; }
+
+  document.getElementById('modal-app-title').textContent = `Permohonan — ${appId}`;
+
+  let bodyHtml = '';
+  if (app.type === 'asnaf') {
+    bodyHtml = `
+      <div class="detail-row"><span class="detail-key">Nama</span><span class="detail-val">${escHtml(app.full_name)}</span></div>
+      <div class="detail-row"><span class="detail-key">No IC</span><span class="detail-val">${escHtml(app.ic_number)}</span></div>
+      <div class="detail-row"><span class="detail-key">Alamat</span><span class="detail-val">${escHtml(app.address)}</span></div>
+      <div class="detail-row"><span class="detail-key">Kategori Asnaf</span><span class="detail-val">${escHtml(app.asnaf_category)}</span></div>
+      <div class="detail-row"><span class="detail-key">Pendapatan</span><span class="detail-val">RM${app.monthly_income}/bulan</span></div>
+      <div class="detail-row"><span class="detail-key">Tanggungan</span><span class="detail-val">${app.dependents || 0} orang</span></div>
+      <div class="detail-row"><span class="detail-key">Status</span><span class="detail-val">${statusBadge(app.status)}</span></div>
+      <div class="detail-row"><span class="detail-key">Tarikh Hantar</span><span class="detail-val">${new Date(app.submitted_at).toLocaleString('ms-MY')}</span></div>
+      ${app.review_note ? `<div class="detail-row"><span class="detail-key">Nota Admin</span><span class="detail-val">${escHtml(app.review_note)}</span></div>` : ''}
+      <div style="margin-top:16px">
+        ${app.doc_url ? `<p style="font-size:12px;color:var(--ink-muted);margin-bottom:8px">Dokumen Sokongan:</p><a href="${escHtml(app.doc_url)}" target="_blank" class="doc-link">📎 Buka Dokumen</a>` : '<p style="font-size:12px;color:var(--silver)">Tiada dokumen dimuat naik</p>'}
+        ${app.ic_url ? `<p style="font-size:12px;color:var(--ink-muted);margin:12px 0 8px">Gambar IC:</p><a href="${escHtml(app.ic_url)}" target="_blank" class="doc-link">🪪 Buka IC</a>` : ''}
+      </div>
+    `;
+  } else {
+    bodyHtml = `
+      <div class="detail-row"><span class="detail-key">Nama</span><span class="detail-val">${escHtml(app.full_name)}</span></div>
+      <div class="detail-row"><span class="detail-key">No IC</span><span class="detail-val">${escHtml(app.ic_number)}</span></div>
+      <div class="detail-row"><span class="detail-key">Tarikh Islam</span><span class="detail-val">${app.conversion_date || '—'}</span></div>
+      <div class="detail-row"><span class="detail-key">Negeri Pengislaman</span><span class="detail-val">${escHtml(app.conversion_state || '—')}</span></div>
+      <div class="detail-row"><span class="detail-key">Status</span><span class="detail-val">${statusBadge(app.status)}</span></div>
+      <div class="detail-row"><span class="detail-key">Tarikh Hantar</span><span class="detail-val">${new Date(app.submitted_at).toLocaleString('ms-MY')}</span></div>
+      ${app.review_note ? `<div class="detail-row"><span class="detail-key">Nota Admin</span><span class="detail-val">${escHtml(app.review_note)}</span></div>` : ''}
+      <div style="margin-top:16px">
+        ${app.cert_url ? `<p style="font-size:12px;color:var(--ink-muted);margin-bottom:8px">Sijil Mualaf:</p><a href="${escHtml(app.cert_url)}" target="_blank" class="doc-link">📜 Buka Sijil</a>` : '<p style="font-size:12px;color:var(--silver)">Tiada sijil dimuat naik</p>'}
+        ${app.ic_url ? `<p style="font-size:12px;color:var(--ink-muted);margin:12px 0 8px">Gambar IC:</p><a href="${escHtml(app.ic_url)}" target="_blank" class="doc-link">🪪 Buka IC</a>` : ''}
+      </div>
+    `;
+  }
+
+  document.getElementById('modal-app-body').innerHTML = bodyHtml;
+  const footer = document.getElementById('modal-app-footer');
+  if (app.status === 'pending') {
+    footer.innerHTML = `
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-app')">Batal</button>
+      <button class="btn btn-danger btn-sm" onclick="closeModal('modal-app');openReview('${appId}','reject')">❌ Tolak</button>
+      <button class="btn btn-success btn-sm" onclick="closeModal('modal-app');openReview('${appId}','approve')">✅ Lulus</button>
+    `;
+  } else {
+    footer.innerHTML = `<button class="btn btn-ghost btn-sm" onclick="closeModal('modal-app')">Tutup</button>`;
+  }
+  showModal('modal-app');
+}
+
+function openReview(appId, action) {
+  reviewContext = { appId, action };
+  document.getElementById('review-title').textContent = action === 'approve' ? '✅ Luluskan Permohonan' : '❌ Tolak Permohonan';
+  document.getElementById('review-desc').textContent = action === 'approve'
+    ? `Anda akan meluluskan permohonan ${appId}. Pengguna akan dimaklumkan.`
+    : `Anda akan menolak permohonan ${appId}. Sila berikan sebab penolakan.`;
+  document.getElementById('review-note').value = '';
+  showModal('modal-review');
+}
+
+async function confirmReview(action) {
+  if (!reviewContext) return;
+  const note = document.getElementById('review-note').value;
+  const endpoint = `/applications/${reviewContext.appId}/${action}`;
+  const res = await adminApi('POST', endpoint, { note });
+  if (res.success) {
+    toast(action === 'approve' ? `✅ Diluluskan` : `❌ Ditolak`, action === 'approve' ? 'success' : 'error');
+    closeModal('modal-review');
+    refreshCurrent();
+  } else {
+    toast(res.error || 'Gagal', 'error');
+  }
+}
+
+/* ── UTILS ── */
+function showModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+function toast(msg, type = 'info') {
+  const icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.innerHTML = `<span>${icons[type] || '•'}</span><span>${msg}</span>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
