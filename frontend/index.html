@@ -10,8 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-  <!-- Socket.IO -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+  <!-- Socket.IO removed — not used by this backend -->
 
   <style>
     /* ======================================================
@@ -1549,7 +1548,7 @@
         <h4>2. Penggunaan Data</h4>
         <p>Nombor telefon tidak didedahkan tanpa kebenaran. Data tidak dijual kepada pihak ketiga.</p>
         <h4>3. Hak Pengguna</h4>
-        <p>Anda berhak akses, pembetulan, atau pemadaman data. Hubungi: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="eb989e9b9b84999fab81848f8483809ec58692">[email&#160;protected]</a></p>
+        <p>Anda berhak akses, pembetulan, atau pemadaman data. Hubungi: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="8af9fffafae5f8fecae0e5eee5e2e1ffa4e7f3">[email&#160;protected]</a></p>
         <h3>C. Keselamatan Platform</h3>
         <h4>1. Pengesahan Berlapis</h4>
         <p>OTP, tarikh lahir, IC separa, CAPTCHA, emel — semua memastikan setiap akaun adalah manusia nyata.</p>
@@ -1628,64 +1627,40 @@
     </div>
   </div>
 
-  <!-- Modal: Asnaf Application -->
+  <!-- Modal: Asnaf -->
   <div class="modal-overlay" id="modal-asnaf" onclick="closeModalOnBg(event,'modal-asnaf')">
     <div class="modal-sheet" style="position:relative;max-height:90vh;overflow-y:auto">
       <div class="modal-handle"></div>
       <button class="modal-close" onclick="closeModal('modal-asnaf')">✕</button>
       <h3 class="modal-title">🤲 Permohonan Status Asnaf</h3>
-      <p style="font-size:13px;color:var(--ink-muted);margin-bottom:20px;line-height:1.5">
-        Untuk mendapat akses percuma atau subsidi, sila lengkapkan borang ini. Semua dokumen disulitkan dan hanya dilihat oleh admin berlesen.
-      </p>
+      <p style="font-size:13px;color:var(--ink-muted);margin-bottom:20px;line-height:1.5">Untuk mendapat akses percuma atau subsidi. Semua dokumen dienkripsi dan hanya dilihat admin berlesen.</p>
       <div style="display:flex;flex-direction:column;gap:12px">
-        <div>
-          <label style="font-size:13px;font-weight:600;color:var(--ink-light);display:block;margin-bottom:4px">Nama Penuh (seperti dalam IC)</label>
-          <input class="form-input" id="asnaf-name" type="text" placeholder="Nama penuh">
-        </div>
-        <div>
-          <label style="font-size:13px;font-weight:600;color:var(--ink-light);display:block;margin-bottom:4px">No. IC</label>
-          <input class="form-input" id="asnaf-ic" type="text" placeholder="000000-00-0000">
-        </div>
-        <div>
-          <label style="font-size:13px;font-weight:600;color:var(--ink-light);display:block;margin-bottom:4px">Alamat Penuh</label>
-          <input class="form-input" id="asnaf-address" type="text" placeholder="Alamat lengkap">
-        </div>
-        <div>
-          <label style="font-size:13px;font-weight:600;color:var(--ink-light);display:block;margin-bottom:4px">Kategori Asnaf</label>
+        <div><label style="font-size:12px;font-weight:600;color:var(--ink-muted);display:block;margin-bottom:4px">NAMA PENUH (seperti IC)</label>
+          <input class="form-input" id="asnaf-name" type="text" placeholder="Nama penuh"></div>
+        <div><label style="font-size:12px;font-weight:600;color:var(--ink-muted);display:block;margin-bottom:4px">NO. IC</label>
+          <input class="form-input" id="asnaf-ic" type="text" placeholder="000000-00-0000"></div>
+        <div><label style="font-size:12px;font-weight:600;color:var(--ink-muted);display:block;margin-bottom:4px">ALAMAT PENUH</label>
+          <input class="form-input" id="asnaf-address" type="text" placeholder="Alamat lengkap"></div>
+        <div><label style="font-size:12px;font-weight:600;color:var(--ink-muted);display:block;margin-bottom:4px">KATEGORI ASNAF</label>
           <select class="form-input" id="asnaf-category">
             <option value="">-- Pilih Kategori --</option>
-            <option value="Fakir">Fakir</option>
-            <option value="Miskin">Miskin</option>
-            <option value="Amil">Amil</option>
-            <option value="Muallaf">Muallaf</option>
-            <option value="Riqab">Riqab (Membebaskan diri dari hutang)</option>
-            <option value="Gharimin">Gharimin (Berhutang)</option>
-            <option value="Fisabilillah">Fisabilillah</option>
-            <option value="Ibnussabil">Ibnussabil (Musafir)</option>
-          </select>
-        </div>
+            <option>Fakir</option><option>Miskin</option><option>Amil</option>
+            <option>Muallaf</option><option>Gharimin</option><option>Fisabilillah</option><option>Ibnussabil</option>
+          </select></div>
+        <div><label style="font-size:12px;font-weight:600;color:var(--ink-muted);display:block;margin-bottom:4px">PENDAPATAN BULANAN (RM)</label>
+          <input class="form-input" id="asnaf-income" type="number" placeholder="cth: 1500"></div>
+        <div><label style="font-size:12px;font-weight:600;color:var(--ink-muted);display:block;margin-bottom:4px">BILANGAN TANGGUNGAN</label>
+          <input class="form-input" id="asnaf-dependents" type="number" placeholder="cth: 3" min="0"></div>
         <div>
-          <label style="font-size:13px;font-weight:600;color:var(--ink-light);display:block;margin-bottom:4px">Pendapatan Bulanan (RM)</label>
-          <input class="form-input" id="asnaf-income" type="number" placeholder="cth: 1500">
-        </div>
-        <div>
-          <label style="font-size:13px;font-weight:600;color:var(--ink-light);display:block;margin-bottom:4px">Bilangan Tanggungan</label>
-          <input class="form-input" id="asnaf-dependents" type="number" placeholder="cth: 3" min="0">
-        </div>
-        <div>
-          <label style="font-size:13px;font-weight:600;color:var(--ink-light);display:block;margin-bottom:6px">Dokumen Sokongan (Slip gaji / Surat miskin / Lain)</label>
-          <div class="ic-upload-area" id="asnaf-doc-area" onclick="document.getElementById('asnaf-doc-input').click()" style="padding:16px;text-align:center">
-            <div id="asnaf-doc-placeholder">
-              <div style="font-size:28px">📄</div>
-              <div style="font-size:13px;font-weight:600;color:var(--ink-light);margin-top:6px">Pilih Dokumen</div>
-              <div style="font-size:11px;color:var(--ink-muted);margin-top:4px">JPG, PNG atau PDF • Maks 10MB</div>
-            </div>
+          <label style="font-size:12px;font-weight:600;color:var(--ink-muted);display:block;margin-bottom:6px">DOKUMEN SOKONGAN (slip gaji / surat miskin)</label>
+          <div class="ic-upload-area" onclick="document.getElementById('asnaf-doc-input').click()" style="padding:16px;text-align:center">
+            <div id="asnaf-doc-placeholder"><div style="font-size:28px">📄</div><div style="font-size:13px;color:var(--ink-light);margin-top:6px">Pilih Dokumen</div><div style="font-size:11px;color:var(--ink-muted);margin-top:4px">JPG, PNG atau PDF • Maks 10MB</div></div>
             <div id="asnaf-doc-chosen" style="display:none;font-size:13px;color:var(--success);font-weight:600"></div>
           </div>
           <input type="file" id="asnaf-doc-input" accept="image/jpeg,image/png,application/pdf" style="display:none" onchange="onAsnafDocChosen(this)">
         </div>
         <div>
-          <label style="font-size:13px;font-weight:600;color:var(--ink-light);display:block;margin-bottom:6px">Gambar IC (Opsional)</label>
+          <label style="font-size:12px;font-weight:600;color:var(--ink-muted);display:block;margin-bottom:6px">GAMBAR IC (opsional)</label>
           <div class="ic-upload-area" onclick="document.getElementById('asnaf-ic-input').click()" style="padding:12px;text-align:center">
             <div id="asnaf-ic-placeholder" style="font-size:12px;color:var(--ink-muted)">🪪 Pilih gambar IC (opsional)</div>
             <div id="asnaf-ic-chosen" style="display:none;font-size:12px;color:var(--success);font-weight:600"></div>
@@ -1693,58 +1668,43 @@
           <input type="file" id="asnaf-ic-input" accept="image/jpeg,image/png" style="display:none" onchange="onAsnafICChosen(this)">
         </div>
       </div>
-      <div style="margin-top:16px;font-size:12px;color:var(--ink-muted)">🔒 Data PDPA 2010 dilindungi • Semakan 3-5 hari bekerja</div>
+      <div style="margin-top:16px;font-size:12px;color:var(--ink-muted)">🔒 PDPA 2010 dilindungi • Semakan 3–5 hari bekerja</div>
       <button class="btn btn-primary btn-full" style="margin-top:16px" id="btn-submit-asnaf" onclick="submitAsnaf()">Hantar Permohonan Asnaf</button>
     </div>
   </div>
 
-  <!-- Modal: Mualaf Application -->
+  <!-- Modal: Mualaf -->
   <div class="modal-overlay" id="modal-mualaf" onclick="closeModalOnBg(event,'modal-mualaf')">
     <div class="modal-sheet" style="position:relative;max-height:90vh;overflow-y:auto">
       <div class="modal-handle"></div>
       <button class="modal-close" onclick="closeModal('modal-mualaf')">✕</button>
       <h3 class="modal-title">☪️ Pendaftaran Mualaf</h3>
-      <p style="font-size:13px;color:var(--ink-muted);margin-bottom:20px;line-height:1.5">
-        Saudara/i Muslim baru, kami mengucapkan selamat datang. Daftarkan status Mualaf anda untuk mendapat padanan yang lebih sesuai.
-      </p>
+      <p style="font-size:13px;color:var(--ink-muted);margin-bottom:20px;line-height:1.5">Saudara/i Muslim baru, selamat datang. Daftarkan status Mualaf untuk mendapat padanan yang lebih sesuai.</p>
       <div style="display:flex;flex-direction:column;gap:12px">
-        <div>
-          <label style="font-size:13px;font-weight:600;color:var(--ink-light);display:block;margin-bottom:4px">Nama Penuh (seperti dalam IC)</label>
-          <input class="form-input" id="mualaf-name" type="text" placeholder="Nama penuh">
-        </div>
-        <div>
-          <label style="font-size:13px;font-weight:600;color:var(--ink-light);display:block;margin-bottom:4px">No. IC</label>
-          <input class="form-input" id="mualaf-ic" type="text" placeholder="000000-00-0000">
-        </div>
-        <div>
-          <label style="font-size:13px;font-weight:600;color:var(--ink-light);display:block;margin-bottom:4px">Tarikh Memeluk Islam</label>
-          <input class="form-input" id="mualaf-date" type="date">
-        </div>
-        <div>
-          <label style="font-size:13px;font-weight:600;color:var(--ink-light);display:block;margin-bottom:4px">Negeri Pengislaman</label>
+        <div><label style="font-size:12px;font-weight:600;color:var(--ink-muted);display:block;margin-bottom:4px">NAMA PENUH (seperti IC)</label>
+          <input class="form-input" id="mualaf-name" type="text" placeholder="Nama penuh"></div>
+        <div><label style="font-size:12px;font-weight:600;color:var(--ink-muted);display:block;margin-bottom:4px">NO. IC</label>
+          <input class="form-input" id="mualaf-ic" type="text" placeholder="000000-00-0000"></div>
+        <div><label style="font-size:12px;font-weight:600;color:var(--ink-muted);display:block;margin-bottom:4px">TARIKH MEMELUK ISLAM</label>
+          <input class="form-input" id="mualaf-date" type="date"></div>
+        <div><label style="font-size:12px;font-weight:600;color:var(--ink-muted);display:block;margin-bottom:4px">NEGERI PENGISLAMAN</label>
           <select class="form-input" id="mualaf-state">
             <option value="">-- Pilih Negeri --</option>
-            <option>Johor</option><option>Kedah</option><option>Kelantan</option>
-            <option>Melaka</option><option>Negeri Sembilan</option><option>Pahang</option>
-            <option>Perak</option><option>Perlis</option><option>Pulau Pinang</option>
-            <option>Sabah</option><option>Sarawak</option><option>Selangor</option>
+            <option>Johor</option><option>Kedah</option><option>Kelantan</option><option>Melaka</option>
+            <option>Negeri Sembilan</option><option>Pahang</option><option>Perak</option><option>Perlis</option>
+            <option>Pulau Pinang</option><option>Sabah</option><option>Sarawak</option><option>Selangor</option>
             <option>Terengganu</option><option>Kuala Lumpur</option><option>Labuan</option><option>Putrajaya</option>
-          </select>
-        </div>
+          </select></div>
         <div>
-          <label style="font-size:13px;font-weight:600;color:var(--ink-light);display:block;margin-bottom:6px">Sijil Pemelukan Islam (Sijil Mualaf)</label>
-          <div class="ic-upload-area" id="mualaf-sijil-area" onclick="document.getElementById('mualaf-sijil-input').click()" style="padding:16px;text-align:center">
-            <div id="mualaf-sijil-placeholder">
-              <div style="font-size:28px">📜</div>
-              <div style="font-size:13px;font-weight:600;color:var(--ink-light);margin-top:6px">Muat Naik Sijil Mualaf</div>
-              <div style="font-size:11px;color:var(--ink-muted);margin-top:4px">JPG, PNG atau PDF • Maks 10MB</div>
-            </div>
+          <label style="font-size:12px;font-weight:600;color:var(--ink-muted);display:block;margin-bottom:6px">SIJIL PEMELUKAN ISLAM</label>
+          <div class="ic-upload-area" onclick="document.getElementById('mualaf-sijil-input').click()" style="padding:16px;text-align:center">
+            <div id="mualaf-sijil-placeholder"><div style="font-size:28px">📜</div><div style="font-size:13px;color:var(--ink-light);margin-top:6px">Muat Naik Sijil Mualaf</div><div style="font-size:11px;color:var(--ink-muted);margin-top:4px">JPG, PNG atau PDF • Maks 10MB</div></div>
             <div id="mualaf-sijil-chosen" style="display:none;font-size:13px;color:var(--success);font-weight:600"></div>
           </div>
           <input type="file" id="mualaf-sijil-input" accept="image/jpeg,image/png,application/pdf" style="display:none" onchange="onMualafSijilChosen(this)">
         </div>
         <div>
-          <label style="font-size:13px;font-weight:600;color:var(--ink-light);display:block;margin-bottom:6px">Gambar IC (Opsional)</label>
+          <label style="font-size:12px;font-weight:600;color:var(--ink-muted);display:block;margin-bottom:6px">GAMBAR IC (opsional)</label>
           <div class="ic-upload-area" onclick="document.getElementById('mualaf-ic-input').click()" style="padding:12px;text-align:center">
             <div id="mualaf-ic-placeholder" style="font-size:12px;color:var(--ink-muted)">🪪 Pilih gambar IC (opsional)</div>
             <div id="mualaf-ic-chosen" style="display:none;font-size:12px;color:var(--success);font-weight:600"></div>
@@ -1752,7 +1712,7 @@
           <input type="file" id="mualaf-ic-input" accept="image/jpeg,image/png" style="display:none" onchange="onMualafICChosen(this)">
         </div>
       </div>
-      <div style="margin-top:16px;font-size:12px;color:var(--ink-muted)">🔒 Data PDPA 2010 dilindungi • Semakan 3-5 hari bekerja</div>
+      <div style="margin-top:16px;font-size:12px;color:var(--ink-muted)">🔒 PDPA 2010 dilindungi • Semakan 3–5 hari bekerja</div>
       <button class="btn btn-primary btn-full" style="margin-top:16px" id="btn-submit-mualaf" onclick="submitMualaf()">Hantar Pendaftaran Mualaf</button>
     </div>
   </div>
@@ -1766,7 +1726,7 @@
    Versi: 2.0.0 (Fixed & Production-Ready)
 ============================================================ */
 
-const API = 'https://jodohku-api.onrender.com/api'; // ← Tukar ke URL backend production anda (cth: https://jodohku-api.onrender.com/api)
+const API = 'https://jodohku-api.onrender.com/api'; // ← URL backend anda
 
 /* ── STATE ── */
 let appState = {
@@ -1778,7 +1738,7 @@ let appState = {
   quizAnswers: {},
   quizIndex: 0,
   tempToken: null,
-  socket: null,
+  socket: null, // socket not used
   trialTimer: null,
   resetTimer: null,
   resendTimer: null,
@@ -1804,7 +1764,6 @@ function initApp() {
   document.getElementById('page-quiz').classList.remove('active');
   document.getElementById('main-app').classList.add('active');
   loadUserProfile();
-  connectSocket();
   renderTiers();
   startResetTimer();
 }
@@ -2299,9 +2258,6 @@ function openChatRoom(matchId, partnerName, partnerPhoto, partnerTier) {
 
   document.getElementById('chat-room').classList.add('open');
   loadMessages(matchId);
-
-  // Join Socket.IO room
-  if (appState.socket) appState.socket.emit('join_match', matchId);
 }
 
 function closeChatRoom() {
@@ -2394,11 +2350,6 @@ function chatInputChange() {
   // Auto resize
   input.style.height='44px';
   input.style.height = Math.min(input.scrollHeight, 120)+'px';
-
-  // Typing indicator via socket
-  if (appState.socket && appState.currentMatch) {
-    appState.socket.emit('typing', { matchId: appState.currentMatch, isTyping: input.value.length>0 });
-  }
 }
 
 function useQuickReply(btn) {
@@ -2707,37 +2658,7 @@ async function saveWingman() {
    SOCKET.IO
 ============================================================ */
 function connectSocket() {
-  if (!appState.token) return;
-
-  try {
-    appState.socket = io(API.replace("/api",""), { auth:{ token:appState.token } });
-
-    appState.socket.on('new_message', (msg) => {
-      if (appState.currentMatch === msg.match_id) {
-        const isSent = msg.sender_id === appState.user?.id;
-        appendMessage(msg, isSent);
-        appState.socket.emit('message_seen', { matchId: msg.match_id });
-      } else {
-        // Update unread badge
-        const badge = document.getElementById('chat-badge');
-        const current = parseInt(badge.textContent||'0');
-        badge.textContent = current+1;
-        badge.classList.add('show');
-      }
-    });
-
-    appState.socket.on('typing', ({ userId, isTyping }) => {
-      if (userId !== appState.user?.id) {
-        document.getElementById('typing-indicator').classList.toggle('show', isTyping);
-      }
-    });
-
-    appState.socket.on('connect_error', () => {
-      console.log('[Socket] Sambungan gagal — mode offline');
-    });
-  } catch(e) {
-    console.log('[Socket] Socket.IO tidak tersedia');
-  }
+  // Socket.IO not used — real-time via polling if needed
 }
 
 /* ============================================================
@@ -2803,7 +2724,6 @@ function closeModalOnBg(e, id) {
 function logout() {
   clearInterval(appState.trialTimer);
   clearInterval(appState.resetTimer);
-  if (appState.socket) appState.socket.disconnect();
   localStorage.removeItem('jk_token');
   localStorage.removeItem('jk_user');
   appState.token = null;
@@ -2872,78 +2792,57 @@ if (urlParams.get('payment_success') === 'true') {
 }
 
 /* ============================================================
-   ASNAF APPLICATION
+   ASNAF & MUALAF APPLICATIONS
 ============================================================ */
 function onAsnafDocChosen(input) {
-  const f = input.files[0];
-  if (!f) return;
+  const f = input.files[0]; if (!f) return;
   document.getElementById('asnaf-doc-placeholder').style.display = 'none';
   document.getElementById('asnaf-doc-chosen').style.display = 'block';
   document.getElementById('asnaf-doc-chosen').textContent = `✅ ${f.name}`;
 }
 function onAsnafICChosen(input) {
-  const f = input.files[0];
-  if (!f) return;
+  const f = input.files[0]; if (!f) return;
   document.getElementById('asnaf-ic-placeholder').style.display = 'none';
   document.getElementById('asnaf-ic-chosen').style.display = 'block';
   document.getElementById('asnaf-ic-chosen').textContent = `✅ ${f.name}`;
 }
 async function submitAsnaf() {
-  const name       = document.getElementById('asnaf-name').value.trim();
-  const ic         = document.getElementById('asnaf-ic').value.trim();
-  const address    = document.getElementById('asnaf-address').value.trim();
-  const category   = document.getElementById('asnaf-category').value;
-  const income     = document.getElementById('asnaf-income').value.trim();
-  const dependents = document.getElementById('asnaf-dependents').value.trim();
-  const docInput   = document.getElementById('asnaf-doc-input');
-  const icInput    = document.getElementById('asnaf-ic-input');
-
-  if (!name || !ic || !address || !category || !income) {
-    toast('Sila lengkapkan semua maklumat wajib', 'warning'); return;
-  }
-  if (!docInput.files[0]) {
-    toast('Sila muat naik dokumen sokongan', 'warning'); return;
-  }
-
-  const formData = new FormData();
-  formData.append('full_name', name);
-  formData.append('ic_number', ic);
-  formData.append('address', address);
-  formData.append('asnaf_category', category);
-  formData.append('monthly_income', income);
-  formData.append('dependents', dependents || '0');
-  formData.append('supporting_doc', docInput.files[0]);
-  if (icInput.files[0]) formData.append('ic_photo', icInput.files[0]);
-
+  const name     = document.getElementById('asnaf-name').value.trim();
+  const ic       = document.getElementById('asnaf-ic').value.trim();
+  const address  = document.getElementById('asnaf-address').value.trim();
+  const category = document.getElementById('asnaf-category').value;
+  const income   = document.getElementById('asnaf-income').value.trim();
+  const dep      = document.getElementById('asnaf-dependents').value.trim();
+  const docInput = document.getElementById('asnaf-doc-input');
+  const icInput  = document.getElementById('asnaf-ic-input');
+  if (!name || !ic || !address || !category || !income) { toast('Sila lengkapkan semua maklumat wajib', 'warning'); return; }
+  if (!docInput.files[0]) { toast('Sila muat naik dokumen sokongan', 'warning'); return; }
+  const fd = new FormData();
+  fd.append('full_name', name); fd.append('ic_number', ic);
+  fd.append('address', address); fd.append('asnaf_category', category);
+  fd.append('monthly_income', income); fd.append('dependents', dep || '0');
+  fd.append('supporting_doc', docInput.files[0]);
+  if (icInput.files[0]) fd.append('ic_photo', icInput.files[0]);
   setLoading('btn-submit-asnaf', true);
-  const res = await api('POST', '/applications/asnaf', formData, true);
+  const res = await api('POST', '/applications/asnaf', fd, true);
   setLoading('btn-submit-asnaf', false);
-
   if (!res.success) { toast(res.error || 'Gagal hantar permohonan', 'error'); return; }
   toast(`✅ ${res.message}`, 'success');
   closeModal('modal-asnaf');
-  // Reset form
-  ['asnaf-name','asnaf-ic','asnaf-address','asnaf-income','asnaf-dependents'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.value = '';
-  });
+  ['asnaf-name','asnaf-ic','asnaf-address','asnaf-income','asnaf-dependents'].forEach(id => { const e = document.getElementById(id); if(e) e.value=''; });
   document.getElementById('asnaf-category').value = '';
   document.getElementById('asnaf-doc-placeholder').style.display = '';
   document.getElementById('asnaf-doc-chosen').style.display = 'none';
 }
 
-/* ============================================================
-   MUALAF APPLICATION
-============================================================ */
 function onMualafSijilChosen(input) {
-  const f = input.files[0];
-  if (!f) return;
+  const f = input.files[0]; if (!f) return;
   document.getElementById('mualaf-sijil-placeholder').style.display = 'none';
   document.getElementById('mualaf-sijil-chosen').style.display = 'block';
   document.getElementById('mualaf-sijil-chosen').textContent = `✅ ${f.name}`;
 }
 function onMualafICChosen(input) {
-  const f = input.files[0];
-  if (!f) return;
+  const f = input.files[0]; if (!f) return;
   document.getElementById('mualaf-ic-placeholder').style.display = 'none';
   document.getElementById('mualaf-ic-chosen').style.display = 'block';
   document.getElementById('mualaf-ic-chosen').textContent = `✅ ${f.name}`;
@@ -2955,32 +2854,20 @@ async function submitMualaf() {
   const state = document.getElementById('mualaf-state').value;
   const sijilInput = document.getElementById('mualaf-sijil-input');
   const icInput    = document.getElementById('mualaf-ic-input');
-
-  if (!name || !ic || !date || !state) {
-    toast('Sila lengkapkan semua maklumat wajib', 'warning'); return;
-  }
-  if (!sijilInput.files[0]) {
-    toast('Sila muat naik Sijil Mualaf', 'warning'); return;
-  }
-
-  const formData = new FormData();
-  formData.append('full_name', name);
-  formData.append('ic_number', ic);
-  formData.append('conversion_date', date);
-  formData.append('conversion_state', state);
-  formData.append('sijil_mualaf', sijilInput.files[0]);
-  if (icInput.files[0]) formData.append('ic_photo', icInput.files[0]);
-
+  if (!name || !ic || !date || !state) { toast('Sila lengkapkan semua maklumat wajib', 'warning'); return; }
+  if (!sijilInput.files[0]) { toast('Sila muat naik Sijil Mualaf', 'warning'); return; }
+  const fd = new FormData();
+  fd.append('full_name', name); fd.append('ic_number', ic);
+  fd.append('conversion_date', date); fd.append('conversion_state', state);
+  fd.append('sijil_mualaf', sijilInput.files[0]);
+  if (icInput.files[0]) fd.append('ic_photo', icInput.files[0]);
   setLoading('btn-submit-mualaf', true);
-  const res = await api('POST', '/applications/mualaf', formData, true);
+  const res = await api('POST', '/applications/mualaf', fd, true);
   setLoading('btn-submit-mualaf', false);
-
   if (!res.success) { toast(res.error || 'Gagal hantar permohonan', 'error'); return; }
   toast(`✅ ${res.message}`, 'success');
   closeModal('modal-mualaf');
-  ['mualaf-name','mualaf-ic','mualaf-date'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.value = '';
-  });
+  ['mualaf-name','mualaf-ic','mualaf-date'].forEach(id => { const e = document.getElementById(id); if(e) e.value=''; });
   document.getElementById('mualaf-state').value = '';
   document.getElementById('mualaf-sijil-placeholder').style.display = '';
   document.getElementById('mualaf-sijil-chosen').style.display = 'none';
