@@ -248,12 +248,12 @@
             Kod dihantar ke <strong id="otp-email-display"></strong>
           </p>
           <div class="otp-input-group">
-            <input class="otp-digit" maxlength="1" type="tel" oninput="otpInput(this,0)" onkeydown="otpKeydown(this,0)">
-            <input class="otp-digit" maxlength="1" type="tel" oninput="otpInput(this,1)" onkeydown="otpKeydown(this,1)">
-            <input class="otp-digit" maxlength="1" type="tel" oninput="otpInput(this,2)" onkeydown="otpKeydown(this,2)">
-            <input class="otp-digit" maxlength="1" type="tel" oninput="otpInput(this,3)" onkeydown="otpKeydown(this,3)">
-            <input class="otp-digit" maxlength="1" type="tel" oninput="otpInput(this,4)" onkeydown="otpKeydown(this,4)">
-            <input class="otp-digit" maxlength="1" type="tel" oninput="otpInput(this,5)" onkeydown="otpKeydown(this,5)">
+            <input class="otp-digit" maxlength="1" type="tel" oninput="otpInput(this,0)" onkeydown="otpKeydown(this,0,event)">
+            <input class="otp-digit" maxlength="1" type="tel" oninput="otpInput(this,1)" onkeydown="otpKeydown(this,1,event)">
+            <input class="otp-digit" maxlength="1" type="tel" oninput="otpInput(this,2)" onkeydown="otpKeydown(this,2,event)">
+            <input class="otp-digit" maxlength="1" type="tel" oninput="otpInput(this,3)" onkeydown="otpKeydown(this,3,event)">
+            <input class="otp-digit" maxlength="1" type="tel" oninput="otpInput(this,4)" onkeydown="otpKeydown(this,4,event)">
+            <input class="otp-digit" maxlength="1" type="tel" oninput="otpInput(this,5)" onkeydown="otpKeydown(this,5,event)">
           </div>
           <button class="btn btn-primary btn-full" id="btn-verify-otp" onclick="verifyOTP()" disabled>
             Sahkan & Masuk
