@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: jodohku-api
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: BREVO_SENDER_EMAIL
+        sync: false
+      - key: TOYYIBPAY_SECRET
+        value: mp64p268-tduc-xtfk-s7bj-m8bvnxd8r0zs
+      - key: TOYYIBPAY_CATEGORY
+        value: 8ljrgxzi
+      - key: FRONTEND_URL
+        value: https://jodohku.my
+      - key: BACKEND_URL
+        value: https://jodohku-api.onrender.com
+      - key: DEBUG
+        value: "false"
+      - key: PIONEER_QUOTA
+        value: "3000"
+      - key: PIONEER_TRIAL_DAYS
+        value: "7"
+      - key: FREE_MSG_LIMIT
+        value: "10"
+      - key: DAILY_CANDIDATES
+        value: "5"
