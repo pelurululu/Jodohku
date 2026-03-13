@@ -1,7 +1,7 @@
 'use strict';
 
 // ══════════ CONFIG ══════════
-const API = 'https://api.jodohku.my';
+const API = 'https://jodohku-api.onrender.com';
 const TIER_ORDER = { Basic: 0, Silver: 1, 'Silver (7-Hari)': 1, Gold: 2, Platinum: 3, Sovereign: 4 };
 const FREE_MSGS = 10;
 const DAILY_RESET_HOUR = 8;
